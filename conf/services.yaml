@@ -1,0 +1,29 @@
+"php-7.4":
+  brew_name: "php@7.4"
+  post_install: |
+    sed -i -e 's/listen = 127.0.0.1:9000/listen = 127.0.0.1:{PORT}/g' {BREW_PATH}/etc/php/7.4/php-fpm.d/www.conf
+  port: 51901
+
+"php-7.3":
+  brew_name: "php@7.3"
+  post_install: |
+    sed -i -e 's/listen = 127.0.0.1:9000/listen = 127.0.0.1:{PORT}/g' {BREW_PATH}/etc/php/7.3/php-fpm.d/www.conf
+  port: 51902
+
+"mysql-*":
+  brew_name: "mariadb"
+  post_install: |
+    echo '[mysqld]\nport = {PORT}\nsocket = {SOCKET}' >> {BREW_PATH}/etc/my.cnf
+  port: 51801
+
+"mariadb-*":
+  brew_name: "mariadb"
+  post_install: |
+    echo '[mysqld]\nport = {PORT}\nsocket = {SOCKET}' >> {BREW_PATH}/etc/my.cnf
+  port: 51801
+
+"redis-*":
+  brew_name: "redis"
+  post_install: |
+    sed -i -e 's/port 6379/port {PORT}/g' {BREW_PATH}/etc/redis.conf
+  port: 51802
