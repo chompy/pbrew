@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"gitlab.com/contextualcode/pbrew/core"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 )
@@ -21,10 +23,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if err := proj.InstallServices(); err != nil {
+	/*if err := proj.InstallServices(); err != nil {
 		panic(err)
 	}
-	proj.Start()
+	proj.Start()*/
+
+	//log.Println(core.GetHostNames(proj.Routes))
+
+	//log.Println(core.GetRoutesForHostName("www.5dca.org", proj.Routes))
+
+	log.Println(proj.GetRelationships(proj.Apps[0]))
 
 	// load services
 	/*services, err := core.LoadServiceList()

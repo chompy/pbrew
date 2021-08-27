@@ -1,0 +1,17 @@
+# {{ .ProjectName }}
+
+{{ range .Hosts }}
+
+server {
+    listen          8080;
+    server_name     {{ .Name }};
+    error_page      500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   html;
+    }
+    {{ range .Paths }}
+        location 
+    {{ end }}
+}
+
+{{ end }}

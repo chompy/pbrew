@@ -16,7 +16,8 @@ import (
 type Service struct {
 	BrewName       string `yaml:"brew_name"`
 	PostInstallCmd string `yaml:"post_install"`
-	PostStartCmd   string `yaml:"post_start"`
+	StartCmd       string `yaml:"start"`
+	StopCmd        string `yaml:"stop"`
 	Port           int    `yaml:"port"`
 }
 
@@ -75,14 +76,10 @@ func (s *Service) Start() error {
 	if !s.IsInstalled() {
 		return errors.WithStack(ErrServiceNotInstalled)
 	}
-	if err := brewCommand("services", "start", s.BrewName); err != nil {
+	cmdStr := s.injectCommandParams(s.StartCmd)
+	if err := RunCommand(cmdStr); err != nil {
 		return errors.WithStack(err)
 	}
-	return nil
-}
-
-// PostStart runs the post start command for the service.
-func (s *Service) PostStart(d interface{}) error {
 	return nil
 }
 
@@ -91,7 +88,8 @@ func (s *Service) Stop() error {
 	if !s.IsInstalled() {
 		return errors.WithStack(ErrServiceNotInstalled)
 	}
-	if err := brewCommand("services", "stop", s.BrewName); err != nil {
+	cmdStr := s.injectCommandParams(s.StopCmd)
+	if err := RunCommand(cmdStr); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -102,9 +100,16 @@ func (s *Service) SocketPath() string {
 	return fmt.Sprintf("/tmp/pbrew-%s.sock", s.BrewName)
 }
 
+// PidPath returns path to service pid file.
+func (s *Service) PidPath() string {
+	return fmt.Sprintf("/tmp/pbrew-%s.pid", s.BrewName)
+}
+
 func (s *Service) injectCommandParams(cmd string) string {
 	cmd = strings.ReplaceAll(cmd, "{BREW_PATH}", BrewPath())
 	cmd = strings.ReplaceAll(cmd, "{PORT}", fmt.Sprintf("%d", s.Port))
 	cmd = strings.ReplaceAll(cmd, "{SOCKET}", s.SocketPath())
+	cmd = strings.ReplaceAll(cmd, "{PID_FILE}", s.PidPath())
+	cmd = strings.ReplaceAll(cmd, "{PID_FILE_ESC}", strings.ReplaceAll(s.PidPath(), "/", "\\/"))
 	return cmd
 }

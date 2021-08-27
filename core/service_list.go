@@ -14,11 +14,16 @@ import (
 
 const serviceListYAML = "conf/services.yaml"
 
+var loadedServiceList map[string]*Service
+
 // ServiceList is a list of available Homebrew services.
 type ServiceList map[string]*Service
 
 // LoadServiceList loads all available Homebrew services.
 func LoadServiceList() (ServiceList, error) {
+	if loadedServiceList != nil {
+		return loadedServiceList, nil
+	}
 	yamlPath, err := os.Executable()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -31,6 +36,7 @@ func LoadServiceList() (ServiceList, error) {
 	if err := yaml.Unmarshal(yamlRaw, &out); err != nil {
 		return nil, errors.WithStack(err)
 	}
+	loadedServiceList = out
 	return out, nil
 }
 
@@ -63,6 +69,14 @@ func (s ServiceList) MatchDef(d interface{}) (*Service, error) {
 			return service, nil
 		}
 	case *def.Service:
+		{
+			service, err := s.Match(d.Type)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			return service, nil
+		}
+	case def.Service:
 		{
 			service, err := s.Match(d.Type)
 			if err != nil {

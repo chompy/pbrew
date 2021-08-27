@@ -11,9 +11,9 @@
 "php-7.3":
   brew_name: "php@7.3"
   start: |
-    {BREW_PATH}/opt/php@7.3/sbin/php-fpm -D -g /tmp/pbrew-php73.pid
+    {BREW_PATH}/opt/php@7.3/sbin/php-fpm -D -g {PID_FILE}
   stop: |
-    pkill -f /tmp/pbrew-php73.pid
+    pkill -f {PID_FILE}
   post_install: |
     sed -i -e 's/listen = 127.0.0.1:9000/listen = 127.0.0.1:{PORT}/g' {BREW_PATH}/etc/php/7.3/php-fpm.d/www.conf
   port: 51902
@@ -21,9 +21,9 @@
 "mysql-*":
   brew_name: "mariadb"
   start: |
-    {BREW_PATH}/opt/mariadb/bin/mariadbd --pid-file=/tmp/pbrew-mariadb.pid &
+    {BREW_PATH}/opt/mariadb/bin/mariadbd --pid-file={PID_FILE} &
   stop: |
-    pkill -f /tmp/pbrew-mariadb.pid
+    pkill -f {PID_FILE}
   post_install: |
     echo '[mysqld]\nport = {PORT}\nsocket = {SOCKET}' >> {BREW_PATH}/etc/my.cnf
   port: 51801
@@ -31,17 +31,21 @@
 "mariadb-*":
   brew_name: "mariadb"
   start: |
-    {BREW_PATH}/opt/mariadb/bin/mariadbd --pid-file=/tmp/pbrew-mariadb.pid &
+    {BREW_PATH}/opt/mariadb/bin/mariadbd --pid-file={PID_FILE} &
   stop: |
-    pkill -f /tmp/pbrew-mariadb.pid
+    pkill -f {PID_FILE}
   post_install: |
     echo '[mysqld]\nport = {PORT}\nsocket = {SOCKET}' >> {BREW_PATH}/etc/my.cnf
   port: 51801
 
 "redis-*":
   brew_name: "redis"
+  start: |
+    {BREW_PATH}/opt/redis/bin/redis-server {BREW_PATH}/etc/redis.conf
+  stop: |
+    pkill -f {PID_FILE}
   post_install: |
     sed -i -e 's/port 6379/port {PORT}/g' {BREW_PATH}/etc/redis.conf
     sed -i -e 's/daemonize no/daemonize yes/g' {BREW_PATH}/etc/redis.conf
-    sed -i -e 's/pidfile \/var\/run\/redis_6379.pid/pidfile \/tmp\/pbrew_redis.pid/g' {BREW_PATH}/etc/redis.conf
+    sed -i -e 's/pidfile \/var\/run\/redis_6379.pid/pidfile {PID_FILE_ESC}/g' {BREW_PATH}/etc/redis.conf
   port: 51802

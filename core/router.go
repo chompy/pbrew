@@ -1,5 +1,65 @@
 package core
 
+import (
+	"net/url"
+	"strings"
+
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
+)
+
+const defaultHostName = "localhost"
+
+// GetHostNames returns all host names for given routes.
+func GetHostNames(routes []def.Route) []string {
+	out := make([]string, 0)
+	for _, route := range routes {
+		urlParse, err := url.Parse(route.Path)
+		if err != nil {
+			output.LogWarn(err.Error())
+			continue
+		}
+		thisHost := strings.TrimSpace(urlParse.Host)
+		if thisHost == "" {
+			thisHost = defaultHostName
+		}
+
+		hasHost := false
+		for _, host := range out {
+			if host == thisHost {
+				hasHost = true
+				break
+			}
+		}
+		if !hasHost {
+			out = append(out, thisHost)
+		}
+	}
+	return out
+}
+
+// GetRoutesForHostName returns all routes for given host name.
+func GetRoutesForHostName(host string, routes []def.Route) []def.Route {
+	out := make([]def.Route, 0)
+	for _, route := range routes {
+		urlParse, err := url.Parse(route.Path)
+		if err != nil {
+			output.LogWarn(err.Error())
+			continue
+		}
+		thisHost := strings.TrimSpace(urlParse.Host)
+		if thisHost == "" {
+			thisHost = defaultHostName
+		}
+
+		if thisHost != host {
+			continue
+		}
+		out = append(out, route)
+	}
+	return out
+}
+
 /*func GetUpstreamHost(proj *project.Project, upstream string, allowServices bool) (string, error) {
 	upstreamSplit := strings.Split(upstream, ":")
 	// itterate apps and services to find name match
