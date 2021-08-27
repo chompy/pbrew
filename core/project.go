@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
@@ -14,15 +15,22 @@ var routesYamlFilenames = []string{".platform/routes.yaml", ".platform/routes.pc
 
 // Project defines a Platform.sh project.
 type Project struct {
+	Path     string
+	Name     string
 	Apps     []*def.App
 	Services []def.Service
 	Routes   []def.Route
 }
 
 // LoadProject loads a project at given the path.
-func LoadProject(path string) (*Project, error) {
-	done := output.Duration(fmt.Sprintf("Read project at %s.", path))
-	appPaths := scanPlatformAppYaml(path, false)
+func LoadProject(projPath string) (*Project, error) {
+	var err error
+	projPath, err = filepath.Abs(projPath)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	done := output.Duration(fmt.Sprintf("Read project at %s.", projPath))
+	appPaths := scanPlatformAppYaml(projPath, false)
 	apps := make([]*def.App, 0)
 	for _, appPath := range appPaths {
 		app, err := def.ParseAppYamlFiles(appPath, nil)
@@ -44,6 +52,8 @@ func LoadProject(path string) (*Project, error) {
 	)
 	done()
 	return &Project{
+		Path:     projPath,
+		Name:     filepath.Base(projPath),
 		Apps:     apps,
 		Services: services,
 		Routes:   routes,

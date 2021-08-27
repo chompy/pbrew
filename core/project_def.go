@@ -13,8 +13,8 @@ import (
 
 const localHostName = "localhost"
 
-// GetDefinitionRelationship returns relationship value for given definition.
-func (p *Project) GetDefinitionRelationships(d interface{}) []map[string]interface{} {
+// GenerateRelationships returns available relationship mappings for given service definition.
+func GenerateRelationships(d interface{}) []map[string]interface{} {
 	switch d := d.(type) {
 	case *def.App:
 		{
@@ -66,8 +66,8 @@ func (p *Project) GetDefinitionRelationships(d interface{}) []map[string]interfa
 	return nil
 }
 
-// GetRelationships gets all relationships for project.
-func (p *Project) GetRelationships(d interface{}) map[string]map[string]interface{} {
+// MapRelationships returns all relationships for given service definition.
+func (p *Project) MapRelationships(d interface{}) map[string]map[string]interface{} {
 	var rels map[string]string
 	switch d := d.(type) {
 	case *def.App:
@@ -93,7 +93,7 @@ func (p *Project) GetRelationships(d interface{}) map[string]map[string]interfac
 	for relName, rel := range rels {
 		relSplit := strings.Split(rel, ":")
 		for _, service := range p.Services {
-			serviceRels := p.GetDefinitionRelationships(service)
+			serviceRels := GenerateRelationships(service)
 			for _, serviceRel := range serviceRels {
 				if service.Name == relSplit[0] && serviceRel["rel"] == relSplit[1] {
 					out[relName] = serviceRel
@@ -105,41 +105,34 @@ func (p *Project) GetRelationships(d interface{}) map[string]map[string]interfac
 	return out
 }
 
-// GetDefinitionRelationships returns relationships for given definition.
-/*func (p *Project) GetDefinitionRelationships(d interface{}) map[string][]map[string]interface{} {
-	var rels map[string]string
-	switch d := d.(type) {
-	case *def.App:
-		{
-			rels = d.Relationships
-			break
-		}
-	case *def.AppWorker:
-		{
-			rels = d.Relationships
-			break
-		}
-	case def.Service:
-		{
-			rels = d.Relationships
-			break
-		}
-	}
-	out := make(map[string][]map[string]interface{})
-	for name, rel := range rels {
-		out[name] = make([]map[string]interface{}, 0)
-		relSplit := strings.Split(rel, ":")
-
-		for _, service := range p.Services {
-			if service.Name == relSplit[0] && (
-		}
-
-		for _, v := range p.relationships {
-			if v["service"] != nil && v["service"].(string) == relSplit[0] && v["rel"] == relSplit[1] {
-				out[name] = append(out[name], v)
+// MatchRelationshipToService matches a given relationship to its service def.
+func (p *Project) MatchRelationshipToService(rel string) interface{} {
+	relSplit := strings.Split(rel, ":")
+	// look for service match
+	for _, service := range p.Services {
+		if service.Name == relSplit[0] {
+			serviceRels := GenerateRelationships(service)
+			for _, serviceRel := range serviceRels {
+				if serviceRel["rel"] == relSplit[1] {
+					return service
+				}
 			}
 		}
 	}
-	return out
+	// map varnish to first app
+	if relSplit[0] == "varnish" {
+		return p.Apps[0]
+	}
+	// look for app match
+	for _, service := range p.Apps {
+		if service.Name == relSplit[0] {
+			serviceRels := GenerateRelationships(service)
+			for _, serviceRel := range serviceRels {
+				if serviceRel["rel"] == relSplit[1] {
+					return service
+				}
+			}
+		}
+	}
+	return nil
 }
-*/

@@ -1,0 +1,34 @@
+{{ range .Locations }}
+location = "{{ .Path }}" {
+    alias {{ .Root }};
+    set $_rewrite_path "{{ .Passthru }}";
+    try_files       $uri @rewrite;
+    expires         0;
+}
+location "{{ .Path }}/" {
+    alias {{ .Root }};
+    location {{ .Path }}/ {
+        set $_rewrite_path "{{ .Passthru }}";
+        try_files       $uri @rewrite;
+        expires         0;
+    }
+    location ~ ".+?\.php(?=$|/)" {    
+        set $_rewrite_path "/index.php";
+        try_files       $fastcgi_script_name @rewrite;
+        fastcgi_pass    127.0.0.1:{{ .Port }};
+        fastcgi_request_buffering on;
+        client_max_body_size 250m;
+        set $_document_root $document_root;
+        include         "fastcgi_params";
+        # Split the script name from the path info, set it as a variable so
+        # that it persists after try_files has resolved the actual filename.
+        fastcgi_split_path_info ^(.+?\.php(?=$|/))((?:/.*)?)$;
+        set $path_info  $fastcgi_path_info;
+        # Set environment variables
+        {{ range $key, $val := .Env }}
+        fastcgi_params  {{ $key }}    "{{ $val }}";
+        {{ end }}
+      }
+}
+
+{{ end }}

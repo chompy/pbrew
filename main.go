@@ -32,7 +32,11 @@ func main() {
 
 	//log.Println(core.GetRoutesForHostName("www.5dca.org", proj.Routes))
 
-	log.Println(proj.GetRelationships(proj.Apps[0]))
+	n, err := proj.GenerateNginxRoutes()
+	if err != nil {
+		panic(err)
+	}
+	log.Println(n)
 
 	// load services
 	/*services, err := core.LoadServiceList()

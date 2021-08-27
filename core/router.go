@@ -51,7 +51,6 @@ func GetRoutesForHostName(host string, routes []def.Route) []def.Route {
 		if thisHost == "" {
 			thisHost = defaultHostName
 		}
-
 		if thisHost != host {
 			continue
 		}
