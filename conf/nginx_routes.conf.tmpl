@@ -11,7 +11,7 @@ server {
     }
     {{ range .Locations }}
         {{ if eq .Type "upstream" }}
-        include "server/up_{{ .Upstream }}";
+        include "upstreams/{{ .Upstream }}";
         {{ else if eq .Type "redirect" }}
         # TODO
         {{ end }}

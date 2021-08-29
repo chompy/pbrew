@@ -11,7 +11,7 @@ import (
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 )
 
-var nginxAppTemplates = map[string]string{
+var nginxAppTemplateFiles = map[string]string{
 	"php": "conf/nginx_app_php.conf.tmpl",
 }
 
@@ -41,7 +41,7 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 	locations := make([]nginxAppLocationTemplate, 0)
 	for path, location := range app.Web.Locations {
 		path = strings.TrimRight(path, "/")
-		root, err := filepath.Abs(filepath.Join(path, location.Root))
+		root, err := filepath.Abs(filepath.Join(p.Path, location.Root))
 		if err != nil {
 			return nginxAppTemplate{}, errors.WithStack(err)
 		}
@@ -59,7 +59,7 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 
 // GenerateNginxApp generates nginx config for given application.
 func (p *Project) GenerateNginxApp(app *def.App) (string, error) {
-	templatePath := nginxAppTemplates[app.GetTypeName()]
+	templatePath := nginxAppTemplateFiles[app.GetTypeName()]
 	if templatePath == "" {
 		return "", errors.WithStack(errors.WithMessage(ErrNginxTemplateNotFound, app.GetTypeName()))
 	}

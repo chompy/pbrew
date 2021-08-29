@@ -1,10 +1,14 @@
 package core
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
@@ -71,10 +75,32 @@ func (s *Service) IsInstalled() bool {
 	return len(info["installed"].([]interface{})) > 0
 }
 
+// IsRunning returns true if service is running.
+func (s *Service) IsRunning() bool {
+	pidFile, err := ioutil.ReadFile(s.PidPath())
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+		output.Warn(err.Error())
+		return false
+	}
+	pid, err := strconv.Atoi(string(bytes.TrimSpace(pidFile)))
+	if err != nil {
+		output.Warn(err.Error())
+		return false
+	}
+	_, err = os.FindProcess(pid)
+	return err == nil
+}
+
 // Start will start the service.
 func (s *Service) Start() error {
 	if !s.IsInstalled() {
-		return errors.WithStack(ErrServiceNotInstalled)
+		return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, s.BrewName))
+	}
+	if s.IsRunning() {
+		return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
 	}
 	cmdStr := s.injectCommandParams(s.StartCmd)
 	if err := RunCommand(cmdStr); err != nil {
@@ -88,6 +114,10 @@ func (s *Service) Stop() error {
 	if !s.IsInstalled() {
 		return errors.WithStack(ErrServiceNotInstalled)
 	}
+	if !s.IsRunning() {
+		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+	}
+
 	cmdStr := s.injectCommandParams(s.StopCmd)
 	if err := RunCommand(cmdStr); err != nil {
 		return errors.WithStack(err)

@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
+
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 
 	"github.com/pkg/errors"
@@ -24,6 +26,7 @@ func LoadServiceList() (ServiceList, error) {
 	if loadedServiceList != nil {
 		return loadedServiceList, nil
 	}
+	done := output.Duration("Load Homebrew service list.")
 	yamlPath, err := os.Executable()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -37,6 +40,7 @@ func LoadServiceList() (ServiceList, error) {
 		return nil, errors.WithStack(err)
 	}
 	loadedServiceList = out
+	done()
 	return out, nil
 }
 

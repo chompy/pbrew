@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -14,20 +13,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-const nginxRouteTemplate = "conf/nginx_routes.conf.tmpl"
+const nginxRouteTemplateFile = "conf/nginx_routes.conf.tmpl"
 
-type routeTemplate struct {
+type nginxRouteTemplate struct {
 	ProjectName string
-	Hosts       []routeHostTemplate
+	Hosts       []nginxRouteHostTemplate
 }
 
-type routeHostTemplate struct {
+type nginxRouteHostTemplate struct {
 	Host      string
 	Port      int
-	Locations []routeLocationTemplate
+	Locations []nginxRouteLocationTemplate
 }
 
-type routeLocationTemplate struct {
+type nginxRouteLocationTemplate struct {
 	Host     string
 	Path     string
 	Type     string
@@ -35,10 +34,10 @@ type routeLocationTemplate struct {
 	To       string
 }
 
-func (p *Project) buildRouteTemplate() routeTemplate {
-	hostTemplates := make([]routeHostTemplate, 0)
+func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
+	hostTemplates := make([]nginxRouteHostTemplate, 0)
 	for _, hostName := range GetHostNames(p.Routes) {
-		locationTemplates := make([]routeLocationTemplate, 0)
+		locationTemplates := make([]nginxRouteLocationTemplate, 0)
 		for _, route := range GetRoutesForHostName(hostName, p.Routes) {
 			parsedRouteURL, err := url.Parse(route.Path)
 			if err != nil {
@@ -47,34 +46,33 @@ func (p *Project) buildRouteTemplate() routeTemplate {
 			upstream := ""
 			if route.Type == "upstream" {
 				service := p.MatchRelationshipToService(route.Upstream)
-				log.Println(route.Upstream)
 				switch service := service.(type) {
 				case *def.App:
 					{
-						upstream = fmt.Sprintf("%s_%s.conf", p.Name, service.Name)
+						upstream = fmt.Sprintf("%s_%s", p.Name, service.Name)
 						break
 					}
 				case *def.Service:
 					{
-						upstream = fmt.Sprintf("%s_%s.conf", p.Name, service.Name)
+						upstream = fmt.Sprintf("%s_%s", p.Name, service.Name)
 						break
 					}
 				}
 			}
-			locationTemplates = append(locationTemplates, routeLocationTemplate{
+			locationTemplates = append(locationTemplates, nginxRouteLocationTemplate{
 				Host:     hostName,
 				Path:     parsedRouteURL.Path,
 				Type:     route.Type,
 				Upstream: upstream,
 			})
 		}
-		hostTemplates = append(hostTemplates, routeHostTemplate{
+		hostTemplates = append(hostTemplates, nginxRouteHostTemplate{
 			Host:      hostName,
 			Port:      8080,
 			Locations: locationTemplates,
 		})
 	}
-	return routeTemplate{
+	return nginxRouteTemplate{
 		ProjectName: p.Name,
 		Hosts:       hostTemplates,
 	}
@@ -86,13 +84,13 @@ func (p *Project) GenerateNginxRoutes() (string, error) {
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	templatePath := filepath.Join(filepath.Dir(execPath), nginxRouteTemplate)
+	templatePath := filepath.Join(filepath.Dir(execPath), nginxRouteTemplateFile)
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, p.buildRouteTemplate()); err != nil {
+	if err := tmpl.Execute(&buf, p.buildNginxRouteTemplate()); err != nil {
 		return "", errors.WithStack(err)
 	}
 	return buf.String(), nil

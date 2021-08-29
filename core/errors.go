@@ -8,4 +8,6 @@ var (
 	ErrServiceNotInstalled   = errors.New("service not installed")
 	ErrInvalidDef            = errors.New("invalid definition")
 	ErrNginxTemplateNotFound = errors.New("nginx template not found")
+	ErrServiceAlreadyRunning = errors.New("service already running")
+	ErrServiceNotRunning     = errors.New("service not running")
 )

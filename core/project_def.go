@@ -1,7 +1,6 @@
 package core
 
 import (
-	"log"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -57,7 +56,6 @@ func GenerateRelationships(d interface{}) []map[string]interface{} {
 				rel["ip"] = "127.0.0.1"
 				rel["port"] = brewService.Port
 				rel["rel"] = d.GetTypeName()
-				log.Println(rel)
 				out = append(out, rel)
 			}
 			return out
