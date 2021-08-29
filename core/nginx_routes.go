@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
@@ -28,6 +29,7 @@ type nginxRouteHostTemplate struct {
 
 type nginxRouteLocationTemplate struct {
 	Host     string
+	Original string
 	Path     string
 	Type     string
 	Upstream string
@@ -39,7 +41,14 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 	for _, hostName := range GetHostNames(p.Routes) {
 		locationTemplates := make([]nginxRouteLocationTemplate, 0)
 		for _, route := range GetRoutesForHostName(hostName, p.Routes) {
+			if route.Path != "" && route.Path[0] == '.' {
+				continue
+			}
 			parsedRouteURL, err := url.Parse(route.Path)
+			if err != nil {
+				continue
+			}
+			parsedOriginalURL, err := url.Parse(route.OriginalURL)
 			if err != nil {
 				continue
 			}
@@ -58,10 +67,14 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 						break
 					}
 				}
+				if upstream == "" {
+					continue
+				}
 			}
 			locationTemplates = append(locationTemplates, nginxRouteLocationTemplate{
 				Host:     hostName,
-				Path:     parsedRouteURL.Path,
+				Original: parsedOriginalURL.Host,
+				Path:     strings.TrimRight(parsedRouteURL.Path, "/"),
 				Type:     route.Type,
 				Upstream: upstream,
 			})

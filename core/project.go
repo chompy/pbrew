@@ -47,6 +47,11 @@ func LoadProject(projPath string) (*Project, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	routes, err = def.ExpandRoutes(routes, "platform.cc")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
 	output.Info(
 		fmt.Sprintf("Found %d app(s), %d service(s), %d route(s).", len(apps), len(services), len(routes)),
 	)

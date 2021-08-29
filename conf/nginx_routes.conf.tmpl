@@ -1,21 +1,24 @@
 # {{ .ProjectName }}
 
 {{ range .Hosts }}
-
 server {
     listen          {{ .Port }};
     server_name     {{ .Host }};
     error_page      500 502 503 504  /50x.html;
+    client_max_body_size 200M;
     location = /50x.html {
         root   html;
     }
     {{ range .Locations }}
+    location "{{ .Path }}/" {
         {{ if eq .Type "upstream" }}
-        include "upstreams/{{ .Upstream }}";
+        location ~* {
+            include "upstreams/{{ .Upstream }}";
+        }
         {{ else if eq .Type "redirect" }}
         # TODO
         {{ end }}
+    }
     {{ end }}
 }
-
 {{ end }}

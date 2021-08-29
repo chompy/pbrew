@@ -21,6 +21,9 @@ func GenerateRelationships(d interface{}) []map[string]interface{} {
 			rel["hostname"] = localHostName
 			rel["host"] = localHostName
 			rel["ip"] = "127.0.0.1"
+			if rel["rel"] == "" {
+				rel["rel"] = "http"
+			}
 			return []map[string]interface{}{rel}
 		}
 	case def.Service:
