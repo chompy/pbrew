@@ -28,7 +28,7 @@ func NginxService() *Service {
 		BrewName:       "nginx",
 		PostInstallCmd: "",
 		StartCmd: fmt.Sprintf(
-			"echo '%s' > {BREW_PATH}/etc/nginx/nginx.conf && {BREW_PATH}/opt/nginx/bin/nginx",
+			"echo '%s' | base64 -d > {BREW_PATH}/etc/nginx/nginx.conf && {BREW_PATH}/opt/nginx/bin/nginx -c {BREW_PATH}/etc/nginx/nginx.conf",
 			nginxConfB64,
 		),
 		StopCmd: "{BREW_PATH}/opt/nginx/bin/nginx -s stop",

@@ -77,6 +77,7 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 				Path:     strings.TrimRight(parsedRouteURL.Path, "/"),
 				Type:     route.Type,
 				Upstream: upstream,
+				To:       route.To,
 			})
 		}
 		hostTemplates = append(hostTemplates, nginxRouteHostTemplate{

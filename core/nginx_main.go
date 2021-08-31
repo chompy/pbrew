@@ -17,7 +17,7 @@ type nginxMainTemplate struct {
 
 func buildNginxMainTemplate() nginxMainTemplate {
 	return nginxMainTemplate{
-		Pid: "/tmp/pbrew_nginx.pid",
+		Pid: "/tmp/pbrew-nginx.pid",
 	}
 }
 

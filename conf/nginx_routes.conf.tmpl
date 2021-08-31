@@ -9,16 +9,26 @@ server {
     location = /50x.html {
         root   html;
     }
+
+    set $_rewrite_path "";
+    set $_rewrite_querystring "";
+    location @rewrite {
+          rewrite . $_rewrite_path;
+    }
+    location @rewrite_qs {
+          rewrite . $_rewrite_path?$_rewrite_querystring;
+    }
+
     {{ range .Locations }}
+    {{ if eq .Type "upstream" }}
     location "{{ .Path }}/" {
-        {{ if eq .Type "upstream" }}
         location ~* {
             include "upstreams/{{ .Upstream }}";
         }
-        {{ else if eq .Type "redirect" }}
-        # TODO
-        {{ end }}
     }
+    {{ else if eq .Type "redirect" }}
+    # TODO redirect to {{ .To }}
+    {{ end }}
     {{ end }}
 }
 {{ end }}

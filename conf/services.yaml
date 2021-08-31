@@ -21,7 +21,7 @@
 "mysql-*":
   brew_name: "mariadb"
   start: |
-    {BREW_PATH}/opt/mariadb/bin/mariadbd --pid-file={PID_FILE} &
+    {BREW_PATH}/opt/mariadb/bin/mariadbd-safe --nowatch --pid-file={PID_FILE} &
   stop: |
     pkill -f {PID_FILE}
   post_install: |
@@ -31,7 +31,7 @@
 "mariadb-*":
   brew_name: "mariadb"
   start: |
-    {BREW_PATH}/opt/mariadb/bin/mariadbd --pid-file={PID_FILE} &
+    {BREW_PATH}/opt/mariadb/bin/mariadbd-safe --nowatch --pid-file={PID_FILE} &
   stop: |
     pkill -f {PID_FILE}
   post_install: |
