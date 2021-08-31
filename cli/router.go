@@ -19,6 +19,9 @@ var routerStartCmd = &cobra.Command{
 		if nginx == nil {
 			handleError(core.ErrServiceNotFound)
 		}
+		if !nginx.IsInstalled() {
+			handleError(nginx.Install())
+		}
 		handleError(nginx.Start())
 	},
 }

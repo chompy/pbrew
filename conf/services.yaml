@@ -1,7 +1,7 @@
 "php-7.4":
   brew_name: "php@7.4"
   start: |
-    {BREW_PATH}/opt/php@7.4/sbin/php-fpm -D -g /tmp/pbrew-php74.pid
+    {BREW_PATH}/opt/php@7.4/sbin/php-fpm -D -g {PID_FILE}
   stop: |
     pkill -f /tmp/pbrew-php74.pid
   post_install: |

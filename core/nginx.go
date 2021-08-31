@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -22,17 +23,16 @@ func NginxService() *Service {
 		output.Warn(err.Error())
 		return nil
 	}
-	nginxConfPath := filepath.Join(BrewPath(), "etc", "nginx", "nginx.conf")
-	if err := ioutil.WriteFile(nginxConfPath, []byte(nginxConf), 0655); err != nil {
-		output.Warn(err.Error())
-		return nil
-	}
+	nginxConfB64 := base64.StdEncoding.EncodeToString([]byte(nginxConf))
 	return &Service{
 		BrewName:       "nginx",
 		PostInstallCmd: "",
-		StartCmd:       "{BREW_PATH}/opt/nginx/bin/nginx",
-		StopCmd:        "{BREW_PATH}/opt/nginx/bin/nginx -s stop",
-		Port:           8080,
+		StartCmd: fmt.Sprintf(
+			"echo '%s' > {BREW_PATH}/etc/nginx/nginx.conf && {BREW_PATH}/opt/nginx/bin/nginx",
+			nginxConfB64,
+		),
+		StopCmd: "{BREW_PATH}/opt/nginx/bin/nginx -s stop",
+		Port:    8080,
 	}
 }
 
