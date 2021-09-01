@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func wildcardCompare(original string, test string) bool {
@@ -15,6 +17,18 @@ func wildcardCompare(original string, test string) bool {
 		return false
 	}
 	return regex.MatchString(original)
+}
+
+func appPath() (string, error) {
+	execPath, err := os.Executable()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	execPath, err = filepath.EvalSymlinks(execPath)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return filepath.Dir(execPath), nil
 }
 
 func scanPlatformAppYaml(topPath string, disableOverrides bool) [][]string {

@@ -22,6 +22,7 @@ type Service struct {
 	PostInstallCmd string `yaml:"post_install"`
 	StartCmd       string `yaml:"start"`
 	StopCmd        string `yaml:"stop"`
+	ReloadCmd      string `yaml:"reload"`
 	Port           int    `yaml:"port"`
 }
 
@@ -96,6 +97,7 @@ func (s *Service) IsRunning() bool {
 
 // Start will start the service.
 func (s *Service) Start() error {
+	done := output.Duration(fmt.Sprintf("Start %s.", s.BrewName))
 	if !s.IsInstalled() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, s.BrewName))
 	}
@@ -106,11 +108,13 @@ func (s *Service) Start() error {
 	if err := RunCommand(cmdStr); err != nil {
 		return errors.WithStack(err)
 	}
+	done()
 	return nil
 }
 
 // Stop will stop the service.
 func (s *Service) Stop() error {
+	done := output.Duration(fmt.Sprintf("Stop %s.", s.BrewName))
 	if !s.IsInstalled() {
 		return errors.WithStack(ErrServiceNotInstalled)
 	}
@@ -122,6 +126,27 @@ func (s *Service) Stop() error {
 	if err := RunCommand(cmdStr); err != nil {
 		return errors.WithStack(err)
 	}
+	done()
+	return nil
+}
+
+// Reload reloads the service configuration.
+func (s *Service) Reload() error {
+	done := output.Duration(fmt.Sprintf("Reload %s.", s.BrewName))
+	if s.ReloadCmd == "" {
+		return errors.WithStack(errors.WithMessage(ErrServiceReloadNotDefined, s.BrewName))
+	}
+	if !s.IsInstalled() {
+		return errors.WithStack(ErrServiceNotInstalled)
+	}
+	if !s.IsRunning() {
+		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+	}
+	cmdStr := s.injectCommandParams(s.ReloadCmd)
+	if err := RunCommand(cmdStr); err != nil {
+		return errors.WithStack(err)
+	}
+	done()
 	return nil
 }
 
@@ -132,7 +157,7 @@ func (s *Service) SocketPath() string {
 
 // PidPath returns path to service pid file.
 func (s *Service) PidPath() string {
-	return fmt.Sprintf("/tmp/pbrew-%s.pid", s.BrewName)
+	return fmt.Sprintf("/tmp/pbrew-%s.pid", strings.ReplaceAll(s.BrewName, "@", "-"))
 }
 
 func (s *Service) injectCommandParams(cmd string) string {
@@ -141,5 +166,7 @@ func (s *Service) injectCommandParams(cmd string) string {
 	cmd = strings.ReplaceAll(cmd, "{SOCKET}", s.SocketPath())
 	cmd = strings.ReplaceAll(cmd, "{PID_FILE}", s.PidPath())
 	cmd = strings.ReplaceAll(cmd, "{PID_FILE_ESC}", strings.ReplaceAll(s.PidPath(), "/", "\\/"))
+	appPath, _ := appPath()
+	cmd = strings.ReplaceAll(cmd, "{APP_PATH}", appPath)
 	return cmd
 }

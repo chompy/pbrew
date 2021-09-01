@@ -2,7 +2,6 @@ package core
 
 import (
 	"bytes"
-	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -65,11 +64,11 @@ func (p *Project) GenerateNginxApp(app *def.App) (string, error) {
 	if templatePath == "" {
 		return "", errors.WithStack(errors.WithMessage(ErrNginxTemplateNotFound, app.GetTypeName()))
 	}
-	execPath, err := os.Executable()
+	appPath, err := appPath()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	tmpl, err := template.ParseFiles(filepath.Join(filepath.Dir(execPath), templatePath))
+	tmpl, err := template.ParseFiles(filepath.Join(appPath, templatePath))
 	if err != nil {
 		return "", errors.WithStack(err)
 	}

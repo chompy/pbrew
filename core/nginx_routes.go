@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -82,11 +81,11 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 
 // GenerateNginxRoutes returns nginx configuration for project routes.
 func (p *Project) GenerateNginxRoutes() (string, error) {
-	execPath, err := os.Executable()
+	appPath, err := appPath()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	templatePath := filepath.Join(filepath.Dir(execPath), nginxRouteTemplateFile)
+	templatePath := filepath.Join(appPath, nginxRouteTemplateFile)
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return "", errors.WithStack(err)

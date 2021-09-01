@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"gitlab.com/contextualcode/pbrew/core"
 )
@@ -21,16 +22,44 @@ var projectStartCmd = &cobra.Command{
 		handleError(proj.Start())
 		// generate nginx
 		handleError(core.NginxAdd(proj))
-		// start nginx
+		// start/reload nginx
 		nginx := core.NginxService()
 		if nginx == nil {
-			handleError(core.ErrServiceNotFound)
+			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
+		}
+		if nginx.IsRunning() {
+			handleError(nginx.Reload())
+			return
 		}
 		handleError(nginx.Start())
 	},
 }
 
+var projectStopCmd = &cobra.Command{
+	Use:   "stop",
+	Short: "Stop project.",
+	Run: func(cmd *cobra.Command, args []string) {
+		// stop project
+		proj, err := getProject()
+		handleError(err)
+		handleError(proj.Stop())
+		// generate nginx
+		handleError(core.NginxDel(proj))
+		// reload nginx
+		nginx := core.NginxService()
+		if nginx == nil {
+			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
+		}
+		if nginx.IsRunning() {
+			handleError(nginx.Reload())
+			return
+		}
+		// TODO stop if last project
+	},
+}
+
 func init() {
 	projectCmd.AddCommand(projectStartCmd)
+	projectCmd.AddCommand(projectStopCmd)
 	RootCmd.AddCommand(projectCmd)
 }

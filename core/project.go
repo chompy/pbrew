@@ -139,3 +139,23 @@ func (p *Project) Start() error {
 	done()
 	return nil
 }
+
+// Stop stops the project.
+func (p *Project) Stop() error {
+	done := output.Duration("Stopping services.")
+	services, err := p.GetServices()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// stop services
+	for _, service := range services {
+		if !service.IsRunning() {
+			continue
+		}
+		if err := service.Stop(); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	done()
+	return nil
+}

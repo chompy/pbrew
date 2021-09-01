@@ -2,7 +2,7 @@ package core
 
 import (
 	"bytes"
-	"os"
+	"os/user"
 	"path/filepath"
 	"text/template"
 
@@ -12,22 +12,29 @@ import (
 const nginxMainTemplateFile = "conf/nginx_main.conf.tmpl"
 
 type nginxMainTemplate struct {
-	Pid string
+	User string
+	Pid  string
 }
 
 func buildNginxMainTemplate() nginxMainTemplate {
+	currentUser, err := user.Current()
+	nginxUserName := "nginx"
+	if err != nil {
+		nginxUserName = currentUser.Name
+	}
 	return nginxMainTemplate{
-		Pid: "/tmp/pbrew-nginx.pid",
+		User: nginxUserName,
+		Pid:  "/tmp/pbrew-nginx.pid",
 	}
 }
 
 // GenerateNginxMain returns main nginx configuration.
 func GenerateNginxMain() (string, error) {
-	execPath, err := os.Executable()
+	appPath, err := appPath()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	templatePath := filepath.Join(filepath.Dir(execPath), nginxMainTemplateFile)
+	templatePath := filepath.Join(appPath, nginxMainTemplateFile)
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return "", errors.WithStack(err)

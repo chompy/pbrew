@@ -15,6 +15,12 @@ import (
 
 const defaultHostName = "localhost"
 
+const nginxStartCmd = `
+	cp {APP_PATH}/conf/fastcgi_params.normal {BREW_PATH}/etc/nginx/fastcgi_params.normal
+	echo '%s' | base64 -d > {BREW_PATH}/etc/nginx/nginx.conf
+	{BREW_PATH}/opt/nginx/bin/nginx -c {BREW_PATH}/etc/nginx/nginx.conf
+`
+
 // NginxService returns the service for nginx.
 func NginxService() *Service {
 	nginxConf, err := GenerateNginxMain()
@@ -27,11 +33,12 @@ func NginxService() *Service {
 		BrewName:       "nginx",
 		PostInstallCmd: "",
 		StartCmd: fmt.Sprintf(
-			"echo '%s' | base64 -d > {BREW_PATH}/etc/nginx/nginx.conf && {BREW_PATH}/opt/nginx/bin/nginx -c {BREW_PATH}/etc/nginx/nginx.conf",
+			nginxStartCmd,
 			nginxConfB64,
 		),
-		StopCmd: "{BREW_PATH}/opt/nginx/bin/nginx -s stop",
-		Port:    8080,
+		StopCmd:   "{BREW_PATH}/opt/nginx/bin/nginx -s stop",
+		ReloadCmd: "{BREW_PATH}/opt/nginx/bin/nginx -s reload",
+		Port:      8080,
 	}
 }
 

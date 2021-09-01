@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"gitlab.com/contextualcode/pbrew/core"
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 	"golang.org/x/term"
 )
@@ -40,15 +41,21 @@ func getProject() (*core.Project, error) {
 	return proj, err
 }
 
-/*
-	// install brew
-	if !core.IsBrewInstalled() {
-		done := output.Duration("Installing Homebrew.")
-		if err := core.BrewInstall(); err != nil {
-			panic(err)
+// getService fetches a service definition.
+func getService(cmd *cobra.Command, proj *core.Project, filterType []string) (def.Service, error) {
+	name := cmd.PersistentFlags().Lookup("service").Value.String()
+	for _, serv := range proj.Services {
+		for _, t := range filterType {
+			if (serv.Name == name || name == "") && t == serv.GetTypeName() {
+				return serv, nil
+			}
 		}
-		done()
-	}*/
+	}
+	if name == "" {
+		return def.Service{}, errors.WithStack(errors.WithMessage(ErrServiceNotFound, strings.Join(filterType, ",")))
+	}
+	return def.Service{}, errors.WithStack(errors.WithMessage(ErrServiceNotFound, name))
+}
 
 // drawTable draws an ASCII table to stdout.
 func drawTable(head []string, data [][]string) {
