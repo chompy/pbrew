@@ -16,6 +16,7 @@ var nginxAppTemplateFiles = map[string]string{
 }
 
 type nginxAppTemplate struct {
+	Port      int
 	Locations []nginxAppLocationTemplate
 }
 
@@ -53,6 +54,7 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 		})
 	}
 	return nginxAppTemplate{
+		Port:      p.GetUpstreamPort(app),
 		Locations: locations,
 	}, nil
 }

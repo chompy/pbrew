@@ -2,14 +2,11 @@ package core
 
 import (
 	"bytes"
-	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
-
-	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 
 	"github.com/pkg/errors"
 )
@@ -28,12 +25,12 @@ type nginxRouteHostTemplate struct {
 }
 
 type nginxRouteLocationTemplate struct {
-	Host     string
-	Original string
-	Path     string
-	Type     string
-	Upstream string
-	To       string
+	Host         string
+	Original     string
+	Path         string
+	Type         string
+	UpstreamPort int
+	To           string
 }
 
 func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
@@ -52,32 +49,23 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 			if err != nil {
 				continue
 			}
-			upstream := ""
+			upstreamPort := 0
 			if route.Type == "upstream" {
 				service := p.MatchRelationshipToService(route.Upstream)
-				switch service := service.(type) {
-				case *def.App:
-					{
-						upstream = fmt.Sprintf("%s_%s", p.Name, service.Name)
-						break
-					}
-				case *def.Service:
-					{
-						upstream = fmt.Sprintf("%s_%s", p.Name, service.Name)
-						break
-					}
+				if service != nil {
+					upstreamPort = p.GetUpstreamPort(service)
 				}
-				if upstream == "" {
+				if upstreamPort == 0 {
 					continue
 				}
 			}
 			locationTemplates = append(locationTemplates, nginxRouteLocationTemplate{
-				Host:     hostName,
-				Original: parsedOriginalURL.Host,
-				Path:     strings.TrimRight(parsedRouteURL.Path, "/"),
-				Type:     route.Type,
-				Upstream: upstream,
-				To:       route.To,
+				Host:         hostName,
+				Original:     parsedOriginalURL.Host,
+				Path:         strings.TrimRight(parsedRouteURL.Path, "/"),
+				Type:         route.Type,
+				UpstreamPort: upstreamPort,
+				To:           route.To,
 			})
 		}
 		hostTemplates = append(hostTemplates, nginxRouteHostTemplate{
