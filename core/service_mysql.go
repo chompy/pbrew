@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -48,5 +49,10 @@ func (s *Service) MySQLShell(database string) error {
 	if err := cmd.Run(); err != nil {
 		return errors.WithStack(errors.WithMessage(err, s.BrewName))
 	}
+	return nil
+}
+
+// MySQLDump dumps the given mysql database.
+func (s *Service) MySQLDump(database string, out io.Writer) error {
 	return nil
 }
