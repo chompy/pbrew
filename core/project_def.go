@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -13,7 +14,7 @@ import (
 const localHostName = "localhost"
 
 // GenerateRelationships returns available relationship mappings for given service definition.
-func GenerateRelationships(d interface{}) []map[string]interface{} {
+func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} {
 	switch d := d.(type) {
 	case *def.App:
 		{
@@ -33,12 +34,16 @@ func GenerateRelationships(d interface{}) []map[string]interface{} {
 				output.Warn(err.Error())
 				return nil
 			}
+			port := 0
 			brewService, err := brewServices.MatchDef(d)
 			if err != nil {
 				if !errors.Is(err, ErrServiceNotFound) {
 					output.Warn(err.Error())
+					return nil
 				}
-				return nil
+			}
+			if brewService != nil {
+				port = brewService.Port
 			}
 			out := make([]map[string]interface{}, 0)
 			if d.Configuration["endpoints"] != nil {
@@ -47,9 +52,14 @@ func GenerateRelationships(d interface{}) []map[string]interface{} {
 					rel["hostname"] = localHostName
 					rel["host"] = localHostName
 					rel["ip"] = "127.0.0.1"
-					rel["port"] = brewService.Port
+					rel["port"] = port
 					rel["rel"] = name
-					rel["path"] = config.(map[string]interface{})["default_schema"].(string)
+					if brewService != nil && brewService.IsMySQL() {
+						rel["path"] = fmt.Sprintf("%s_%s", p.Name, config.(map[string]interface{})["default_schema"].(string))
+						rel["username"] = mysqlUser
+						rel["password"] = mysqlPass
+						rel["scheme"] = "mysql"
+					}
 					out = append(out, rel)
 				}
 			} else {
@@ -57,7 +67,7 @@ func GenerateRelationships(d interface{}) []map[string]interface{} {
 				rel["hostname"] = localHostName
 				rel["host"] = localHostName
 				rel["ip"] = "127.0.0.1"
-				rel["port"] = brewService.Port
+				rel["port"] = port
 				rel["rel"] = d.GetTypeName()
 				out = append(out, rel)
 			}
@@ -68,7 +78,7 @@ func GenerateRelationships(d interface{}) []map[string]interface{} {
 }
 
 // MapRelationships returns all relationships for given service definition.
-func (p *Project) MapRelationships(d interface{}) map[string]map[string]interface{} {
+func (p *Project) MapRelationships(d interface{}) map[string][]map[string]interface{} {
 	var rels map[string]string
 	switch d := d.(type) {
 	case *def.App:
@@ -90,15 +100,15 @@ func (p *Project) MapRelationships(d interface{}) map[string]map[string]interfac
 	if rels == nil {
 		return nil
 	}
-	out := make(map[string]map[string]interface{})
+	out := make(map[string][]map[string]interface{})
 	for relName, rel := range rels {
 		relSplit := strings.Split(rel, ":")
+		out[relName] = make([]map[string]interface{}, 0)
 		for _, service := range p.Services {
-			serviceRels := GenerateRelationships(service)
+			serviceRels := p.GenerateRelationships(service)
 			for _, serviceRel := range serviceRels {
 				if service.Name == relSplit[0] && serviceRel["rel"] == relSplit[1] {
-					out[relName] = serviceRel
-					break
+					out[relName] = append(out[relName], serviceRel)
 				}
 			}
 		}
@@ -112,7 +122,7 @@ func (p *Project) MatchRelationshipToService(rel string) interface{} {
 	// look for service match
 	for _, service := range p.Services {
 		if service.Name == relSplit[0] {
-			serviceRels := GenerateRelationships(service)
+			serviceRels := p.GenerateRelationships(service)
 			for _, serviceRel := range serviceRels {
 				if serviceRel["rel"] == relSplit[1] {
 					return service
@@ -127,7 +137,7 @@ func (p *Project) MatchRelationshipToService(rel string) interface{} {
 	// look for app match
 	for _, service := range p.Apps {
 		if service.Name == relSplit[0] {
-			serviceRels := GenerateRelationships(service)
+			serviceRels := p.GenerateRelationships(service)
 			for _, serviceRel := range serviceRels {
 				if serviceRel["rel"] == relSplit[1] {
 					return service

@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
@@ -25,9 +26,19 @@ func (p *Project) Env(d interface{}) map[string]string {
 	case *def.App:
 		{
 			return map[string]string{
-				"PLATFORM_RELATIONSHIPS": p.EnvPlatformRelationships(d),
-				"PLATFORM_BRANCH":        "pbrew",
-				"PLATFORM_ENTROPY":       "--random--",
+				"PLATFORM_APP_DIR":          p.Path,
+				"PLATFORM_DIR":              p.Path,
+				"PLATFORM_DOCUMENT_ROOT":    "",
+				"PLATFORM_BRANCH":           "pbrew",
+				"PLATFORM_PROJECT":          p.Name,
+				"PLATFORM_PROJECT_ENTROPY":  "--random--",
+				"PLATFORM_ENVIRONMENT":      fmt.Sprintf("pbrew-%s", p.Name),
+				"PLATFORM_ENVIRONMENT_TYPE": "dev",
+				"PLATFORM_APPLICATION_NAME": d.Name,
+				"PLATFORM_APP_COMMAND":      "",
+				"PLATFORM_RELATIONSHIPS":    p.EnvPlatformRelationships(d),
+				"PLATFORM_ROUTES":           "",
+				"PLATFORM_VARIABLES":        "",
 			}
 		}
 	}

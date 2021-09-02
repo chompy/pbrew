@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"gitlab.com/contextualcode/pbrew/core"
 )
@@ -17,7 +18,7 @@ var routerStartCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		nginx := core.NginxService()
 		if nginx == nil {
-			handleError(core.ErrServiceNotFound)
+			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
 		}
 		if !nginx.IsInstalled() {
 			handleError(nginx.Install())
@@ -32,7 +33,7 @@ var routerStopCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		nginx := core.NginxService()
 		if nginx == nil {
-			handleError(core.ErrServiceNotFound)
+			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
 		}
 		handleError(nginx.Stop())
 	},
@@ -45,6 +46,11 @@ var routerAddCmd = &cobra.Command{
 		proj, err := getProject()
 		handleError(err)
 		handleError(core.NginxAdd(proj))
+		nginx := core.NginxService()
+		if nginx == nil {
+			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
+		}
+		handleError(nginx.Reload())
 	},
 }
 

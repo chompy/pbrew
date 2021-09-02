@@ -37,6 +37,7 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 	if err != nil {
 		return nginxAppTemplate{}, errors.WithStack(err)
 	}
+	env := p.Env(app)
 	// build location list
 	locations := make([]nginxAppLocationTemplate, 0)
 	for path, location := range app.Web.Locations {
@@ -50,6 +51,7 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 			Root:     root,
 			Passthru: location.Passthru.GetString(),
 			Port:     service.Port,
+			Env:      env,
 		})
 	}
 	return nginxAppTemplate{

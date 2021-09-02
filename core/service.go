@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
+
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 
 	"github.com/pkg/errors"
@@ -121,7 +123,6 @@ func (s *Service) Stop() error {
 	if !s.IsRunning() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
 	}
-
 	cmdStr := s.injectCommandParams(s.StopCmd)
 	if err := RunCommand(cmdStr); err != nil {
 		return errors.WithStack(err)
@@ -147,6 +148,27 @@ func (s *Service) Reload() error {
 		return errors.WithStack(err)
 	}
 	done()
+	return nil
+}
+
+// Setup configures service for given definition.
+func (s *Service) Setup(d interface{}, p *Project) error {
+	switch d := d.(type) {
+	case *def.Service:
+		{
+			done := output.Duration(fmt.Sprintf("Setup %s.", d.Name))
+			if !s.IsRunning() {
+				return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+			}
+			if s.IsMySQL() {
+				if err := s.mySQLSetup(d, p); err != nil {
+					return errors.WithStack(err)
+				}
+			}
+			done()
+			break
+		}
+	}
 	return nil
 }
 

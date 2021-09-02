@@ -65,8 +65,8 @@ func LoadProject(projPath string) (*Project, error) {
 	}, nil
 }
 
-// GetServices returns list of Homebrew services used by project.
-func (p *Project) GetServices() ([]*Service, error) {
+// GetBrewServices returns list of Homebrew services used by project.
+func (p *Project) GetBrewServices() ([]*Service, error) {
 	serviceList, err := LoadServiceList()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -97,14 +97,14 @@ func (p *Project) GetServices() ([]*Service, error) {
 
 // InstallServices installs all Homebrew services for project.
 func (p *Project) InstallServices() error {
-	done := output.Duration("Installing services.")
-	services, err := p.GetServices()
+	done := output.Duration("Installing services. (THIS MIGHT TAKE A WHILE.)")
+	services, err := p.GetBrewServices()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	for _, service := range services {
 		if service.IsInstalled() {
-			output.Info(fmt.Sprintf("Service '%s' already installed.", service.BrewName))
+			output.LogInfo(fmt.Sprintf("Service '%s' already installed.", service.BrewName))
 			continue
 		}
 		d2 := output.Duration(fmt.Sprintf("Installing '%s' service.", service.BrewName))
@@ -117,24 +117,49 @@ func (p *Project) InstallServices() error {
 	return nil
 }
 
-// Start starts the project.
-func (p *Project) Start() error {
-	done := output.Duration("Starting services.")
-	services, err := p.GetServices()
+// SetupServices configures services for project.
+func (p *Project) SetupServices() error {
+	done := output.Duration("Setup services.")
+	serviceList, err := LoadServiceList()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// check installed
-	for _, service := range services {
-		if !service.IsInstalled() {
-			return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, service.BrewName))
+	for _, service := range p.Services {
+		brewService, err := serviceList.MatchDef(service)
+		if err != nil {
+			if errors.Is(err, ErrServiceNotFound) {
+				continue
+			}
+			return errors.WithStack(err)
 		}
+		if err := brewService.Setup(&service, p); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	done()
+	return nil
+}
+
+// Start starts the project.
+func (p *Project) Start() error {
+	done := output.Duration("Starting services.")
+	services, err := p.GetBrewServices()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// install services
+	if err := p.InstallServices(); err != nil {
+		return errors.WithStack(err)
 	}
 	// start services
 	for _, service := range services {
 		if err := service.Start(); err != nil {
 			return errors.WithStack(err)
 		}
+	}
+	// setup services
+	if err := p.SetupServices(); err != nil {
+		return errors.WithStack(err)
 	}
 	done()
 	return nil
@@ -143,7 +168,7 @@ func (p *Project) Start() error {
 // Stop stops the project.
 func (p *Project) Stop() error {
 	done := output.Duration("Stopping services.")
-	services, err := p.GetServices()
+	services, err := p.GetBrewServices()
 	if err != nil {
 		return errors.WithStack(err)
 	}

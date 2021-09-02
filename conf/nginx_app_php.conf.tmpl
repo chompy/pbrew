@@ -38,7 +38,7 @@ server {
             set $path_info  $fastcgi_path_info;
             # Set environment variables
             {{ range $key, $val := .Env }}
-            fastcgi_params  {{ $key }}    "{{ $val }}";
+            fastcgi_param  {{ $key }}    "{{ $val }}";
             {{ end }}
         }
     }
