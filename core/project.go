@@ -146,19 +146,21 @@ func (p *Project) SetupServices() error {
 // Start starts the project.
 func (p *Project) Start() error {
 	done := output.Duration("Starting services.")
-	services, err := p.GetBrewServices()
-	if err != nil {
-		return errors.WithStack(err)
-	}
 	// check if brew is installed
 	if !IsBrewInstalled() {
-		return errors.WithStack(BrewInstall())
+		if err := BrewInstall(); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 	// install services
 	if err := p.InstallServices(); err != nil {
 		return errors.WithStack(err)
 	}
 	// start services
+	services, err := p.GetBrewServices()
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	for _, service := range services {
 		if err := service.Start(); err != nil {
 			return errors.WithStack(err)

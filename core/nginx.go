@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -52,6 +53,9 @@ func NginxAdd(proj *Project) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	if err := os.MkdirAll(filepath.Join(BrewPath(), "etc", "nginx", "servers"), 0755); err != nil {
+		return errors.WithStack(err)
+	}
 	if err := ioutil.WriteFile(
 		filepath.Join(BrewPath(), "etc", "nginx", "servers", proj.Name),
 		[]byte(nginxRoutes),
@@ -59,7 +63,6 @@ func NginxAdd(proj *Project) error {
 	); err != nil {
 		return errors.WithStack(err)
 	}
-
 	for _, app := range proj.Apps {
 		nginxApp, err := proj.GenerateNginxApp(app)
 		if err != nil {
