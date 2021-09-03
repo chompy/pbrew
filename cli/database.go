@@ -26,6 +26,7 @@ var databaseSql = &cobra.Command{
 		brewService, err := brewServiceList.MatchDef(serv)
 		handleError(err)
 		database := databaseCmd.PersistentFlags().Lookup("database").Value.String()
+		database = proj.ResolveDatabase(database)
 		handleError(brewService.MySQLShell(database))
 	},
 }
@@ -43,6 +44,7 @@ var databaseDump = &cobra.Command{
 		brewService, err := brewServiceList.MatchDef(serv)
 		handleError(err)
 		database := databaseCmd.PersistentFlags().Lookup("database").Value.String()
+		database = proj.ResolveDatabase(database)
 		handleError(brewService.MySQLDump(database, os.Stdout))
 	},
 }

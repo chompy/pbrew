@@ -2,7 +2,10 @@ package core
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
@@ -182,5 +185,59 @@ func (p *Project) Stop() error {
 		}
 	}
 	done()
+	return nil
+}
+
+// Shell opens a shell for given app.
+func (p *Project) Shell(d *def.App) error {
+	output.Info(fmt.Sprintf("Access shell for %s.", d.Name))
+	// get app brew service
+	serviceList, err := LoadServiceList()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	brewAppService, err := serviceList.MatchDef(d)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if !brewAppService.IsRunning() {
+		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewAppService.BrewName))
+	}
+	// build path
+	envPath := make([]string, 0)
+	envPath = append(envPath, filepath.Join(BrewPath(), "bin"))
+	for _, service := range p.Services {
+		brewService, err := serviceList.MatchDef(&service)
+		if err != nil {
+			if errors.Is(err, ErrServiceNotFound) {
+				continue
+			}
+			return errors.WithStack(err)
+		}
+		if !brewService.IsRunning() {
+			return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewService.BrewName))
+		}
+		envPath = append(envPath, filepath.Join(BrewPath(), "opt", brewService.BrewName, "bin"))
+	}
+	envPath = append(envPath, filepath.Join(BrewPath(), "opt", brewAppService.BrewName, "bin"))
+	envPath = append(envPath, "/bin")
+	envPath = append(envPath, "/usr/bin")
+
+	// inject env vars
+	env := make([]string, 0)
+	env = append(env, "PATH="+strings.Join(envPath, ":"))
+	env = append(env, fmt.Sprintf("PS1=%s-%s> ", p.Name, d.Name))
+	for k, v := range p.Env(d) {
+		env = append(env, fmt.Sprintf("%s=%s", k, v))
+	}
+	// build command attributes and run
+	cmd := exec.Command("bash", "--norc")
+	cmd.Env = env
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	if err := cmd.Run(); err != nil {
+		return errors.WithStack(errors.WithMessage(err, d.Name))
+	}
 	return nil
 }

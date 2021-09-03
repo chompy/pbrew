@@ -37,7 +37,7 @@ func (p *Project) Env(d interface{}) map[string]string {
 				"PLATFORM_APPLICATION_NAME": d.Name,
 				"PLATFORM_APP_COMMAND":      "",
 				"PLATFORM_RELATIONSHIPS":    p.EnvPlatformRelationships(d),
-				"PLATFORM_ROUTES":           "",
+				"PLATFORM_ROUTES":           "e30=",
 				"PLATFORM_VARIABLES":        "",
 			}
 		}

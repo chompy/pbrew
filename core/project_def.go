@@ -11,17 +11,15 @@ import (
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 )
 
-const localHostName = "localhost"
-
 // GenerateRelationships returns available relationship mappings for given service definition.
 func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} {
 	switch d := d.(type) {
 	case *def.App:
 		{
 			rel := d.GetEmptyRelationship()
-			rel["hostname"] = localHostName
-			rel["host"] = localHostName
 			rel["ip"] = "127.0.0.1"
+			rel["hostname"] = rel["ip"]
+			rel["host"] = rel["ip"]
 			if rel["rel"] == "" {
 				rel["rel"] = "http"
 			}
@@ -49,9 +47,9 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 			if d.Configuration["endpoints"] != nil {
 				for name, config := range d.Configuration["endpoints"].(map[string]interface{}) {
 					rel := d.GetEmptyRelationship()
-					rel["hostname"] = localHostName
-					rel["host"] = localHostName
 					rel["ip"] = "127.0.0.1"
+					rel["hostname"] = rel["ip"]
+					rel["host"] = rel["ip"]
 					rel["port"] = port
 					rel["rel"] = name
 					if brewService != nil && brewService.IsMySQL() {
@@ -64,9 +62,9 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 				}
 			} else {
 				rel := d.GetEmptyRelationship()
-				rel["hostname"] = localHostName
-				rel["host"] = localHostName
 				rel["ip"] = "127.0.0.1"
+				rel["hostname"] = rel["ip"]
+				rel["host"] = rel["ip"]
 				rel["port"] = port
 				rel["rel"] = d.GetTypeName()
 				out = append(out, rel)
@@ -146,4 +144,12 @@ func (p *Project) MatchRelationshipToService(rel string) interface{} {
 		}
 	}
 	return nil
+}
+
+// ResolveDatabase returns actual database name from endpoint.
+func (p *Project) ResolveDatabase(database string) string {
+	if !strings.HasPrefix(database, p.Name) {
+		database = fmt.Sprintf("%s_%s", p.Name, database)
+	}
+	return database
 }
