@@ -47,7 +47,7 @@ func (s *Service) Info() (map[string]interface{}, error) {
 
 // Install installs the service and runs the post install command.
 func (s *Service) Install() error {
-	if err := brewCommand("install", s.BrewName); err != nil {
+	if err := brewCommand("install", s.BrewName, "--force-bottle"); err != nil {
 		return errors.WithStack(err)
 	}
 	if err := brewCommand("services", "stop", s.BrewName); err != nil {
@@ -162,6 +162,20 @@ func (s *Service) Reload() error {
 // Setup configures service for given definition.
 func (s *Service) Setup(d interface{}, p *Project) error {
 	switch d := d.(type) {
+	case *def.App:
+		{
+			done := output.Duration(fmt.Sprintf("Setup %s.", d.Name))
+			if !s.IsRunning() {
+				return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+			}
+			if s.IsPHP() {
+				if err := s.phpSetup(d, p); err != nil {
+					return errors.WithStack(err)
+				}
+			}
+			done()
+			break
+		}
 	case *def.Service:
 		{
 			done := output.Duration(fmt.Sprintf("Setup %s.", d.Name))
@@ -192,6 +206,7 @@ func (s *Service) PidPath() string {
 
 func (s *Service) injectCommandParams(cmd string) string {
 	cmd = strings.ReplaceAll(cmd, "{BREW_PATH}", BrewPath())
+	cmd = strings.ReplaceAll(cmd, "{BREW_APP}", s.BrewName)
 	cmd = strings.ReplaceAll(cmd, "{PORT}", fmt.Sprintf("%d", s.Port))
 	cmd = strings.ReplaceAll(cmd, "{SOCKET}", s.SocketPath())
 	cmd = strings.ReplaceAll(cmd, "{PID_FILE}", s.PidPath())

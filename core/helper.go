@@ -1,12 +1,14 @@
 package core
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 func wildcardCompare(original string, test string) bool {
@@ -74,4 +76,19 @@ func scanPlatformAppYaml(topPath string, disableOverrides bool) [][]string {
 		}
 	}
 	return o
+}
+
+func loadYAML(name string, out interface{}) error {
+	appPath, err := appPath()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	yamlRaw, err := ioutil.ReadFile(filepath.Join(appPath, "conf", name+".yaml"))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := yaml.Unmarshal(yamlRaw, out); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }

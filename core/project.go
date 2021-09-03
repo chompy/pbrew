@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
@@ -137,6 +138,18 @@ func (p *Project) SetupServices() error {
 			return errors.WithStack(err)
 		}
 	}
+	for _, service := range p.Apps {
+		brewService, err := serviceList.MatchDef(service)
+		if err != nil {
+			if errors.Is(err, ErrServiceNotFound) {
+				continue
+			}
+			return errors.WithStack(err)
+		}
+		if err := brewService.Setup(service, p); err != nil {
+			return errors.WithStack(err)
+		}
+	}
 	done()
 	return nil
 }
@@ -165,6 +178,7 @@ func (p *Project) Start() error {
 		}
 	}
 	// setup services
+	time.Sleep(time.Second)
 	if err := p.SetupServices(); err != nil {
 		return errors.WithStack(err)
 	}
