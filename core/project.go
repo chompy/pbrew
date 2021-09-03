@@ -150,6 +150,10 @@ func (p *Project) Start() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	// check if brew is installed
+	if !IsBrewInstalled() {
+		return errors.WithStack(BrewInstall())
+	}
 	// install services
 	if err := p.InstallServices(); err != nil {
 		return errors.WithStack(err)

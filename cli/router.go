@@ -54,9 +54,26 @@ var routerAddCmd = &cobra.Command{
 	},
 }
 
+var routerDelCmd = &cobra.Command{
+	Use:     "delete",
+	Aliases: []string{"del"},
+	Short:   "Delete project from router.",
+	Run: func(cmd *cobra.Command, args []string) {
+		proj, err := getProject()
+		handleError(err)
+		handleError(core.NginxDel(proj))
+		nginx := core.NginxService()
+		if nginx == nil {
+			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
+		}
+		handleError(nginx.Reload())
+	},
+}
+
 func init() {
 	routerCmd.AddCommand(routerStartCmd)
 	routerCmd.AddCommand(routerStopCmd)
 	routerCmd.AddCommand(routerAddCmd)
+	routerCmd.AddCommand(routerDelCmd)
 	RootCmd.AddCommand(routerCmd)
 }

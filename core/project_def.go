@@ -148,7 +148,7 @@ func (p *Project) MatchRelationshipToService(rel string) interface{} {
 
 // ResolveDatabase returns actual database name from endpoint.
 func (p *Project) ResolveDatabase(database string) string {
-	if !strings.HasPrefix(database, p.Name) {
+	if database != "" && !strings.HasPrefix(database, p.Name) {
 		database = fmt.Sprintf("%s_%s", p.Name, database)
 	}
 	return database
