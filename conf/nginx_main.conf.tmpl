@@ -1,6 +1,6 @@
 worker_processes  1;
 pid        {{ .Pid }};
-user       {{ .User }};
+user       {{ .User }} {{ .Group }};
 
 events {
     worker_connections  1024;

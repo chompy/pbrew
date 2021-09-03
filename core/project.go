@@ -2,8 +2,6 @@ package core
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -228,7 +226,6 @@ func (p *Project) Shell(d *def.App) error {
 	envPath = append(envPath, filepath.Join(BrewPath(), "opt", brewAppService.BrewName, "bin"))
 	envPath = append(envPath, "/bin")
 	envPath = append(envPath, "/usr/bin")
-
 	// inject env vars
 	env := make([]string, 0)
 	env = append(env, "PATH="+strings.Join(envPath, ":"))
@@ -236,14 +233,12 @@ func (p *Project) Shell(d *def.App) error {
 	for k, v := range p.Env(d) {
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
 	}
-	// build command attributes and run
-	cmd := exec.Command("bash", "--norc")
+	// run interactive shell
+	cmd := NewShellCommand()
+	cmd.Args = []string{"--norc"}
 	cmd.Env = env
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-	if err := cmd.Run(); err != nil {
-		return errors.WithStack(errors.WithMessage(err, d.Name))
+	if err := cmd.Drop(); err != nil {
+		return errors.WithStack(err)
 	}
 	return nil
 }

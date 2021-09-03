@@ -12,19 +12,22 @@ import (
 const nginxMainTemplateFile = "conf/nginx_main.conf.tmpl"
 
 type nginxMainTemplate struct {
-	User string
-	Pid  string
+	User  string
+	Group string
+	Pid   string
 }
 
 func buildNginxMainTemplate() nginxMainTemplate {
 	currentUser, err := user.Current()
 	nginxUserName := "nginx"
-	if err != nil {
-		nginxUserName = currentUser.Name
+	nginxGroupName := "nobody"
+	if err == nil {
+		nginxUserName = currentUser.Username
 	}
 	return nginxMainTemplate{
-		User: nginxUserName,
-		Pid:  "/tmp/pbrew-nginx.pid",
+		User:  nginxUserName,
+		Group: nginxGroupName,
+		Pid:   "/tmp/pbrew-nginx.pid",
 	}
 }
 

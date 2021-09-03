@@ -37,7 +37,9 @@ func BrewInstall() error {
 	if err := os.MkdirAll(BrewPath(), 0755); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := RunCommand(fmt.Sprintf(brewInstall, BrewPath())); err != nil {
+	cmd := NewShellCommand()
+	cmd.Args = []string{"-c", fmt.Sprintf(brewInstall, BrewPath())}
+	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(err)
 	}
 	done()
@@ -51,7 +53,9 @@ func brewCommand(subCmds ...string) error {
 	}
 	done := output.Duration("Run brew " + strings.Join(subCmds, " ") + ".")
 	binPath := filepath.Join(BrewPath(), "bin/brew")
-	if err := RunCommand(binPath + " " + strings.Join(subCmds, " ")); err != nil {
+	cmd := NewShellCommand()
+	cmd.Args = []string{"-c", binPath + " " + strings.Join(subCmds, " ")}
+	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(err)
 	}
 	done()

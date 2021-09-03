@@ -62,8 +62,10 @@ func (s *Service) Install() error {
 // PostInstall runs the post install command for the service.
 func (s *Service) PostInstall() error {
 	cmdStr := s.injectCommandParams(s.PostInstallCmd)
-	if err := RunCommand(cmdStr); err != nil {
-		return errors.WithStack(err)
+	cmd := NewShellCommand()
+	cmd.Args = []string{"-c", cmdStr}
+	if err := cmd.Interactive(); err != nil {
+		return errors.WithStack(errors.WithMessage(err, s.BrewName))
 	}
 	return nil
 }
@@ -107,8 +109,10 @@ func (s *Service) Start() error {
 		return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
 	}
 	cmdStr := s.injectCommandParams(s.StartCmd)
-	if err := RunCommand(cmdStr); err != nil {
-		return errors.WithStack(err)
+	cmd := NewShellCommand()
+	cmd.Args = []string{"-c", cmdStr}
+	if err := cmd.Interactive(); err != nil {
+		return errors.WithStack(errors.WithMessage(err, s.BrewName))
 	}
 	done()
 	return nil
@@ -124,8 +128,10 @@ func (s *Service) Stop() error {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
 	}
 	cmdStr := s.injectCommandParams(s.StopCmd)
-	if err := RunCommand(cmdStr); err != nil {
-		return errors.WithStack(err)
+	cmd := NewShellCommand()
+	cmd.Args = []string{"-c", cmdStr}
+	if err := cmd.Interactive(); err != nil {
+		return errors.WithStack(errors.WithMessage(err, s.BrewName))
 	}
 	done()
 	return nil
@@ -144,8 +150,10 @@ func (s *Service) Reload() error {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
 	}
 	cmdStr := s.injectCommandParams(s.ReloadCmd)
-	if err := RunCommand(cmdStr); err != nil {
-		return errors.WithStack(err)
+	cmd := NewShellCommand()
+	cmd.Args = []string{"-c", cmdStr}
+	if err := cmd.Interactive(); err != nil {
+		return errors.WithStack(errors.WithMessage(err, s.BrewName))
 	}
 	done()
 	return nil

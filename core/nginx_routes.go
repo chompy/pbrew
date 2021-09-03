@@ -69,7 +69,7 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 		}
 		hostTemplates = append(hostTemplates, nginxRouteHostTemplate{
 			Host:      hostName,
-			Port:      8080,
+			Port:      80,
 			Locations: locationTemplates,
 		})
 	}

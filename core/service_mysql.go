@@ -3,8 +3,6 @@ package core
 import (
 	"fmt"
 	"io"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -50,11 +48,10 @@ func (s *Service) MySQLShell(database string) error {
 	if database != "" {
 		args = append(args, "-D", database)
 	}
-	cmd := exec.Command(pathToMySQL, args...)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-	if err := cmd.Run(); err != nil {
+	cmd := NewShellCommand()
+	cmd.Command = pathToMySQL
+	cmd.Args = args
+	if err := cmd.Drop(); err != nil {
 		return errors.WithStack(errors.WithMessage(err, s.BrewName))
 	}
 	return nil
@@ -62,16 +59,17 @@ func (s *Service) MySQLShell(database string) error {
 
 // MySQLDump dumps the given mysql database.
 func (s *Service) MySQLDump(database string, out io.Writer) error {
+	// TODO
 	return nil
 }
 
 // MySQLExecute executes given query.
 func (s *Service) MySQLExecute(query string) error {
 	pathToMySQL := filepath.Join(BrewPath(), "opt", s.BrewName, "bin", "mysql")
-	cmd := exec.Command(pathToMySQL, "-S", s.SocketPath(), "-e", query)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	if err := cmd.Run(); err != nil {
+	cmd := NewShellCommand()
+	cmd.Command = pathToMySQL
+	cmd.Args = []string{"-S", s.SocketPath(), "-e", query}
+	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(errors.WithMessage(err, s.BrewName))
 	}
 	return nil
