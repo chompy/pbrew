@@ -40,7 +40,7 @@ func (s *Service) Info() (map[string]interface{}, error) {
 		return nil, errors.WithStack(err)
 	}
 	if len(info) == 0 {
-		return nil, errors.WithStack(ErrServiceNotFound)
+		return nil, errors.WithStack(errors.WithMessage(ErrServiceNotFound, s.BrewName))
 	}
 	return info[0], nil
 }
@@ -48,13 +48,13 @@ func (s *Service) Info() (map[string]interface{}, error) {
 // Install installs the service and runs the post install command.
 func (s *Service) Install() error {
 	if err := brewCommand("install", s.BrewName, "--force-bottle"); err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	if err := brewCommand("services", "stop", s.BrewName); err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	if err := s.PostInstall(); err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	return nil
 }
@@ -65,7 +65,7 @@ func (s *Service) PostInstall() error {
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
 	if err := cmd.Interactive(); err != nil {
-		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+		return errors.WithMessage(err, s.BrewName)
 	}
 	return nil
 }
@@ -95,8 +95,8 @@ func (s *Service) IsRunning() bool {
 		output.Warn(err.Error())
 		return false
 	}
-	_, err = os.FindProcess(pid)
-	return err == nil
+	proc, err := os.FindProcess(pid)
+	return err == nil && proc != nil
 }
 
 // Start will start the service.
@@ -112,7 +112,7 @@ func (s *Service) Start() error {
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
 	if err := cmd.Interactive(); err != nil {
-		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+		return errors.WithMessage(err, s.BrewName)
 	}
 	done()
 	return nil
@@ -131,7 +131,7 @@ func (s *Service) Stop() error {
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
 	if err := cmd.Interactive(); err != nil {
-		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+		return errors.WithMessage(err, s.BrewName)
 	}
 	done()
 	return nil
@@ -144,7 +144,7 @@ func (s *Service) Reload() error {
 		return errors.WithStack(errors.WithMessage(ErrServiceReloadNotDefined, s.BrewName))
 	}
 	if !s.IsInstalled() {
-		return errors.WithStack(ErrServiceNotInstalled)
+		return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, s.BrewName))
 	}
 	if !s.IsRunning() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
@@ -153,38 +153,24 @@ func (s *Service) Reload() error {
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
 	if err := cmd.Interactive(); err != nil {
-		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+		return errors.WithMessage(err, s.BrewName)
 	}
 	done()
 	return nil
 }
 
-// Setup configures service for given definition.
-func (s *Service) Setup(d interface{}, p *Project) error {
+// PreStart performs setup that should occur prior to starting service.
+func (s *Service) PreStart(d interface{}, p *Project) error {
 	switch d := d.(type) {
 	case *def.App:
 		{
-			done := output.Duration(fmt.Sprintf("Setup %s.", d.Name))
-			if !s.IsRunning() {
-				return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+			done := output.Duration(fmt.Sprintf("Pre setup %s.", d.Name))
+			if s.IsRunning() {
+				return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
 			}
 			if s.IsPHP() {
-				if err := s.phpSetup(d, p); err != nil {
-					return errors.WithStack(err)
-				}
-			}
-			done()
-			break
-		}
-	case *def.Service:
-		{
-			done := output.Duration(fmt.Sprintf("Setup %s.", d.Name))
-			if !s.IsRunning() {
-				return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
-			}
-			if s.IsMySQL() {
-				if err := s.mySQLSetup(d, p); err != nil {
-					return errors.WithStack(err)
+				if err := s.phpPreSetup(d, p); err != nil {
+					return err
 				}
 			}
 			done()
@@ -194,14 +180,64 @@ func (s *Service) Setup(d interface{}, p *Project) error {
 	return nil
 }
 
+// PostStart performs setup that should occur after starting service.
+func (s *Service) PostStart(d interface{}, p *Project) error {
+	switch d := d.(type) {
+	case *def.Service:
+		{
+			done := output.Duration(fmt.Sprintf("Post setup %s.", d.Name))
+			if !s.IsRunning() {
+				return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+			}
+			if s.IsMySQL() {
+				if err := s.mySQLPostSetup(d, p); err != nil {
+					return err
+				}
+			}
+			done()
+			break
+		}
+	}
+	return nil
+}
+
+// Cleanup performs cleanup for project.
+func (s *Service) Cleanup(d interface{}, p *Project) error {
+	switch d := d.(type) {
+	case *def.App:
+		{
+			done := output.Duration(fmt.Sprintf("Clean up %s.", d.Name))
+			if s.IsPHP() {
+				if err := s.phpCleanup(d, p); err != nil {
+					return err
+				}
+			}
+			done()
+			break
+		}
+	}
+	return nil
+
+}
+
 // SocketPath returns path to service socket.
 func (s *Service) SocketPath() string {
-	return fmt.Sprintf("/tmp/pbrew-%s.sock", s.BrewName)
+	return filepath.Join(userPath(), fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewName, "@", "-")))
+}
+
+// UpstreamSocketPath returns path to app upstream socket.
+func (s *Service) UpstreamSocketPath(p *Project, app *def.App) string {
+
+	if s.IsPHP() {
+		return filepath.Join(userPath(), fmt.Sprintf("php-%s-%s.sock", p.Name, app.Name))
+	}
+	return s.SocketPath()
+
 }
 
 // PidPath returns path to service pid file.
 func (s *Service) PidPath() string {
-	return fmt.Sprintf("/tmp/pbrew-%s.pid", strings.ReplaceAll(s.BrewName, "@", "-"))
+	return filepath.Join(userPath(), fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewName, "@", "-")))
 }
 
 func (s *Service) injectCommandParams(cmd string) string {

@@ -27,7 +27,7 @@ server {
         location ~ ".+?\.php(?=$|/)" {    
             set $_rewrite_path "{{ .Passthru }}";
             try_files       $fastcgi_script_name @rewrite;
-            fastcgi_pass    127.0.0.1:{{ .Port }};
+            fastcgi_pass    unix:{{ .Socket }};
             fastcgi_request_buffering on;
             client_max_body_size 250m;
             set $_document_root $document_root;
@@ -36,10 +36,6 @@ server {
             # that it persists after try_files has resolved the actual filename.
             fastcgi_split_path_info ^(.+?\.php(?=$|/))((?:/.*)?)$;
             set $path_info  $fastcgi_path_info;
-            # Set environment variables
-            {{ range $key, $val := .Env }}
-            fastcgi_param  {{ $key }}    "{{ $val }}";
-            {{ end }}
         }
     }
     {{ end }}

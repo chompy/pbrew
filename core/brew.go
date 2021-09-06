@@ -11,16 +11,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-const brewPath = ".pbrew/homebrew"
-
 // BrewPath is the path the homebrew install.
 func BrewPath() string {
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		// TODO
-		panic(err)
-	}
-	return filepath.Join(homePath, brewPath)
+	return filepath.Join(userPath(), "homebrew")
 }
 
 // IsBrewInstalled returns true if homebrew is installed.

@@ -5,8 +5,7 @@
   stop: |
     pkill -F {PID_FILE}
   post_install: |
-    sed -i -e 's/listen = 127.0.0.1:9000/listen = 127.0.0.1:{PORT}/g' {BREW_PATH}/etc/php/7.4/php-fpm.d/www.conf
-  port: 51901
+    rm {BREW_PATH}/etc/php/7.4/php-fpm.d/*
 
 "php-7.3":
   brew_name: "php@7.3"
@@ -15,8 +14,7 @@
   stop: |
     pkill -F {PID_FILE}
   post_install: |
-    sed -i -e 's/listen = 127.0.0.1:9000/listen = 127.0.0.1:{PORT}/g' {BREW_PATH}/etc/php/7.3/php-fpm.d/www.conf
-  port: 51902
+    rm {BREW_PATH}/etc/php/7.3/php-fpm.d/*
 
 "mysql-*":
   brew_name: "mariadb"

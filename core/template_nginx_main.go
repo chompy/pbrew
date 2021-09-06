@@ -23,6 +23,10 @@ func buildNginxMainTemplate() nginxMainTemplate {
 	nginxGroupName := "nobody"
 	if err == nil {
 		nginxUserName = currentUser.Username
+		grp, err := user.LookupGroupId(currentUser.Gid)
+		if err == nil {
+			nginxGroupName = grp.Name
+		}
 	}
 	return nginxMainTemplate{
 		User:  nginxUserName,

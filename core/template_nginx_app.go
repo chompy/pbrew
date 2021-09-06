@@ -23,8 +23,7 @@ type nginxAppLocationTemplate struct {
 	Path     string
 	Root     string
 	Passthru string
-	Port     int
-	Env      map[string]string
+	Socket   string
 }
 
 func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) {
@@ -37,7 +36,6 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 	if err != nil {
 		return nginxAppTemplate{}, errors.WithStack(err)
 	}
-	env := p.Env(app)
 	// build location list
 	locations := make([]nginxAppLocationTemplate, 0)
 	for path, location := range app.Web.Locations {
@@ -50,8 +48,7 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 			Path:     path,
 			Root:     root,
 			Passthru: location.Passthru.GetString(),
-			Port:     service.Port,
-			Env:      env,
+			Socket:   service.UpstreamSocketPath(p, app),
 		})
 	}
 	return nginxAppTemplate{
@@ -64,7 +61,7 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 func (p *Project) GenerateNginxApp(app *def.App) (string, error) {
 	templatePath := nginxAppTemplateFiles[app.GetTypeName()]
 	if templatePath == "" {
-		return "", errors.WithStack(errors.WithMessage(ErrNginxTemplateNotFound, app.GetTypeName()))
+		return "", errors.WithStack(errors.WithMessage(ErrTemplateNotFound, app.GetTypeName()))
 	}
 	appPath, err := appPath()
 	if err != nil {

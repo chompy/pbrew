@@ -1,0 +1,67 @@
+package core
+
+import (
+	"bytes"
+	"os/user"
+	"path/filepath"
+	"text/template"
+
+	"github.com/pkg/errors"
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
+)
+
+const phpFpmPoolTemplateFile = "conf/php_fpm_pool.conf.tmpl"
+
+type phpFpmPoolTemplate struct {
+	ProjectName string
+	AppName     string
+	User        string
+	Socket      string
+	Env         map[string]string
+	Ini         map[string]string
+}
+
+func (p *Project) buildPhpFPMPoolTemplate(app *def.App) (phpFpmPoolTemplate, error) {
+	currentUser, err := user.Current()
+	userName := "_www"
+	if err == nil {
+		userName = currentUser.Username
+	}
+	serviceList, err := LoadServiceList()
+	if err != nil {
+		return phpFpmPoolTemplate{}, err
+	}
+	service, err := serviceList.MatchDef(app)
+	if err != nil {
+		return phpFpmPoolTemplate{}, err
+	}
+	return phpFpmPoolTemplate{
+		ProjectName: p.Name,
+		AppName:     app.Name,
+		User:        userName,
+		Socket:      service.UpstreamSocketPath(p, app),
+		Env:         p.Env(app),
+		Ini:         app.Variables.GetStringSubMap("php"), // TODO
+	}, nil
+}
+
+// GenerateNginxApp generates nginx config for given application.
+func (p *Project) GeneratePhpFpmPool(app *def.App) (string, error) {
+	appPath, err := appPath()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	tmpl, err := template.ParseFiles(filepath.Join(appPath, phpFpmPoolTemplateFile))
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	var buf bytes.Buffer
+	templateVars, err := p.buildPhpFPMPoolTemplate(app)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	if err := tmpl.Execute(&buf, templateVars); err != nil {
+		return "", errors.WithStack(err)
+	}
+	return buf.String(), nil
+}

@@ -2,6 +2,9 @@ package core
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -60,7 +63,7 @@ func (s *Service) PHPInstallExtension(name string) error {
 	}
 	done := output.Duration(fmt.Sprintf("Installing PHP extension %s.", extKey))
 	cmd := NewShellCommand()
-	cmd.Args = []string{"-c", s.injectCommandParams(extCmd)}
+	cmd.Args = []string{"--login", "-c", s.injectCommandParams(extCmd)}
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(errors.WithMessage(err, extKey))
 	}
@@ -68,8 +71,25 @@ func (s *Service) PHPInstallExtension(name string) error {
 	return nil
 }
 
-// phpSetup configures php for given app definition.
-func (s *Service) phpSetup(d *def.App, p *Project) error {
+func (s *Service) phpFpmPoolPath() (string, error) {
+	if !s.IsPHP() {
+		return "", errors.WithStack(errors.WithMessage(ErrInvalidService, s.BrewName))
+	}
+	verSplit := strings.Split(s.BrewName, "@")
+	if len(verSplit) < 2 {
+		return "", errors.WithStack(errors.WithMessage(ErrInvalidService, s.BrewName))
+	}
+	return filepath.Join(BrewPath(), "etc", "php", verSplit[1], "php-fpm.d"), nil
+}
+
+func (s *Service) phpPreSetup(d *def.App, p *Project) error {
+	// checks
+	if !s.IsPHP() {
+		return errors.WithStack(errors.WithMessage(ErrInvalidService, s.BrewName))
+	}
+	if s.IsRunning() {
+		return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
+	}
 	// install extensions
 	for _, ext := range d.Runtime.Extensions {
 		if err := s.PHPInstallExtension(ext.Name); err != nil {
@@ -79,7 +99,28 @@ func (s *Service) phpSetup(d *def.App, p *Project) error {
 			return errors.WithStack(err)
 		}
 	}
-	// php ini
+	// php fpm pool
+	done := output.Duration("Generate PHP FPM pool.")
+	fpmPoolConf, err := p.GeneratePhpFpmPool(d)
+	if err != nil {
+		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+	}
+	fpmPoolPath, err := s.phpFpmPoolPath()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := ioutil.WriteFile(filepath.Join(fpmPoolPath, fmt.Sprintf("%s_%s.conf", p.Name, d.Name)), []byte(fpmPoolConf), 0755); err != nil {
+		return errors.WithStack(err)
+	}
+	done()
+	return nil
+}
 
+func (s *Service) phpCleanup(d *def.App, p *Project) error {
+	fpmPoolPath, err := s.phpFpmPoolPath()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	os.Remove(filepath.Join(fpmPoolPath, fmt.Sprintf("%s_%s.conf", p.Name, d.Name)))
 	return nil
 }

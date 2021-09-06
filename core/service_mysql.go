@@ -75,8 +75,8 @@ func (s *Service) MySQLExecute(query string) error {
 	return nil
 }
 
-// mySQLSetup configures mysql for given service definition.
-func (s *Service) mySQLSetup(d *def.Service, p *Project) error {
+// mySQLPostSetup configures mysql for given service definition.
+func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 	if !s.IsMySQL() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
 	}

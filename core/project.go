@@ -37,23 +37,22 @@ func LoadProject(projPath string) (*Project, error) {
 	for _, appPath := range appPaths {
 		app, err := def.ParseAppYamlFiles(appPath, nil)
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return nil, err
 		}
 		apps = append(apps, app)
 	}
 	services, err := def.ParseServiceYamlFiles(serviceYamlFilenames)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 	routes, err := def.ParseRoutesYamlFiles(routesYamlFilenames)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 	routes, err = def.ExpandRoutes(routes, "platform.cc")
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
-
 	output.Info(
 		fmt.Sprintf("Found %d app(s), %d service(s), %d route(s).", len(apps), len(services), len(routes)),
 	)
@@ -102,7 +101,7 @@ func (p *Project) InstallServices() error {
 	done := output.Duration("Installing services. (THIS MIGHT TAKE A WHILE.)")
 	services, err := p.GetBrewServices()
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	for _, service := range services {
 		if service.IsInstalled() {
@@ -111,7 +110,7 @@ func (p *Project) InstallServices() error {
 		}
 		d2 := output.Duration(fmt.Sprintf("Installing '%s' service.", service.BrewName))
 		if err := service.Install(); err != nil {
-			return errors.WithStack(err)
+			return err
 		}
 		d2()
 	}
@@ -119,12 +118,12 @@ func (p *Project) InstallServices() error {
 	return nil
 }
 
-// SetupServices configures services for project.
-func (p *Project) SetupServices() error {
-	done := output.Duration("Setup services.")
+// PreSetup configures services for project.
+func (p *Project) PreSetup() error {
+	done := output.Duration("Services pre-setup.")
 	serviceList, err := LoadServiceList()
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	for _, service := range p.Services {
 		brewService, err := serviceList.MatchDef(service)
@@ -132,10 +131,10 @@ func (p *Project) SetupServices() error {
 			if errors.Is(err, ErrServiceNotFound) {
 				continue
 			}
-			return errors.WithStack(err)
+			return err
 		}
-		if err := brewService.Setup(&service, p); err != nil {
-			return errors.WithStack(err)
+		if err := brewService.PreStart(&service, p); err != nil {
+			return err
 		}
 	}
 	for _, service := range p.Apps {
@@ -144,10 +143,45 @@ func (p *Project) SetupServices() error {
 			if errors.Is(err, ErrServiceNotFound) {
 				continue
 			}
-			return errors.WithStack(err)
+			return err
 		}
-		if err := brewService.Setup(service, p); err != nil {
-			return errors.WithStack(err)
+		if err := brewService.PreStart(service, p); err != nil {
+			return err
+		}
+	}
+	done()
+	return nil
+}
+
+// PostSetup configures services for project, post start.
+func (p *Project) PostSetup() error {
+	done := output.Duration("Services post-setup.")
+	serviceList, err := LoadServiceList()
+	if err != nil {
+		return err
+	}
+	for _, service := range p.Services {
+		brewService, err := serviceList.MatchDef(service)
+		if err != nil {
+			if errors.Is(err, ErrServiceNotFound) {
+				continue
+			}
+			return err
+		}
+		if err := brewService.PostStart(&service, p); err != nil {
+			return err
+		}
+	}
+	for _, service := range p.Apps {
+		brewService, err := serviceList.MatchDef(service)
+		if err != nil {
+			if errors.Is(err, ErrServiceNotFound) {
+				continue
+			}
+			return err
+		}
+		if err := brewService.PostStart(service, p); err != nil {
+			return err
 		}
 	}
 	done()
@@ -160,27 +194,31 @@ func (p *Project) Start() error {
 	// check if brew is installed
 	if !IsBrewInstalled() {
 		if err := BrewInstall(); err != nil {
-			return errors.WithStack(err)
+			return err
 		}
 	}
 	// install services
 	if err := p.InstallServices(); err != nil {
-		return errors.WithStack(err)
+		return err
+	}
+	// pre-setup services
+	if err := p.PreSetup(); err != nil {
+		return err
 	}
 	// start services
 	services, err := p.GetBrewServices()
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	for _, service := range services {
 		if err := service.Start(); err != nil {
-			return errors.WithStack(err)
+			return err
 		}
 	}
 	// setup services
 	time.Sleep(time.Second)
-	if err := p.SetupServices(); err != nil {
-		return errors.WithStack(err)
+	if err := p.PostSetup(); err != nil {
+		return err
 	}
 	done()
 	return nil
@@ -191,7 +229,7 @@ func (p *Project) Stop() error {
 	done := output.Duration("Stopping services.")
 	services, err := p.GetBrewServices()
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	// stop services
 	for _, service := range services {
@@ -199,7 +237,10 @@ func (p *Project) Stop() error {
 			continue
 		}
 		if err := service.Stop(); err != nil {
-			return errors.WithStack(err)
+			return err
+		}
+		if err := service.Cleanup(service, p); err != nil {
+			return err
 		}
 	}
 	done()
@@ -212,11 +253,11 @@ func (p *Project) Shell(d *def.App) error {
 	// get app brew service
 	serviceList, err := LoadServiceList()
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	brewAppService, err := serviceList.MatchDef(d)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	if !brewAppService.IsRunning() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewAppService.BrewName))
@@ -230,7 +271,7 @@ func (p *Project) Shell(d *def.App) error {
 			if errors.Is(err, ErrServiceNotFound) {
 				continue
 			}
-			return errors.WithStack(err)
+			return err
 		}
 		if !brewService.IsRunning() {
 			return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewService.BrewName))
@@ -252,7 +293,7 @@ func (p *Project) Shell(d *def.App) error {
 	cmd.Args = []string{"--norc"}
 	cmd.Env = env
 	if err := cmd.Drop(); err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	return nil
 }

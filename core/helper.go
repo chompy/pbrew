@@ -33,6 +33,15 @@ func appPath() (string, error) {
 	return filepath.Dir(execPath), nil
 }
 
+func userPath() string {
+	homePath, err := os.UserHomeDir()
+	if err != nil {
+		// TODO
+		panic(err)
+	}
+	return filepath.Join(homePath, ".pbrew")
+}
+
 func scanPlatformAppYaml(topPath string, disableOverrides bool) [][]string {
 	o := make([][]string, 0)
 	appYamlPaths := make([]string, 0)
