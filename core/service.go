@@ -222,22 +222,20 @@ func (s *Service) Cleanup(d interface{}, p *Project) error {
 
 // SocketPath returns path to service socket.
 func (s *Service) SocketPath() string {
-	return filepath.Join(userPath(), fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewName, "@", "-")))
+	return filepath.Join(userPath(), "run", fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewName, "@", "-")))
 }
 
 // UpstreamSocketPath returns path to app upstream socket.
 func (s *Service) UpstreamSocketPath(p *Project, app *def.App) string {
-
 	if s.IsPHP() {
-		return filepath.Join(userPath(), fmt.Sprintf("php-%s-%s.sock", p.Name, app.Name))
+		return filepath.Join(userPath(), "run", fmt.Sprintf("php-%s-%s.sock", p.Name, app.Name))
 	}
 	return s.SocketPath()
-
 }
 
 // PidPath returns path to service pid file.
 func (s *Service) PidPath() string {
-	return filepath.Join(userPath(), fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewName, "@", "-")))
+	return filepath.Join(userPath(), "run", fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewName, "@", "-")))
 }
 
 func (s *Service) injectCommandParams(cmd string) string {

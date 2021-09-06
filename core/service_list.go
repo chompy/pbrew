@@ -43,7 +43,7 @@ func (s ServiceList) Match(name string) (*Service, error) {
 			return serviceDef, nil
 		}
 	}
-	return nil, errors.WithStack(ErrServiceNotFound)
+	return nil, errors.WithStack(errors.WithMessage(ErrServiceNotFound, name))
 }
 
 // MatchDef matches definition with its homebrew service.

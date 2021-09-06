@@ -133,6 +133,12 @@ func (p *Project) PreSetup() error {
 			}
 			return err
 		}
+		if brewService.IsRunning() {
+			if err := brewService.Stop(); err != nil {
+				return err
+			}
+			time.Sleep(time.Second)
+		}
 		if err := brewService.PreStart(&service, p); err != nil {
 			return err
 		}
@@ -144,6 +150,12 @@ func (p *Project) PreSetup() error {
 				continue
 			}
 			return err
+		}
+		if brewService.IsRunning() {
+			if err := brewService.Stop(); err != nil {
+				return err
+			}
+			time.Sleep(time.Second)
 		}
 		if err := brewService.PreStart(service, p); err != nil {
 			return err
@@ -212,7 +224,13 @@ func (p *Project) Start() error {
 	}
 	for _, service := range services {
 		if err := service.Start(); err != nil {
-			return err
+			if !errors.Is(err, ErrServiceAlreadyRunning) {
+				return err
+			}
+			output.IndentLevel--
+			if err := service.Reload(); err != nil {
+				return err
+			}
 		}
 	}
 	// setup services

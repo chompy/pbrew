@@ -51,7 +51,7 @@ func NginxAdd(proj *Project) error {
 	done := output.Duration(fmt.Sprintf("Add '%s' to router.", proj.Name))
 	nginxRoutes, err := proj.GenerateNginxRoutes()
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	if err := os.MkdirAll(filepath.Join(BrewPath(), "etc", "nginx", "servers"), 0755); err != nil {
 		return errors.WithStack(err)
@@ -66,7 +66,7 @@ func NginxAdd(proj *Project) error {
 	for _, app := range proj.Apps {
 		nginxApp, err := proj.GenerateNginxApp(app)
 		if err != nil {
-			return errors.WithStack(err)
+			return err
 		}
 		if err := ioutil.WriteFile(
 			filepath.Join(BrewPath(), "etc", "nginx", "servers", proj.Name+"_"+app.Name),

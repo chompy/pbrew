@@ -31,7 +31,7 @@ func buildNginxMainTemplate() nginxMainTemplate {
 	return nginxMainTemplate{
 		User:  nginxUserName,
 		Group: nginxGroupName,
-		Pid:   "/tmp/pbrew-nginx.pid",
+		Pid:   filepath.Join(userPath(), "run", "nginx.pid"),
 	}
 }
 

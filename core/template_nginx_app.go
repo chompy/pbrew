@@ -30,11 +30,11 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 	// get brew service info
 	serviceList, err := LoadServiceList()
 	if err != nil {
-		return nginxAppTemplate{}, errors.WithStack(err)
+		return nginxAppTemplate{}, err
 	}
 	service, err := serviceList.MatchDef(app)
 	if err != nil {
-		return nginxAppTemplate{}, errors.WithStack(err)
+		return nginxAppTemplate{}, err
 	}
 	// build location list
 	locations := make([]nginxAppLocationTemplate, 0)
@@ -65,7 +65,7 @@ func (p *Project) GenerateNginxApp(app *def.App) (string, error) {
 	}
 	appPath, err := appPath()
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 	tmpl, err := template.ParseFiles(filepath.Join(appPath, templatePath))
 	if err != nil {
@@ -74,7 +74,7 @@ func (p *Project) GenerateNginxApp(app *def.App) (string, error) {
 	var buf bytes.Buffer
 	templateVars, err := p.buildNginxAppTemplate(app)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 	if err := tmpl.Execute(&buf, templateVars); err != nil {
 		return "", errors.WithStack(err)

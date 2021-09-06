@@ -2,7 +2,6 @@ package core
 
 import (
 	"bytes"
-	"os/user"
 	"path/filepath"
 	"text/template"
 
@@ -22,11 +21,6 @@ type phpFpmPoolTemplate struct {
 }
 
 func (p *Project) buildPhpFPMPoolTemplate(app *def.App) (phpFpmPoolTemplate, error) {
-	currentUser, err := user.Current()
-	userName := "_www"
-	if err == nil {
-		userName = currentUser.Username
-	}
 	serviceList, err := LoadServiceList()
 	if err != nil {
 		return phpFpmPoolTemplate{}, err
@@ -38,7 +32,6 @@ func (p *Project) buildPhpFPMPoolTemplate(app *def.App) (phpFpmPoolTemplate, err
 	return phpFpmPoolTemplate{
 		ProjectName: p.Name,
 		AppName:     app.Name,
-		User:        userName,
 		Socket:      service.UpstreamSocketPath(p, app),
 		Env:         p.Env(app),
 		Ini:         app.Variables.GetStringSubMap("php"), // TODO
