@@ -7,6 +7,8 @@ import (
 	"strings"
 	"text/template"
 
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
+
 	"github.com/pkg/errors"
 )
 
@@ -19,7 +21,8 @@ type nginxRouteTemplate struct {
 
 type nginxRouteHostTemplate struct {
 	Host      string
-	Port      int
+	PortHTTP  int
+	PortHTTPS int
 	Locations []nginxRouteLocationTemplate
 }
 
@@ -33,6 +36,11 @@ type nginxRouteLocationTemplate struct {
 }
 
 func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
+	config, err := LoadConfig()
+	if err != nil {
+		output.Warn(err.Error())
+		return nginxRouteTemplate{}
+	}
 	hostTemplates := make([]nginxRouteHostTemplate, 0)
 	for _, hostName := range GetHostNames(p.Routes) {
 		locationTemplates := make([]nginxRouteLocationTemplate, 0)
@@ -67,9 +75,11 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 				To:           route.To,
 			})
 		}
+
 		hostTemplates = append(hostTemplates, nginxRouteHostTemplate{
 			Host:      hostName,
-			Port:      80,
+			PortHTTP:  config.RouterHTTP,
+			PortHTTPS: config.RouterHTTPS,
 			Locations: locationTemplates,
 		})
 	}

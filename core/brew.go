@@ -13,7 +13,7 @@ import (
 
 // BrewPath is the path the homebrew install.
 func BrewPath() string {
-	return filepath.Join(userPath(), "homebrew")
+	return filepath.Join(userPath(), brewDir)
 }
 
 // IsBrewInstalled returns true if homebrew is installed.
@@ -28,13 +28,9 @@ func IsBrewInstalled() bool {
 func BrewInstall() error {
 	done := output.Duration("Install Homebrew.")
 	if err := os.MkdirAll(BrewPath(), 0755); err != nil {
-		return errors.WithStack(err)
-	}
-	if err := os.Mkdir(filepath.Join(userPath(), "run"), 0755); err != nil {
-		return errors.WithStack(err)
-	}
-	if err := os.Mkdir(filepath.Join(userPath(), "vars"), 0755); err != nil {
-		return errors.WithStack(err)
+		if !errors.Is(err, os.ErrExist) {
+			return errors.WithStack(err)
+		}
 	}
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", fmt.Sprintf(brewInstall, BrewPath())}

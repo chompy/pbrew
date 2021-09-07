@@ -39,7 +39,6 @@ func NginxService() *Service {
 		),
 		StopCmd:   "sudo {BREW_PATH}/opt/nginx/bin/nginx -s stop",
 		ReloadCmd: "sudo {BREW_PATH}/opt/nginx/bin/nginx -s reload",
-		Port:      80,
 	}
 }
 

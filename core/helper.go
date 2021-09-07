@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
+
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -19,6 +21,18 @@ func wildcardCompare(original string, test string) bool {
 		return false
 	}
 	return regex.MatchString(original)
+}
+
+func resolveUserPath(path string) string {
+	if strings.HasPrefix(path, "~") {
+		homePath, err := os.UserHomeDir()
+		if err != nil {
+			output.Warn(err.Error())
+			return path
+		}
+		path = filepath.Join(homePath, path[1:])
+	}
+	return path
 }
 
 func appPath() (string, error) {
@@ -34,12 +48,11 @@ func appPath() (string, error) {
 }
 
 func userPath() string {
-	homePath, err := os.UserHomeDir()
+	conf, err := LoadConfig()
 	if err != nil {
-		// TODO
-		panic(err)
+		output.Warn(err.Error())
 	}
-	return filepath.Join(homePath, ".pbrew")
+	return resolveUserPath(conf.UserDir)
 }
 
 func scanPlatformAppYaml(topPath string, disableOverrides bool) [][]string {

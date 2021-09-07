@@ -1,0 +1,3 @@
+CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY '';
+SET PASSWORD FOR 'root'@'localhost' = '';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost';

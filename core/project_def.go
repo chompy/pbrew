@@ -41,7 +41,11 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 				}
 			}
 			if brewService != nil {
-				port = brewService.Port
+				port, err = brewService.Port()
+				if err != nil {
+					output.Warn(err.Error())
+					return nil
+				}
 			}
 			out := make([]map[string]interface{}, 0)
 			if d.Configuration["endpoints"] != nil {

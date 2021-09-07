@@ -44,7 +44,7 @@ func (s *Service) MySQLShell(database string) error {
 	output.Info(fmt.Sprintf("Access shell for %s.", s.BrewName))
 	pathToMySQL := filepath.Join(BrewPath(), "opt", s.BrewName, "bin", "mysql")
 	args := make([]string, 0)
-	args = append(args, "-S", s.SocketPath())
+	args = append(args, "-S", s.SocketPath(), "-u", "root")
 	if database != "" {
 		args = append(args, "-D", database)
 	}
@@ -68,7 +68,7 @@ func (s *Service) MySQLExecute(query string) error {
 	pathToMySQL := filepath.Join(BrewPath(), "opt", s.BrewName, "bin", "mysql")
 	cmd := NewShellCommand()
 	cmd.Command = pathToMySQL
-	cmd.Args = []string{"-S", s.SocketPath(), "-e", query}
+	cmd.Args = []string{"-S", s.SocketPath(), "-u", "root", "-e", query}
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(errors.WithMessage(err, s.BrewName))
 	}
@@ -81,6 +81,7 @@ func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
 	}
 	// user
+	// TODO project specific user+password
 	output.Info(fmt.Sprintf("Create %s user.", mysqlUser))
 	if err := s.MySQLExecute(fmt.Sprintf(
 		"CREATE USER IF NOT EXISTS '%s'@'localhost' IDENTIFIED BY '%s';",

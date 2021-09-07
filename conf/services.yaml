@@ -4,8 +4,7 @@
     {BREW_PATH}/opt/php@7.4/sbin/php-fpm -D -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
-  post_install: |
-    rm {BREW_PATH}/etc/php/7.4/php-fpm.d/*
+  config_template: "php_fpm.conf.tmpl"
 
 "php-7.3":
   brew_name: "php@7.3"
@@ -13,37 +12,30 @@
     {BREW_PATH}/opt/php@7.3/sbin/php-fpm -D -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
-  post_install: |
-    rm {BREW_PATH}/etc/php/7.3/php-fpm.d/*
+  config_template: "php_fpm.conf.tmpl"
 
 "mysql-*":
-  brew_name: "mariadb"
+  brew_name: "mariadb@10.6"
   start: |
-    {BREW_PATH}/opt/mariadb/bin/mariadbd-safe --nowatch --pid-file={PID_FILE}
+    {BREW_PATH}/opt/mariadb@10.6/bin/mysql_install_db --defaults-file={CONF_FILE}
+    {BREW_PATH}/opt/mariadb@10.6/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
   stop: |
     pkill -F {PID_FILE}
-  post_install: |
-    echo '[mysqld]\nport = {PORT}\nsocket = {SOCKET}' >> {BREW_PATH}/etc/my.cnf
-  port: 51801
+  config_template: "mariadb.conf.tmpl"
 
 "mariadb-*":
-  brew_name: "mariadb"
+  brew_name: "mariadb@10.6"
   start: |
-    {BREW_PATH}/opt/mariadb/bin/mariadbd-safe --nowatch --pid-file={PID_FILE}
+    {BREW_PATH}/opt/mariadb@10.6/bin/mysql_install_db --defaults-file={CONF_FILE}
+    {BREW_PATH}/opt/mariadb@10.6/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
   stop: |
     pkill -F {PID_FILE}
-  post_install: |
-    echo '[mysqld]\nport = {PORT}\nsocket = {SOCKET}' >> {BREW_PATH}/etc/my.cnf
-  port: 51801
+  config_template: "mariadb.conf.tmpl"
 
 "redis-*":
-  brew_name: "redis"
+  brew_name: "redis@6.2"
   start: |
-    {BREW_PATH}/opt/redis/bin/redis-server {BREW_PATH}/etc/redis.conf
+    {BREW_PATH}/opt/redis/bin/redis-server {CONF_FILE}
   stop: |
     pkill -F {PID_FILE}
-  post_install: |
-    sed -i -e 's/port 6379/port {PORT}/g' {BREW_PATH}/etc/redis.conf
-    sed -i -e 's/daemonize no/daemonize yes/g' {BREW_PATH}/etc/redis.conf
-    sed -i -e 's/pidfile \/var\/run\/redis_6379.pid/pidfile {PID_FILE_ESC}/g' {BREW_PATH}/etc/redis.conf
-  port: 51802
+  config_template: "redis.conf.tmpl"

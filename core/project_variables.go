@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
@@ -62,15 +63,19 @@ func (p *Project) Variables(d interface{}) (def.Variables, error) {
 	}
 	// add global vars
 	globalVars, err := LoadVariables(GlobalVariableFile)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, err
 	}
-	out.Merge(globalVars)
+	if globalVars != nil {
+		out.Merge(globalVars)
+	}
 	// add project vars
 	projVars, err := LoadVariables(p.Name)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, err
 	}
-	out.Merge(projVars)
+	if projVars != nil {
+		out.Merge(projVars)
+	}
 	return out, nil
 }

@@ -2,7 +2,7 @@
 
 {{ range .Hosts }}
 server {
-    listen          {{ .Port }};
+    listen          {{ .PortHTTP }};
     server_name     {{ .Host }};
     client_max_body_size 200M;
     {{ range .Locations }}
