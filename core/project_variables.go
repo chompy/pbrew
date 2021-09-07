@@ -43,3 +43,34 @@ func SaveVariables(name string, vars def.Variables) error {
 	}
 	return nil
 }
+
+// Variables returns variables for project, merged with global.
+func (p *Project) Variables(d interface{}) (def.Variables, error) {
+	out := make(def.Variables)
+	// add def vars
+	switch d := d.(type) {
+	case *def.App:
+		{
+			out.Merge(d.Variables)
+			break
+		}
+	case *def.AppWorker:
+		{
+			out.Merge(d.Variables)
+			break
+		}
+	}
+	// add global vars
+	globalVars, err := LoadVariables(GlobalVariableFile)
+	if err != nil {
+		return nil, err
+	}
+	out.Merge(globalVars)
+	// add project vars
+	projVars, err := LoadVariables(p.Name)
+	if err != nil {
+		return nil, err
+	}
+	out.Merge(projVars)
+	return out, nil
+}

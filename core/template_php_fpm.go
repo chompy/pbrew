@@ -29,12 +29,16 @@ func (p *Project) buildPhpFPMPoolTemplate(app *def.App) (phpFpmPoolTemplate, err
 	if err != nil {
 		return phpFpmPoolTemplate{}, err
 	}
+	vars, err := p.Variables(app)
+	if err != nil {
+		return phpFpmPoolTemplate{}, err
+	}
 	return phpFpmPoolTemplate{
 		ProjectName: p.Name,
 		AppName:     app.Name,
 		Socket:      service.UpstreamSocketPath(p, app),
 		Env:         p.Env(app),
-		Ini:         app.Variables.GetStringSubMap("php"), // TODO
+		Ini:         vars.GetStringSubMap("php"),
 	}, nil
 }
 
