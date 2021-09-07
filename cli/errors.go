@@ -5,4 +5,5 @@ import "errors"
 var (
 	ErrServiceNotFound = errors.New("service not found")
 	ErrInvalidService  = errors.New("invalid service")
+	ErrInvalidArgs     = errors.New("invalid arguments")
 )
