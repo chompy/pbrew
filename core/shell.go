@@ -2,7 +2,6 @@ package core
 
 import (
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -49,8 +48,6 @@ func (s ShellCommand) Drop() error {
 	args := make([]string, 0)
 	args = append(args, filepath.Base(s.Command))
 	args = append(args, s.Args...)
-
-	log.Println(s.Command, args)
 	if err := syscall.Exec(s.Command, args, s.Env); err != nil {
 		return errors.WithStack(err)
 	}

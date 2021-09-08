@@ -234,7 +234,7 @@ func (p *Project) Start() error {
 		}
 	}
 	// setup services
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 	if err := p.PostSetup(); err != nil {
 		return err
 	}

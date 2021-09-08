@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 
@@ -98,7 +99,11 @@ func (s *Service) IsRunning() bool {
 		return false
 	}
 	proc, err := os.FindProcess(pid)
-	return err == nil && proc != nil
+	if err != nil || proc == nil {
+		return false
+	}
+	err = proc.Signal(syscall.Signal(0))
+	return err == nil || strings.Contains(err.Error(), "not permitted")
 }
 
 // Start will start the service.
