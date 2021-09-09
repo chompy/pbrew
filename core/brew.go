@@ -34,6 +34,7 @@ func BrewInstall() error {
 	}
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", fmt.Sprintf(brewInstall, BrewPath())}
+	cmd.Env = os.Environ()
 	if err := cmd.Interactive(); err != nil {
 		return err
 	}
@@ -54,6 +55,7 @@ func brewCommand(subCmds ...string) error {
 	binPath := filepath.Join(BrewPath(), "bin/brew")
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", binPath + " " + strings.Join(subCmds, " ")}
+	cmd.Env = os.Environ()
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(err)
 	}
