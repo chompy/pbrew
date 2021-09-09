@@ -5,6 +5,7 @@ const runDir = "run"
 const confDir = "conf"
 const dataDir = "data"
 const varsDir = "vars"
+const mntDir = "mnt"
 
 // Config defines app configuration.
 type Config struct {

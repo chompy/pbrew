@@ -213,6 +213,10 @@ func (p *Project) Start() error {
 	if err := p.InstallServices(); err != nil {
 		return err
 	}
+	// setup mount symlinks
+	if err := p.SetupMounts(); err != nil {
+		return err
+	}
 	// pre-setup services
 	if err := p.PreSetup(); err != nil {
 		return err

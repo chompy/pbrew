@@ -40,6 +40,11 @@ func InitApp() error {
 			return errors.WithStack(err)
 		}
 	}
+	if err := os.Mkdir(filepath.Join(userPath(), mntDir), mkdirPerm); err != nil {
+		if !errors.Is(err, os.ErrExist) {
+			return errors.WithStack(err)
+		}
+	}
 	// install brew
 	if !IsBrewInstalled() {
 		if err := BrewInstall(); err != nil {
