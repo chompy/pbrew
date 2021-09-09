@@ -306,6 +306,7 @@ func (p *Project) Shell(d *def.App) error {
 	// inject env vars
 	env := make([]string, 0)
 	env = append(env, "PATH="+strings.Join(envPath, ":"))
+	env = append(env, "HOME="+p.Path)
 	env = append(env, fmt.Sprintf("PS1=%s-%s> ", p.Name, d.Name))
 	for k, v := range p.Env(d) {
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
