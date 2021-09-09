@@ -64,6 +64,7 @@ func (s *Service) PHPInstallExtension(name string) error {
 	done := output.Duration(fmt.Sprintf("Installing PHP extension %s.", extKey))
 	cmd := NewShellCommand()
 	cmd.Args = []string{"--login", "-c", s.injectCommandParams(extCmd)}
+	cmd.Env = os.Environ()
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(errors.WithMessage(err, extKey))
 	}
