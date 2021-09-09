@@ -35,7 +35,11 @@ func BrewInstall() error {
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", fmt.Sprintf(brewInstall, BrewPath())}
 	if err := cmd.Interactive(); err != nil {
-		return errors.WithStack(err)
+		return err
+	}
+	// taps
+	if err := brewCommand("tap", "shivammathur/php"); err != nil {
+		return err
 	}
 	done()
 	return nil
