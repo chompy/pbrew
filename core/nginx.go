@@ -1,11 +1,9 @@
 package core
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -17,28 +15,19 @@ import (
 const defaultHostName = "localhost"
 
 const nginxStartCmd = `
-	cp {APP_PATH}/conf/fastcgi_params.normal {BREW_PATH}/etc/nginx/fastcgi_params.normal
-	echo '%s' | base64 -d > {BREW_PATH}/etc/nginx/nginx.conf
-	sudo {BREW_PATH}/opt/nginx/bin/nginx -c {BREW_PATH}/etc/nginx/nginx.conf
+	cp {APP_PATH}/conf/nginx_fastcgi_params.normal {CONF_PATH}/nginx_fastcgi_params.normal
+	sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE}
 `
 
 // NginxService returns the service for nginx.
 func NginxService() *Service {
-	nginxConf, err := GenerateNginxMain()
-	if err != nil {
-		output.Warn(err.Error())
-		return nil
-	}
-	nginxConfB64 := base64.StdEncoding.EncodeToString([]byte(nginxConf))
 	return &Service{
 		BrewName:       "nginx",
 		PostInstallCmd: "",
-		StartCmd: fmt.Sprintf(
-			nginxStartCmd,
-			nginxConfB64,
-		),
-		StopCmd:   "sudo {BREW_PATH}/opt/nginx/bin/nginx -s stop",
-		ReloadCmd: "sudo {BREW_PATH}/opt/nginx/bin/nginx -s reload",
+		StartCmd:       nginxStartCmd,
+		StopCmd:        "sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -s stop",
+		ReloadCmd:      "sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -s reload",
+		ConfigTemplate: "nginx_main.conf.tmpl",
 	}
 }
 
@@ -52,11 +41,8 @@ func NginxAdd(proj *Project) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Join(BrewPath(), "etc", "nginx", "servers"), 0755); err != nil {
-		return errors.WithStack(err)
-	}
 	if err := ioutil.WriteFile(
-		filepath.Join(BrewPath(), "etc", "nginx", "servers", proj.Name),
+		filepath.Join(userPath(), confDir, fmt.Sprintf("nginx_routes_%s.conf", proj.Name)),
 		[]byte(nginxRoutes),
 		0655,
 	); err != nil {
@@ -68,7 +54,7 @@ func NginxAdd(proj *Project) error {
 			return err
 		}
 		if err := ioutil.WriteFile(
-			filepath.Join(BrewPath(), "etc", "nginx", "servers", proj.Name+"_"+app.Name),
+			filepath.Join(userPath(), confDir, fmt.Sprintf("nginx_app_%s_%s.conf", proj.Name, app.Name)),
 			[]byte(nginxApp),
 			0655,
 		); err != nil {

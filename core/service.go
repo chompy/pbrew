@@ -302,6 +302,7 @@ func (s *Service) injectCommandParams(cmd string) string {
 	appPath, _ := appPath()
 	cmd = strings.ReplaceAll(cmd, "{APP_PATH}", appPath)
 	cmd = strings.ReplaceAll(cmd, "{CONF_FILE}", s.ConfigPath())
+	cmd = strings.ReplaceAll(cmd, "{CONF_PATH}", filepath.Join(userPath(), confDir))
 	cmd = strings.ReplaceAll(cmd, "{DATA_PATH}", s.DataPath())
 	return cmd
 }

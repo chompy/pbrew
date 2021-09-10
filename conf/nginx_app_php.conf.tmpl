@@ -31,7 +31,7 @@ server {
             fastcgi_request_buffering on;
             client_max_body_size 250m;
             set $_document_root $document_root;
-            include         "fastcgi_params.normal";
+            include         "nginx_fastcgi_params.normal";
             # Split the script name from the path info, set it as a variable so
             # that it persists after try_files has resolved the actual filename.
             fastcgi_split_path_info ^(.+?\.php(?=$|/))((?:/.*)?)$;

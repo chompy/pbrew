@@ -7,11 +7,12 @@ events {
 }
 
 http {
-    include                 mime.types;
+    include                 {{ .BrewDir }}/etc/nginx/mime.types;
     default_type            application/octet-stream;
     sendfile                on;
     keepalive_timeout       65;
     server_names_hash_bucket_size 256;
     #gzip  on;
-    include servers/*;
+    include {{ .ConfigDir }}/nginx_route_*.conf;
+    include {{ .ConfigDir }}/nginx_app_*.conf;
 }

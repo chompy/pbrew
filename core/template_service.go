@@ -21,7 +21,9 @@ type serviceTemplateVars struct {
 	Pid       string
 	ConfigDir string
 	DataDir   string
+	BrewDir   string
 	User      string
+	Group     string
 	Params    map[string]interface{}
 }
 
@@ -35,6 +37,10 @@ func (s *Service) BuildConfigTemplateVars() (serviceTemplateVars, error) {
 	if err != nil {
 		return serviceTemplateVars{}, errors.WithStack(err)
 	}
+	currentUserGroup, err := user.LookupGroupId(currentUser.Gid)
+	if err != nil {
+		return serviceTemplateVars{}, errors.WithStack(err)
+	}
 	return serviceTemplateVars{
 		Name:      strings.ReplaceAll(s.BrewName, "@", "-"),
 		Port:      port,
@@ -42,7 +48,9 @@ func (s *Service) BuildConfigTemplateVars() (serviceTemplateVars, error) {
 		Pid:       s.PidPath(),
 		ConfigDir: filepath.Dir(s.ConfigPath()),
 		DataDir:   s.DataPath(),
-		User:      currentUser.Name,
+		BrewDir:   BrewPath(),
+		User:      currentUser.Username,
+		Group:     currentUserGroup.Name,
 		Params:    make(map[string]interface{}),
 	}, nil
 }
