@@ -66,6 +66,7 @@ func (s *Service) PostInstall() error {
 		cmdStr := s.injectCommandParams(s.PostInstallCmd)
 		cmd := NewShellCommand()
 		cmd.Args = []string{"-c", cmdStr}
+		cmd.Env = os.Environ()
 		if err := cmd.Interactive(); err != nil {
 			return errors.WithMessage(err, s.BrewName)
 		}
@@ -130,6 +131,7 @@ func (s *Service) Start() error {
 	cmdStr := s.injectCommandParams(s.StartCmd)
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
+	cmd.Env = os.Environ()
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)
 	}
@@ -151,6 +153,7 @@ func (s *Service) Stop() error {
 	cmdStr := s.injectCommandParams(s.StopCmd)
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
+	cmd.Env = os.Environ()
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)
 	}
@@ -175,6 +178,7 @@ func (s *Service) Reload() error {
 	cmdStr := s.injectCommandParams(s.ReloadCmd)
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
+	cmd.Env = os.Environ()
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)
 	}

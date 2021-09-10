@@ -31,6 +31,9 @@ var projectStartCmd = &cobra.Command{
 			handleError(nginx.Reload())
 			return
 		}
+		if !nginx.IsInstalled() {
+			handleError(nginx.Install())
+		}
 		handleError(nginx.Start())
 	},
 }

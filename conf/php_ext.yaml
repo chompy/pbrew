@@ -1,10 +1,12 @@
 redis: |
   if [ ! -f {BREW_PATH}/lib/php/pecl/*/redis.so ]; then
+    rm /opt/homebrew/Cellar/{BREW_APP}/*/pecl || true
     {BREW_PATH}/opt/{BREW_APP}/bin/pecl install redis
   fi
 
 igbinary: |
   if [ ! -f {BREW_PATH}/lib/php/pecl/*/igbinary.so ]; then
+    rm /opt/homebrew/Cellar/{BREW_APP}/*/pecl || true
     {BREW_PATH}/opt/{BREW_APP}/bin/pecl install igbinary
   fi
 
