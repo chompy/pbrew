@@ -13,12 +13,13 @@ var projectCmd = &cobra.Command{
 }
 
 var projectStartCmd = &cobra.Command{
-	Use:   "start",
+	Use:   "start [--no-mounts]",
 	Short: "Start project.",
 	Run: func(cmd *cobra.Command, args []string) {
 		// start project
 		proj, err := getProject()
 		handleError(err)
+		proj.NoMounts = cmd.PersistentFlags().Lookup("no-mounts").Value.String() == "true"
 		handleError(proj.Start())
 		// generate nginx
 		handleError(core.NginxAdd(proj))
@@ -62,6 +63,7 @@ var projectStopCmd = &cobra.Command{
 }
 
 func init() {
+	projectStartCmd.PersistentFlags().Bool("no-mounts", false, "disable symlink mounts")
 	projectCmd.AddCommand(projectStartCmd)
 	projectCmd.AddCommand(projectStopCmd)
 	RootCmd.AddCommand(projectCmd)

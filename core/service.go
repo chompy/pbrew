@@ -128,6 +128,7 @@ func (s *Service) Start() error {
 		}
 	}
 	// execute start cmd
+	done2 := output.Duration("Start up.")
 	cmdStr := s.injectCommandParams(s.StartCmd)
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
@@ -135,6 +136,7 @@ func (s *Service) Start() error {
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)
 	}
+	done2()
 	done()
 	return nil
 }

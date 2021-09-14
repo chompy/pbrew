@@ -22,6 +22,7 @@ type Project struct {
 	Apps     []*def.App
 	Services []def.Service
 	Routes   []def.Route
+	NoMounts bool
 }
 
 // LoadProject loads a project at given the path.
@@ -63,6 +64,7 @@ func LoadProject(projPath string) (*Project, error) {
 		Apps:     apps,
 		Services: services,
 		Routes:   routes,
+		NoMounts: false,
 	}, nil
 }
 

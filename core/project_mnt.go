@@ -13,6 +13,10 @@ import (
 
 // SetupMounts sets up symlinks for mount directories.
 func (p *Project) SetupMounts() error {
+	if p.NoMounts {
+		output.LogInfo("No mounts flag enabled, skipping mount setup.")
+		return nil
+	}
 	done := output.Duration("Setup mounts.")
 	mntPath := filepath.Join(userPath(), mntDir, p.Name)
 	destPaths := make([]string, 0)
