@@ -5,6 +5,8 @@ server {
     listen          {{ .PortHTTP }};
     server_name     {{ .Host }};
     client_max_body_size 200M;
+    error_log {{ .ErrorLog }} warn;
+    access_log {{ .AccessLog }};
     {{ range .Locations }}
     {{ if eq .Type "upstream" }}
     location "{{ .Path }}/" {

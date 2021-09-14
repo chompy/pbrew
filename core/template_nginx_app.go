@@ -63,11 +63,8 @@ func (p *Project) GenerateNginxApp(app *def.App) (string, error) {
 	if templatePath == "" {
 		return "", errors.WithStack(errors.WithMessage(ErrTemplateNotFound, app.GetTypeName()))
 	}
-	appPath, err := appPath()
-	if err != nil {
-		return "", err
-	}
-	tmpl, err := template.ParseFiles(filepath.Join(appPath, templatePath))
+
+	tmpl, err := template.ParseFiles(filepath.Join(GetDir(AppDir), templatePath))
 	if err != nil {
 		return "", errors.WithStack(err)
 	}

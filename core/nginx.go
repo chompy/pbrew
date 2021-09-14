@@ -16,18 +16,18 @@ const defaultHostName = "localhost"
 
 const nginxStartCmd = `
 	cp {APP_PATH}/conf/nginx_fastcgi_params.normal {CONF_PATH}/nginx_fastcgi_params.normal
-	sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE}
+	sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -p {BREW_PATH}/opt/nginx/ -e {LOG_PATH}/nginx_error.log
 `
 
 // NginxService returns the service for nginx.
 func NginxService() *Service {
 	return &Service{
-		BrewName:       "nginx",
-		PostInstallCmd: "",
-		StartCmd:       nginxStartCmd,
-		StopCmd:        "sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -s stop",
-		ReloadCmd:      "sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -s reload",
-		ConfigTemplate: "nginx_main.conf.tmpl",
+		BrewName:        "nginx",
+		PostInstallCmd:  "",
+		StartCmd:        nginxStartCmd,
+		StopCmd:         "sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -p {BREW_PATH}/opt/nginx/ -e {LOG_PATH}/nginx_error.log -s stop",
+		ReloadCmd:       "sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -p {BREW_PATH}/opt/nginx/ -e {LOG_PATH}/nginx_error.log -s reload",
+		ConfigTemplates: map[string]string{"nginx_main.conf.tmpl": "{CONF_FILE}"},
 	}
 }
 
@@ -42,7 +42,7 @@ func NginxAdd(proj *Project) error {
 		return err
 	}
 	if err := ioutil.WriteFile(
-		filepath.Join(userPath(), confDir, fmt.Sprintf("nginx_routes_%s.conf", proj.Name)),
+		filepath.Join(GetDir(ConfDir), fmt.Sprintf("nginx_routes_%s.conf", proj.Name)),
 		[]byte(nginxRoutes),
 		0655,
 	); err != nil {
@@ -54,7 +54,7 @@ func NginxAdd(proj *Project) error {
 			return err
 		}
 		if err := ioutil.WriteFile(
-			filepath.Join(userPath(), confDir, fmt.Sprintf("nginx_app_%s_%s.conf", proj.Name, app.Name)),
+			filepath.Join(GetDir(ConfDir), fmt.Sprintf("nginx_app_%s_%s.conf", proj.Name, app.Name)),
 			[]byte(nginxApp),
 			0655,
 		); err != nil {

@@ -18,14 +18,17 @@ var loadedPHPExtensionList PHPExtensions
 type PHPExtensions map[string]string
 
 // Match finds a PHP extension that matches given name.
-func (p PHPExtensions) Match(name string) (string, string, error) {
+func (p PHPExtensions) Match(name string, version string) (string, string, error) {
+	versionName := fmt.Sprintf("%s-%s", version, name)
+	// match with php version
 	for extName, extCmd := range p {
-		if extName == name {
+		if extName == versionName {
 			return extName, extCmd, nil
 		}
 	}
+	// match with just extension name
 	for extName, extCmd := range p {
-		if wildcardCompare(extName, name) {
+		if extName == name {
 			return extName, extCmd, nil
 		}
 	}
@@ -51,20 +54,32 @@ func (s *Service) IsPHP() bool {
 	return strings.HasPrefix(s.BrewName, "php")
 }
 
+// PHPVersion returns the PHP version.
+func (s *Service) PHPVersion() string {
+	nameSplit := strings.Split(s.BrewName, "@")
+	if len(nameSplit) < 2 {
+		return ""
+	}
+	return strings.TrimSpace(nameSplit[1])
+}
+
 // PHPInstallExtension installs the given PHP extension.
 func (s *Service) PHPInstallExtension(name string) error {
+	if !s.IsPHP() {
+		return errors.WithStack(errors.WithMessage(ErrInvalidService, s.BrewName))
+	}
 	phpExtList, err := LoadPHPExtensionList()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	extKey, extCmd, err := phpExtList.Match(name)
+	extKey, extCmd, err := phpExtList.Match(name, s.PHPVersion())
 	if err != nil {
 		return errors.WithStack(errors.WithMessage(err, name))
 	}
 	done := output.Duration(fmt.Sprintf("Installing PHP extension %s.", extKey))
 	cmd := NewShellCommand()
 	cmd.Args = []string{"--login", "-c", s.injectCommandParams(extCmd)}
-	cmd.Env = os.Environ()
+	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(errors.WithMessage(err, extKey))
 	}
@@ -72,15 +87,31 @@ func (s *Service) PHPInstallExtension(name string) error {
 	return nil
 }
 
-func (s *Service) phpFpmPoolPath() (string, error) {
+// PHPGetInstalledExtensions returns list of installed PHP extensions.
+func (s *Service) PHPGetInstalledExtensions() []string {
 	if !s.IsPHP() {
-		return "", errors.WithStack(errors.WithMessage(ErrInvalidService, s.BrewName))
+		return []string{}
 	}
-	verSplit := strings.Split(s.BrewName, "@")
-	if len(verSplit) < 2 {
-		return "", errors.WithStack(errors.WithMessage(ErrInvalidService, s.BrewName))
+	fileInfo, err := ioutil.ReadDir(s.DataPath())
+	if err != nil {
+		output.Warn(err.Error())
+		return []string{}
 	}
-	return filepath.Join(BrewPath(), "etc", "php", verSplit[1], "php-fpm.d"), nil
+	out := make([]string, 0)
+	for _, file := range fileInfo {
+		if file.IsDir() {
+			continue
+		}
+		if filepath.Ext(file.Name()) == ".so" {
+			out = append(out, strings.Split(file.Name(), ".")[0])
+		}
+	}
+	return out
+}
+
+func (s *Service) phpFpmPoolPath(d *def.App, p *Project) string {
+	brewName := strings.ReplaceAll(s.BrewName, "@", "-")
+	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s_%s_%s.conf", brewName, p.Name, d.Name))
 }
 
 func (s *Service) phpPreSetup(d *def.App, p *Project) error {
@@ -106,11 +137,7 @@ func (s *Service) phpPreSetup(d *def.App, p *Project) error {
 	if err != nil {
 		return errors.WithStack(errors.WithMessage(err, s.BrewName))
 	}
-	fpmPoolPath, err := s.phpFpmPoolPath()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if err := ioutil.WriteFile(filepath.Join(fpmPoolPath, fmt.Sprintf("%s_%s.conf", p.Name, d.Name)), []byte(fpmPoolConf), 0755); err != nil {
+	if err := ioutil.WriteFile(s.phpFpmPoolPath(d, p), []byte(fpmPoolConf), 0755); err != nil {
 		return errors.WithStack(err)
 	}
 	done()
@@ -118,10 +145,12 @@ func (s *Service) phpPreSetup(d *def.App, p *Project) error {
 }
 
 func (s *Service) phpCleanup(d *def.App, p *Project) error {
-	fpmPoolPath, err := s.phpFpmPoolPath()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	os.Remove(filepath.Join(fpmPoolPath, fmt.Sprintf("%s_%s.conf", p.Name, d.Name)))
+	os.Remove(filepath.Join(s.phpFpmPoolPath(d, p)))
 	return nil
+}
+
+func (s *Service) phpConfigParams() map[string]interface{} {
+	return map[string]interface{}{
+		"Extensions": s.PHPGetInstalledExtensions(),
+	}
 }

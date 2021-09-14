@@ -3,7 +3,6 @@ package core
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -268,57 +267,5 @@ func (p *Project) Stop() error {
 		}
 	}
 	done()
-	return nil
-}
-
-// Shell opens a shell for given app.
-func (p *Project) Shell(d *def.App) error {
-	output.Info(fmt.Sprintf("Access shell for %s.", d.Name))
-	// get app brew service
-	serviceList, err := LoadServiceList()
-	if err != nil {
-		return err
-	}
-	brewAppService, err := serviceList.MatchDef(d)
-	if err != nil {
-		return err
-	}
-	if !brewAppService.IsRunning() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewAppService.BrewName))
-	}
-	// build path
-	envPath := make([]string, 0)
-	envPath = append(envPath, filepath.Join(BrewPath(), "bin"))
-	for _, service := range p.Services {
-		brewService, err := serviceList.MatchDef(&service)
-		if err != nil {
-			if errors.Is(err, ErrServiceNotFound) {
-				continue
-			}
-			return err
-		}
-		if !brewService.IsRunning() {
-			return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewService.BrewName))
-		}
-		envPath = append(envPath, filepath.Join(BrewPath(), "opt", brewService.BrewName, "bin"))
-	}
-	envPath = append(envPath, filepath.Join(BrewPath(), "opt", brewAppService.BrewName, "bin"))
-	envPath = append(envPath, "/bin")
-	envPath = append(envPath, "/usr/bin")
-	// inject env vars
-	env := make([]string, 0)
-	env = append(env, "PATH="+strings.Join(envPath, ":"))
-	env = append(env, "HOME="+p.Path)
-	env = append(env, fmt.Sprintf("PS1=%s-%s> ", p.Name, d.Name))
-	for k, v := range p.Env(d) {
-		env = append(env, fmt.Sprintf("%s=%s", k, v))
-	}
-	// run interactive shell
-	cmd := NewShellCommand()
-	cmd.Args = []string{"--norc"}
-	cmd.Env = env
-	if err := cmd.Drop(); err != nil {
-		return err
-	}
 	return nil
 }

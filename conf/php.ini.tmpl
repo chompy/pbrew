@@ -1,0 +1,3 @@
+{{ range $key, $ext := .Params.Extensions }}
+extension={{ $.DataDir }}/{{ $ext }}.so
+{{ end }}

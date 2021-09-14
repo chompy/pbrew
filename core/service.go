@@ -21,17 +21,17 @@ import (
 
 // Service is a Homebrew service.
 type Service struct {
-	BrewName       string `yaml:"brew_name"`
-	PostInstallCmd string `yaml:"post_install"`
-	ConfigTemplate string `yaml:"config_template"`
-	StartCmd       string `yaml:"start"`
-	StopCmd        string `yaml:"stop"`
-	ReloadCmd      string `yaml:"reload"`
+	BrewName        string            `yaml:"brew_name"`
+	PostInstallCmd  string            `yaml:"post_install"`
+	ConfigTemplates map[string]string `yaml:"config_templates"`
+	StartCmd        string            `yaml:"start"`
+	StopCmd         string            `yaml:"stop"`
+	ReloadCmd       string            `yaml:"reload"`
 }
 
 // Info returns information about Homebrew application.
 func (s *Service) Info() (map[string]interface{}, error) {
-	binPath := filepath.Join(BrewPath(), "bin/brew")
+	binPath := filepath.Join(GetDir(BrewDir), "bin/brew")
 	out, err := exec.Command(binPath, "info", s.BrewName, "--json").Output()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -66,7 +66,7 @@ func (s *Service) PostInstall() error {
 		cmdStr := s.injectCommandParams(s.PostInstallCmd)
 		cmd := NewShellCommand()
 		cmd.Args = []string{"-c", cmdStr}
-		cmd.Env = os.Environ()
+		cmd.Env = ServicesEnv([]*Service{s})
 		if err := cmd.Interactive(); err != nil {
 			return errors.WithMessage(err, s.BrewName)
 		}
@@ -132,7 +132,7 @@ func (s *Service) Start() error {
 	cmdStr := s.injectCommandParams(s.StartCmd)
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
-	cmd.Env = os.Environ()
+	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)
 	}
@@ -155,7 +155,7 @@ func (s *Service) Stop() error {
 	cmdStr := s.injectCommandParams(s.StopCmd)
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
-	cmd.Env = os.Environ()
+	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)
 	}
@@ -180,7 +180,7 @@ func (s *Service) Reload() error {
 	cmdStr := s.injectCommandParams(s.ReloadCmd)
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
-	cmd.Env = os.Environ()
+	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)
 	}
@@ -264,30 +264,38 @@ func (s *Service) Port() (int, error) {
 
 // SocketPath returns path to service socket.
 func (s *Service) SocketPath() string {
-	return filepath.Join(userPath(), runDir, fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewName, "@", "-")))
+	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewName, "@", "-")))
 }
 
 // UpstreamSocketPath returns path to app upstream socket.
 func (s *Service) UpstreamSocketPath(p *Project, app *def.App) string {
 	if s.IsPHP() {
-		return filepath.Join(userPath(), runDir, fmt.Sprintf("php-%s-%s.sock", p.Name, app.Name))
+		return filepath.Join(GetDir(RunDir), fmt.Sprintf("php-%s-%s.sock", p.Name, app.Name))
 	}
 	return s.SocketPath()
 }
 
 // PidPath returns path to service pid file.
 func (s *Service) PidPath() string {
-	return filepath.Join(userPath(), runDir, fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewName, "@", "-")))
+	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewName, "@", "-")))
 }
 
 // ConfigPath returns path to service config file.
 func (s *Service) ConfigPath() string {
-	return filepath.Join(userPath(), confDir, fmt.Sprintf("%s.conf", strings.ReplaceAll(s.BrewName, "@", "-")))
+	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s.conf", strings.ReplaceAll(s.BrewName, "@", "-")))
 }
 
 // DataPath returns path to service data directory.
 func (s *Service) DataPath() string {
-	return filepath.Join(userPath(), dataDir, strings.ReplaceAll(s.BrewName, "@", "-"))
+	return filepath.Join(GetDir(DataDir), strings.ReplaceAll(s.BrewName, "@", "-"))
+}
+
+// ConfigParams returns confir template parameters for service.
+func (s *Service) ConfigParams() map[string]interface{} {
+	if s.IsPHP() {
+		return s.phpConfigParams()
+	}
+	return map[string]interface{}{}
 }
 
 func (s *Service) injectCommandParams(cmd string) string {
@@ -295,16 +303,16 @@ func (s *Service) injectCommandParams(cmd string) string {
 	if err != nil {
 		output.Warn(err.Error())
 	}
-	cmd = strings.ReplaceAll(cmd, "{BREW_PATH}", BrewPath())
+	cmd = strings.ReplaceAll(cmd, "{BREW_PATH}", GetDir(BrewDir))
 	cmd = strings.ReplaceAll(cmd, "{BREW_APP}", s.BrewName)
 	cmd = strings.ReplaceAll(cmd, "{PORT}", fmt.Sprintf("%d", port))
 	cmd = strings.ReplaceAll(cmd, "{SOCKET}", s.SocketPath())
 	cmd = strings.ReplaceAll(cmd, "{PID_FILE}", s.PidPath())
 	cmd = strings.ReplaceAll(cmd, "{PID_FILE_ESC}", strings.ReplaceAll(s.PidPath(), "/", "\\/"))
-	appPath, _ := appPath()
-	cmd = strings.ReplaceAll(cmd, "{APP_PATH}", appPath)
+	cmd = strings.ReplaceAll(cmd, "{APP_PATH}", GetDir(AppDir))
 	cmd = strings.ReplaceAll(cmd, "{CONF_FILE}", s.ConfigPath())
-	cmd = strings.ReplaceAll(cmd, "{CONF_PATH}", filepath.Join(userPath(), confDir))
+	cmd = strings.ReplaceAll(cmd, "{CONF_PATH}", GetDir(ConfDir))
 	cmd = strings.ReplaceAll(cmd, "{DATA_PATH}", s.DataPath())
+	cmd = strings.ReplaceAll(cmd, "{LOG_PATH}", GetDir(LogDir))
 	return cmd
 }

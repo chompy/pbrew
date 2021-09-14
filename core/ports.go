@@ -19,7 +19,7 @@ type PortMap map[string]int
 
 // LoadPortMap loads the port mappings.
 func LoadPortMap() (PortMap, error) {
-	pathTo := filepath.Join(userPath(), portMapFile)
+	pathTo := filepath.Join(GetDir(UserDir), portMapFile)
 	portJSON, err := ioutil.ReadFile(pathTo)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -36,7 +36,7 @@ func LoadPortMap() (PortMap, error) {
 
 // Save stores the port mappings to file.
 func (p PortMap) save() error {
-	pathTo := filepath.Join(userPath(), portMapFile)
+	pathTo := filepath.Join(GetDir(UserDir), portMapFile)
 	portJSON, err := json.Marshal(p)
 	if err != nil {
 		return errors.WithStack(err)

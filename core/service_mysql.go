@@ -42,7 +42,7 @@ func (s *Service) MySQLShell(database string) error {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
 	}
 	output.Info(fmt.Sprintf("Access shell for %s.", s.BrewName))
-	pathToMySQL := filepath.Join(BrewPath(), "opt", s.BrewName, "bin", "mysql")
+	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewName, "bin", "mysql")
 	args := make([]string, 0)
 	args = append(args, "-S", s.SocketPath(), "-u", "root")
 	if database != "" {
@@ -65,7 +65,7 @@ func (s *Service) MySQLDump(database string, out io.Writer) error {
 
 // MySQLExecute executes given query.
 func (s *Service) MySQLExecute(query string) error {
-	pathToMySQL := filepath.Join(BrewPath(), "opt", s.BrewName, "bin", "mysql")
+	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewName, "bin", "mysql")
 	cmd := NewShellCommand()
 	cmd.Command = pathToMySQL
 	cmd.Args = []string{"-S", s.SocketPath(), "-u", "root", "-e", query}

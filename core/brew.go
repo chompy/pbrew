@@ -11,14 +11,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// BrewPath is the path the homebrew install.
-func BrewPath() string {
-	return filepath.Join(userPath(), brewDir)
-}
-
 // IsBrewInstalled returns true if homebrew is installed.
 func IsBrewInstalled() bool {
-	if _, err := os.Stat(BrewPath()); os.IsNotExist(err) {
+	if _, err := os.Stat(GetDir(BrewDir)); os.IsNotExist(err) {
 		return false
 	}
 	return true
@@ -27,13 +22,8 @@ func IsBrewInstalled() bool {
 // BrewInstall installs homebrew in application root.
 func BrewInstall() error {
 	done := output.Duration("Install Homebrew.")
-	if err := os.MkdirAll(BrewPath(), 0755); err != nil {
-		if !errors.Is(err, os.ErrExist) {
-			return errors.WithStack(err)
-		}
-	}
 	cmd := NewShellCommand()
-	cmd.Args = []string{"-c", fmt.Sprintf(brewInstall, BrewPath())}
+	cmd.Args = []string{"-c", fmt.Sprintf(brewInstall, GetDir(BrewDir))}
 	cmd.Env = os.Environ()
 	if err := cmd.Interactive(); err != nil {
 		return err
@@ -52,7 +42,7 @@ func brewCommand(subCmds ...string) error {
 		return errors.WithStack(ErrBrewNotInstalled)
 	}
 	done := output.Duration("Run brew " + strings.Join(subCmds, " ") + ".")
-	binPath := filepath.Join(BrewPath(), "bin/brew")
+	binPath := filepath.Join(GetDir(BrewDir), "bin/brew")
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", binPath + " " + strings.Join(subCmds, " ")}
 	cmd.Env = os.Environ()

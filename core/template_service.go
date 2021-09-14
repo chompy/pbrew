@@ -22,6 +22,7 @@ type serviceTemplateVars struct {
 	ConfigDir string
 	DataDir   string
 	BrewDir   string
+	LogDir    string
 	User      string
 	Group     string
 	Params    map[string]interface{}
@@ -48,10 +49,11 @@ func (s *Service) BuildConfigTemplateVars() (serviceTemplateVars, error) {
 		Pid:       s.PidPath(),
 		ConfigDir: filepath.Dir(s.ConfigPath()),
 		DataDir:   s.DataPath(),
-		BrewDir:   BrewPath(),
+		BrewDir:   GetDir(BrewDir),
+		LogDir:    GetDir(LogDir),
 		User:      currentUser.Username,
 		Group:     currentUserGroup.Name,
-		Params:    make(map[string]interface{}),
+		Params:    s.ConfigParams(),
 	}, nil
 }
 
@@ -59,7 +61,7 @@ func (s *Service) BuildConfigTemplateVars() (serviceTemplateVars, error) {
 func (s *Service) GenerateConfigFile() error {
 	done := output.Duration(fmt.Sprintf("Generate config for %s.", s.BrewName))
 	// assume config not needed if template not defined
-	if s.ConfigTemplate == "" {
+	if s.ConfigTemplates == nil {
 		return nil
 	}
 	// build template vars
@@ -67,24 +69,24 @@ func (s *Service) GenerateConfigFile() error {
 	if err != nil {
 		return err
 	}
-	// path to template
-	appPath, err := appPath()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	templatePath := filepath.Join(appPath, confDir, s.ConfigTemplate)
-	// generate config
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, templateVars); err != nil {
-		return errors.WithStack(err)
-	}
-	// save
-	if err := ioutil.WriteFile(s.ConfigPath(), buf.Bytes(), mkdirPerm); err != nil {
-		return errors.WithStack(err)
+	// itterate templates
+	for templateFilename, configPath := range s.ConfigTemplates {
+		// get paths
+		templatePath := filepath.Join(GetDir(AppDir), "conf", templateFilename)
+		configPath = s.injectCommandParams(configPath)
+		// generate config
+		tmpl, err := template.ParseFiles(templatePath)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		var buf bytes.Buffer
+		if err := tmpl.Execute(&buf, templateVars); err != nil {
+			return errors.WithStack(err)
+		}
+		// save
+		if err := ioutil.WriteFile(configPath, buf.Bytes(), mkdirPerm); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 	done()
 	return nil

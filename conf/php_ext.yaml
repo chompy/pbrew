@@ -1,14 +1,37 @@
-redis: |
-  if [ ! -f {BREW_PATH}/lib/php/pecl/*/redis.so ]; then
-    rm /opt/homebrew/Cellar/{BREW_APP}/*/pecl || true
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl install redis
+7.0-redis: |
+  if [ ! -f {DATA_PATH}/redis.so ]; then
+    rm {BREW_PATH}/opt/php@7.0/pecl || true
+    cd /tmp
+    curl -o /tmp/ext.tar.gz https://pecl.php.net/get/redis-5.3.4.tgz
+    tar xvfz ext.tar.gz
+    rm /tmp/ext.tar.gz
+    cd /tmp/redis-*
+    phpize
+    ./configure
+    make
+    cp modules/redis.so {DATA_PATH}/redis.so
+    rm -rf /tmp/redis-*
   fi
 
-igbinary: |
-  if [ ! -f {BREW_PATH}/lib/php/pecl/*/igbinary.so ]; then
-    rm /opt/homebrew/Cellar/{BREW_APP}/*/pecl || true
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl install igbinary
+redis: |
+  if [ ! -f {DATA_PATH}/redis.so ]; then
+    rm {BREW_PATH}/opt/php@7.0/pecl || true
+    cd /tmp
+    curl -o /tmp/ext.tar.gz https://pecl.php.net/get/redis-5.3.4.tgz
+    tar xvfz ext.tar.gz
+    rm /tmp/ext.tar.gz
+    cd /tmp/redis-*
+    phpize
+    ./configure
+    make
+    cp modules/redis.so {DATA_PATH}/redis.so
+    rm -rf /tmp/redis-*
   fi
+
+#igbinary: |
+#  if [ ! -f {BREW_PATH}/lib/php/pecl/*/igbinary.so ]; then
+#    {BREW_PATH}/opt/{BREW_APP}/bin/pecl install igbinary
+#  fi
 
 #imagick: |
 #  if [ ! -f {BREW_PATH}/lib/php/extensions/imagick.so ]; then

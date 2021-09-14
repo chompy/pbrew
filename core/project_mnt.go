@@ -18,7 +18,7 @@ func (p *Project) SetupMounts() error {
 		return nil
 	}
 	done := output.Duration("Setup mounts.")
-	mntPath := filepath.Join(userPath(), mntDir, p.Name)
+	mntPath := filepath.Join(GetDir(MntDir), p.Name)
 	destPaths := make([]string, 0)
 	for _, app := range p.Apps {
 		for dest, mount := range app.Mounts {

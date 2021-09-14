@@ -44,11 +44,7 @@ func (p *Project) buildPhpFPMPoolTemplate(app *def.App) (phpFpmPoolTemplate, err
 
 // GenerateNginxApp generates nginx config for given application.
 func (p *Project) GeneratePhpFpmPool(app *def.App) (string, error) {
-	appPath, err := appPath()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	tmpl, err := template.ParseFiles(filepath.Join(appPath, phpFpmPoolTemplateFile))
+	tmpl, err := template.ParseFiles(filepath.Join(GetDir(AppDir), phpFpmPoolTemplateFile))
 	if err != nil {
 		return "", errors.WithStack(err)
 	}

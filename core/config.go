@@ -1,12 +1,5 @@
 package core
 
-const brewDir = "homebrew"
-const runDir = "run"
-const confDir = "conf"
-const dataDir = "data"
-const varsDir = "vars"
-const mntDir = "mnt"
-
 // Config defines app configuration.
 type Config struct {
 	PortRangeStart int    `yaml:"port_range_start"`

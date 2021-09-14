@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
-
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -21,38 +19,6 @@ func wildcardCompare(original string, test string) bool {
 		return false
 	}
 	return regex.MatchString(original)
-}
-
-func resolveUserPath(path string) string {
-	if strings.HasPrefix(path, "~") {
-		homePath, err := os.UserHomeDir()
-		if err != nil {
-			output.Warn(err.Error())
-			return path
-		}
-		path = filepath.Join(homePath, path[1:])
-	}
-	return path
-}
-
-func appPath() (string, error) {
-	execPath, err := os.Executable()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	execPath, err = filepath.EvalSymlinks(execPath)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	return filepath.Dir(execPath), nil
-}
-
-func userPath() string {
-	conf, err := LoadConfig()
-	if err != nil {
-		output.Warn(err.Error())
-	}
-	return resolveUserPath(conf.UserDir)
 }
 
 func scanPlatformAppYaml(topPath string, disableOverrides bool) [][]string {
@@ -101,11 +67,7 @@ func scanPlatformAppYaml(topPath string, disableOverrides bool) [][]string {
 }
 
 func loadYAML(name string, out interface{}) error {
-	appPath, err := appPath()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	yamlRaw, err := ioutil.ReadFile(filepath.Join(appPath, "conf", name+".yaml"))
+	yamlRaw, err := ioutil.ReadFile(filepath.Join(GetDir(AppDir), "conf", name+".yaml"))
 	if err != nil {
 		return errors.WithStack(err)
 	}

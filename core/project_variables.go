@@ -17,7 +17,7 @@ import (
 const GlobalVariableFile = "_global"
 
 func variablePath(name string) string {
-	return filepath.Join(userPath(), "vars", name)
+	return filepath.Join(GetDir(VarsDir), name)
 }
 
 func LoadVariables(name string) (def.Variables, error) {

@@ -12,7 +12,13 @@ http {
     sendfile                on;
     keepalive_timeout       65;
     server_names_hash_bucket_size 256;
-    #gzip  on;
+    gzip  on;
+    client_body_temp_path /tmp/pbrew_nginx/client_body; 
+    proxy_temp_path /tmp/pbrew_nginx/proxy;
+    fastcgi_temp_path /tmp/pbrew_nginx/fastcgi;
+    uwsgi_temp_path /tmp/pbrew_nginx/uwsgi;
+    scgi_temp_path /tmp/pbrew_nginx/scgi;
+    access_log {{ .LogDir }}/nginx_access.log;
     include {{ .ConfigDir }}/nginx_route_*.conf;
     include {{ .ConfigDir }}/nginx_app_*.conf;
 }

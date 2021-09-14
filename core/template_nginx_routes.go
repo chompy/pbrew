@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -24,6 +25,8 @@ type nginxRouteHostTemplate struct {
 	PortHTTP  int
 	PortHTTPS int
 	Locations []nginxRouteLocationTemplate
+	ErrorLog  string
+	AccessLog string
 }
 
 type nginxRouteLocationTemplate struct {
@@ -81,6 +84,8 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 			PortHTTP:  config.RouterHTTP,
 			PortHTTPS: config.RouterHTTPS,
 			Locations: locationTemplates,
+			ErrorLog:  filepath.Join(GetDir(LogDir), fmt.Sprintf("nginx_error_%s.log", p.Name)),
+			AccessLog: filepath.Join(GetDir(LogDir), fmt.Sprintf("nginx_access_%s.log", p.Name)),
 		})
 	}
 	return nginxRouteTemplate{
@@ -91,11 +96,7 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 
 // GenerateNginxRoutes returns nginx configuration for project routes.
 func (p *Project) GenerateNginxRoutes() (string, error) {
-	appPath, err := appPath()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	templatePath := filepath.Join(appPath, nginxRouteTemplateFile)
+	templatePath := filepath.Join(GetDir(AppDir), nginxRouteTemplateFile)
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return "", errors.WithStack(err)
