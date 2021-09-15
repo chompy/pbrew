@@ -27,6 +27,7 @@ type nginxRouteHostTemplate struct {
 	Locations []nginxRouteLocationTemplate
 	ErrorLog  string
 	AccessLog string
+	DataDir   string
 }
 
 type nginxRouteLocationTemplate struct {
@@ -86,6 +87,7 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 			Locations: locationTemplates,
 			ErrorLog:  filepath.Join(GetDir(LogDir), fmt.Sprintf("nginx_error_%s.log", p.Name)),
 			AccessLog: filepath.Join(GetDir(LogDir), fmt.Sprintf("nginx_access_%s.log", p.Name)),
+			DataDir:   filepath.Join(GetDir(DataDir), "nginx"),
 		})
 	}
 	return nginxRouteTemplate{

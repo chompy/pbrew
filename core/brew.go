@@ -32,6 +32,10 @@ func BrewInstall() error {
 	if err := brewCommand("tap", "shivammathur/php"); err != nil {
 		return err
 	}
+	// dependencies
+	if err := brewCommand("install", "openssl"); err != nil {
+		return err
+	}
 	done()
 	return nil
 }

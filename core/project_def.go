@@ -61,6 +61,9 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 						rel["username"] = mysqlUser
 						rel["password"] = mysqlPass
 						rel["scheme"] = "mysql"
+						rel["query"] = map[string]interface{}{
+							"is_master": true,
+						}
 					}
 					out = append(out, rel)
 				}

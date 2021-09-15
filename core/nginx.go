@@ -19,11 +19,18 @@ const nginxStartCmd = `
 	sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -p {BREW_PATH}/opt/nginx/ -e {LOG_PATH}/nginx_error.log
 `
 
+const nginxPostInstallCmd = `
+	openssl req -x509 -out {DATA_PATH}/localhost.crt -keyout {DATA_PATH}/localhost.key \
+		-newkey rsa:2048 -nodes -sha256 \
+		-subj '/CN=localhost' -extensions EXT -config <( \
+		printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
+`
+
 // NginxService returns the service for nginx.
 func NginxService() *Service {
 	return &Service{
 		BrewName:        "nginx",
-		PostInstallCmd:  "",
+		PostInstallCmd:  nginxPostInstallCmd,
 		StartCmd:        nginxStartCmd,
 		StopCmd:         "sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -p {BREW_PATH}/opt/nginx/ -e {LOG_PATH}/nginx_error.log -s stop",
 		ReloadCmd:       "sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -p {BREW_PATH}/opt/nginx/ -e {LOG_PATH}/nginx_error.log -s reload",
