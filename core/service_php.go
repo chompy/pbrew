@@ -78,7 +78,7 @@ func (s *Service) PHPInstallExtension(name string) error {
 	}
 	done := output.Duration(fmt.Sprintf("Installing PHP extension %s.", extKey))
 	cmd := NewShellCommand()
-	cmd.Args = []string{"--login", "-c", s.injectCommandParams(extCmd)}
+	cmd.Args = []string{"--norc", "-c", s.injectCommandParams(extCmd)}
 	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(errors.WithMessage(err, extKey))
@@ -130,6 +130,11 @@ func (s *Service) phpPreSetup(d *def.App, p *Project) error {
 			}
 			return errors.WithStack(err)
 		}
+	}
+	// (re)generate config file
+	// TODO better way??
+	if err := s.GenerateConfigFile(); err != nil {
+		return err
 	}
 	// php fpm pool
 	done := output.Duration("Generate PHP FPM pool.")

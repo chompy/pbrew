@@ -65,7 +65,7 @@ func (s *Service) PostInstall() error {
 	if s.PostInstallCmd != "" {
 		cmdStr := s.injectCommandParams(s.PostInstallCmd)
 		cmd := NewShellCommand()
-		cmd.Args = []string{"-c", cmdStr}
+		cmd.Args = []string{"--norc", "-c", cmdStr}
 		cmd.Env = ServicesEnv([]*Service{s})
 		if err := cmd.Interactive(); err != nil {
 			return errors.WithMessage(err, s.BrewName)
@@ -121,7 +121,7 @@ func (s *Service) Start() error {
 	done2 := output.Duration("Start up.")
 	cmdStr := s.injectCommandParams(s.StartCmd)
 	cmd := NewShellCommand()
-	cmd.Args = []string{"-c", cmdStr}
+	cmd.Args = []string{"--norc", "-c", cmdStr}
 	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)
@@ -144,7 +144,7 @@ func (s *Service) Stop() error {
 	// execute stop cmd
 	cmdStr := s.injectCommandParams(s.StopCmd)
 	cmd := NewShellCommand()
-	cmd.Args = []string{"-c", cmdStr}
+	cmd.Args = []string{"--norc", "-c", cmdStr}
 	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)
@@ -169,7 +169,7 @@ func (s *Service) Reload() error {
 	// execute reload cmd
 	cmdStr := s.injectCommandParams(s.ReloadCmd)
 	cmd := NewShellCommand()
-	cmd.Args = []string{"-c", cmdStr}
+	cmd.Args = []string{"--norc", "-c", cmdStr}
 	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.BrewName)

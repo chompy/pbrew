@@ -49,7 +49,7 @@ func brewCommand(subCmds ...string) error {
 	done := output.Duration("Run brew " + strings.Join(subCmds, " ") + ".")
 	binPath := filepath.Join(GetDir(BrewDir), "bin/brew")
 	cmd := NewShellCommand()
-	cmd.Args = []string{"-c", binPath + " " + strings.Join(subCmds, " ")}
+	cmd.Args = []string{"--norc", "-c", binPath + " " + strings.Join(subCmds, " ")}
 	cmd.Env = brewEnv()
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(err)
