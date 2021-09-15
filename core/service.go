@@ -117,16 +117,6 @@ func (s *Service) Start() error {
 	if s.IsRunning() {
 		return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
 	}
-	// generate config file
-	if err := s.GenerateConfigFile(); err != nil {
-		return err
-	}
-	// create data dir
-	if err := os.Mkdir(s.DataPath(), mkdirPerm); err != nil {
-		if !errors.Is(err, os.ErrExist) {
-			return errors.WithStack(err)
-		}
-	}
 	// execute start cmd
 	done2 := output.Duration("Start up.")
 	cmdStr := s.injectCommandParams(s.StartCmd)
@@ -190,22 +180,33 @@ func (s *Service) Reload() error {
 
 // PreStart performs setup that should occur prior to starting service.
 func (s *Service) PreStart(d interface{}, p *Project) error {
+	done := output.Duration(fmt.Sprintf("Pre setup %s.", s.BrewName))
+	if s.IsRunning() {
+		return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
+	}
+	// create data dir
+	if err := os.Mkdir(s.DataPath(), mkdirPerm); err != nil {
+		if !errors.Is(err, os.ErrExist) {
+			return errors.WithStack(err)
+		}
+	}
+	// generate config file
+	if err := s.GenerateConfigFile(); err != nil {
+		return err
+	}
+	// service specific setup
 	switch d := d.(type) {
 	case *def.App:
 		{
-			done := output.Duration(fmt.Sprintf("Pre setup %s.", d.Name))
-			if s.IsRunning() {
-				return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
-			}
 			if s.IsPHP() {
 				if err := s.phpPreSetup(d, p); err != nil {
 					return err
 				}
 			}
-			done()
 			break
 		}
 	}
+	done()
 	return nil
 }
 

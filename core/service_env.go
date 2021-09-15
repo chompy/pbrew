@@ -15,6 +15,13 @@ func ServicesEnv(services []*Service) []string {
 	envPath = append(envPath, "/bin")
 	envPath = append(envPath, "/usr/bin")
 	env := make([]string, 0)
+	env = append(env, brewEnv()...)
+	for k, v := range env {
+		if strings.HasPrefix(v, "PATH") {
+			env = append(env[:k], env[k+1:]...)
+			break
+		}
+	}
 	env = append(env, "PATH="+strings.Join(envPath, ":"))
 	env = append(env, "HOME="+GetDir(HomeDir))
 	for _, service := range services {

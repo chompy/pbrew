@@ -15,6 +15,7 @@ import (
 const defaultHostName = "localhost"
 
 const nginxStartCmd = `
+	mkdir -p /tmp/pbrew_nginx
 	cp {APP_PATH}/conf/nginx_fastcgi_params.normal {CONF_PATH}/nginx_fastcgi_params.normal
 	sudo {BREW_PATH}/opt/nginx/bin/nginx -c {CONF_FILE} -p {BREW_PATH}/opt/nginx/ -e {LOG_PATH}/nginx_error.log
 `

@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 
 // IsBrewInstalled returns true if homebrew is installed.
 func IsBrewInstalled() bool {
-	if _, err := os.Stat(GetDir(BrewDir)); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(GetDir(BrewDir), "bin")); os.IsNotExist(err) {
 		return false
 	}
 	return true
@@ -24,7 +25,7 @@ func BrewInstall() error {
 	done := output.Duration("Install Homebrew.")
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", fmt.Sprintf(brewInstall, GetDir(BrewDir))}
-	cmd.Env = os.Environ()
+	cmd.Env = brewEnv()
 	if err := cmd.Interactive(); err != nil {
 		return err
 	}
@@ -49,10 +50,26 @@ func brewCommand(subCmds ...string) error {
 	binPath := filepath.Join(GetDir(BrewDir), "bin/brew")
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", binPath + " " + strings.Join(subCmds, " ")}
-	cmd.Env = os.Environ()
+	cmd.Env = brewEnv()
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(err)
 	}
 	done()
 	return nil
+}
+
+func brewEnv() []string {
+	user, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	return []string{
+		fmt.Sprintf("HOMEBREW_CELLAR=%s", filepath.Join(GetDir(BrewDir), "Cellar")),
+		fmt.Sprintf("HOMEBREW_PREFIX=%s", GetDir(BrewDir)),
+		fmt.Sprintf("HOMEBREW_REPOSITORY=%s", GetDir(BrewDir)),
+		fmt.Sprintf("HOMEBREW_SHELLENV_PREFIX=%s", GetDir(BrewDir)),
+		fmt.Sprintf("HOME=%s", GetDir(HomeDir)),
+		fmt.Sprintf("USER=%s", user.Username),
+		fmt.Sprintf("PATH=%s:/bin:/usr/bin", filepath.Join(GetDir(BrewDir), "bin")),
+	}
 }

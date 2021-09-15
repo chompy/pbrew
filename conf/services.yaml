@@ -4,6 +4,11 @@
     {BREW_PATH}/opt/php@7.4/sbin/php-fpm -D -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
+  post_install: |
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
     "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"
@@ -14,6 +19,11 @@
     {BREW_PATH}/opt/php@7.3/sbin/php-fpm -D -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
+  post_install: |
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
     "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"
@@ -24,6 +34,11 @@
     {BREW_PATH}/opt/php@7.2/sbin/php-fpm -D -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
+  post_install: |
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
     "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"
@@ -34,6 +49,11 @@
     {BREW_PATH}/opt/php@7.1/sbin/php-fpm -D -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
+  post_install: |
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
     "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"
@@ -59,6 +79,11 @@
     {BREW_PATH}/opt/php@5.6/sbin/php-fpm -D -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
+  post_install: |
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
+    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
     "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"

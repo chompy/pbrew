@@ -23,6 +23,7 @@ var routerStartCmd = &cobra.Command{
 		if !nginx.IsInstalled() {
 			handleError(nginx.Install())
 		}
+		handleError(nginx.PreStart(nil, nil))
 		handleError(nginx.Start())
 	},
 }
