@@ -1,3 +1,4 @@
+session.save_path=/tmp
 {{ range $key, $ext := .Params.Extensions }}
 extension={{ $.DataDir }}/{{ $ext }}.so
 {{ end }}

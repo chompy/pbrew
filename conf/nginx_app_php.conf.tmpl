@@ -19,7 +19,7 @@ server {
     }
     location "{{ .Path }}/" {
         alias {{ .Root }}/;
-        location {{ .Path }}/ {
+        location "{{ .Path }}/" {
             set $_rewrite_path "{{ .Passthru }}";
             try_files       $uri @rewrite;
             expires         0;
@@ -27,7 +27,7 @@ server {
         location ~ ".+?\.php(?=$|/)" {    
             set $_rewrite_path "{{ .Passthru }}";
             try_files       $fastcgi_script_name @rewrite;
-            fastcgi_pass    unix:{{ .Socket }};
+            fastcgi_pass    "unix:{{ .Socket }}";
             fastcgi_request_buffering on;
             client_max_body_size 250m;
             set $_document_root $document_root;

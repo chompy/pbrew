@@ -1,7 +1,7 @@
 "php-7.4":
   brew_name: "php@7.4"
   start: |
-    {BREW_PATH}/opt/php@7.4/sbin/php-fpm -D -g {PID_FILE}
+    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
   post_install: |
@@ -16,7 +16,7 @@
 "php-7.3":
   brew_name: "php@7.3"
   start: |
-    {BREW_PATH}/opt/php@7.3/sbin/php-fpm -D -g {PID_FILE}
+    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
   post_install: |
@@ -31,7 +31,7 @@
 "php-7.2":
   brew_name: "php@7.2"
   start: |
-    {BREW_PATH}/opt/php@7.2/sbin/php-fpm -D -g {PID_FILE}
+    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
   post_install: |
@@ -46,7 +46,7 @@
 "php-7.1":
   brew_name: "php@7.1"
   start: |
-    {BREW_PATH}/opt/php@7.1/sbin/php-fpm -D -g {PID_FILE}
+    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
   post_install: |
@@ -76,7 +76,7 @@
 "php-5.6":
   brew_name: "php@5.6"
   start: |
-    {BREW_PATH}/opt/php@5.6/sbin/php-fpm -D -g {PID_FILE}
+    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
   post_install: |
