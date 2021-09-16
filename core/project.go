@@ -105,6 +105,9 @@ func (p *Project) InstallServices() error {
 		return err
 	}
 	for _, service := range services {
+		if err := service.InstallDependencies(); err != nil {
+			return err
+		}
 		if service.IsInstalled() {
 			output.LogInfo(fmt.Sprintf("Service '%s' already installed.", service.BrewName))
 			continue

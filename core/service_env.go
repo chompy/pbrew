@@ -8,10 +8,13 @@ import (
 // ServicesEnv returns environment variables for given services.
 func ServicesEnv(services []*Service) []string {
 	envPath := make([]string, 0)
-	envPath = append(envPath, filepath.Join(GetDir(BrewDir), "bin"))
 	for _, service := range services {
 		envPath = append(envPath, filepath.Join(GetDir(BrewDir), "opt", service.BrewName, "bin"))
+		for _, dependency := range service.Dependencies {
+			envPath = append(envPath, filepath.Join(GetDir(BrewDir), "opt", dependency, "bin"))
+		}
 	}
+	envPath = append(envPath, filepath.Join(GetDir(BrewDir), "bin"))
 	envPath = append(envPath, "/bin")
 	envPath = append(envPath, "/usr/bin")
 	env := make([]string, 0)

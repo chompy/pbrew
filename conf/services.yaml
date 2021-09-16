@@ -72,6 +72,8 @@
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
     "php.ini.tmpl" : "{DATA_PATH}/php.ini"
+  dependencies:
+    - "ruby@2.4"
 
 "php-5.6":
   brew_name: "php@5.6"

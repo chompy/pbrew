@@ -8,20 +8,18 @@ import (
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 )
 
-// Shell opens a shell for given app.
-func (p *Project) Shell(d *def.App) error {
-	output.Info(fmt.Sprintf("Access shell for %s.", d.Name))
+func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 	// get app brew service
 	serviceList, err := LoadServiceList()
 	if err != nil {
-		return err
+		return ShellCommand{}, err
 	}
 	brewAppService, err := serviceList.MatchDef(d)
 	if err != nil {
-		return err
+		return ShellCommand{}, err
 	}
 	if !brewAppService.IsRunning() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewAppService.BrewName))
+		return ShellCommand{}, errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewAppService.BrewName))
 	}
 	brewServiceList := make([]*Service, 0)
 	brewServiceList = append(brewServiceList, brewAppService)
@@ -31,7 +29,7 @@ func (p *Project) Shell(d *def.App) error {
 			if errors.Is(err, ErrServiceNotFound) {
 				continue
 			}
-			return err
+			return ShellCommand{}, err
 		}
 		brewServiceList = append(brewServiceList, brewService)
 	}
@@ -47,6 +45,16 @@ func (p *Project) Shell(d *def.App) error {
 	cmd := NewShellCommand()
 	cmd.Args = []string{"--norc"}
 	cmd.Env = env
+	return cmd, nil
+}
+
+// Shell opens a shell for given app.
+func (p *Project) Shell(d *def.App) error {
+	output.Info(fmt.Sprintf("Access shell for %s.", d.Name))
+	cmd, err := p.getAppShellCommand(d)
+	if err != nil {
+		return err
+	}
 	if err := cmd.Drop(); err != nil {
 		return err
 	}

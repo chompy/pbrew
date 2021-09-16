@@ -27,6 +27,7 @@ type Service struct {
 	StartCmd        string            `yaml:"start"`
 	StopCmd         string            `yaml:"stop"`
 	ReloadCmd       string            `yaml:"reload"`
+	Dependencies    []string          `yaml:"dependencies"`
 }
 
 // Info returns information about Homebrew application.
@@ -70,6 +71,24 @@ func (s *Service) PostInstall() error {
 		if err := cmd.Interactive(); err != nil {
 			return errors.WithMessage(err, s.BrewName)
 		}
+	}
+	return nil
+}
+
+// InstallDependencies installs brew dependencies for given service.
+func (s *Service) InstallDependencies() error {
+	for _, name := range s.Dependencies {
+		dependService := Service{
+			BrewName: name,
+		}
+		if dependService.IsInstalled() {
+			continue
+		}
+		done := output.Duration(fmt.Sprintf("Install dependency %s.", name))
+		if err := dependService.Install(); err != nil {
+			return err
+		}
+		done()
 	}
 	return nil
 }
