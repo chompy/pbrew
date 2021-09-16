@@ -1,14 +1,7 @@
 package core
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
-
-	"github.com/pkg/errors"
 )
 
 // SetupMounts sets up symlinks for mount directories.
@@ -18,7 +11,7 @@ func (p *Project) SetupMounts() error {
 		return nil
 	}
 	done := output.Duration("Setup mounts.")
-	mntPath := filepath.Join(GetDir(MntDir), p.Name)
+	/*mntPath := filepath.Join(GetDir(MntDir), p.Name)
 	destPaths := make([]string, 0)
 	for _, app := range p.Apps {
 		for dest, mount := range app.Mounts {
@@ -60,7 +53,8 @@ func (p *Project) SetupMounts() error {
 				return errors.WithStack(err)
 			}
 		}
-	}
+	}*/
+	// TODO
 	done()
 	return nil
 }
