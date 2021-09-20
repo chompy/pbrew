@@ -253,19 +253,36 @@ func (p *Project) Start() error {
 // Stop stops the project.
 func (p *Project) Stop() error {
 	done := output.Duration("Stopping services.")
-	services, err := p.GetBrewServices()
+	brewServiceList, err := LoadServiceList()
 	if err != nil {
 		return err
 	}
-	// stop services
-	for _, service := range services {
-		if !service.IsRunning() {
-			continue
-		}
-		if err := service.Stop(); err != nil {
+	stopService := func(service interface{}) error {
+		brewService, err := brewServiceList.MatchDef(service)
+		if err != nil {
+			if errors.Is(err, ErrServiceNotFound) {
+				return nil
+			}
 			return err
 		}
-		if err := service.Cleanup(service, p); err != nil {
+		if !brewService.IsRunning() {
+			return nil
+		}
+		if err := brewService.Stop(); err != nil {
+			return err
+		}
+		if err := brewService.Cleanup(service, p); err != nil {
+			return err
+		}
+		return nil
+	}
+	for _, service := range p.Services {
+		if err := stopService(service); err != nil {
+			return err
+		}
+	}
+	for _, service := range p.Apps {
+		if err := stopService(service); err != nil {
 			return err
 		}
 	}

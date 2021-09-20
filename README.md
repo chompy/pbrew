@@ -1,11 +1,7 @@
 # TODO
-- project database for tracking
-    - assign and map ports
-    - list running projects to be able to determine what services can be stopped on project:stop
-
-- fix nginx ssl generation on first install
+- list running projects to be able to determine what services can be stopped on project:stop
 - project purge
-- all stop, all purge
+- all purge
 
 # Things that might be implemented
 - app dependencies

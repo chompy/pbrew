@@ -1,17 +1,3 @@
-7.0-redis: |
-  if [ ! -f {DATA_PATH}/redis.so ]; then
-    cd /tmp
-    curl -o /tmp/ext.tar.gz https://pecl.php.net/get/redis-5.3.4.tgz
-    tar xvfz ext.tar.gz
-    rm /tmp/ext.tar.gz
-    cd /tmp/redis-*
-    phpize
-    ./configure
-    make
-    cp modules/redis.so {DATA_PATH}/redis.so
-    rm -rf /tmp/redis-*
-  fi
-
 redis: |
   if [ ! -f {DATA_PATH}/redis.so ]; then
     cd /tmp
@@ -44,7 +30,7 @@ imagick: |
   if [ ! -f {DATA_PATH}/imagick.so ]; then
     brew install imagemagick
     cd /tmp
-    curl -o /tmp/ext.tar.gz https://pecl.php.net/get/imagick-3.5.1.tgz
+    curl -o /tmp/ext.tar.gz https://pecl.php.net/get/imagick-3.4.4.tgz
     tar xvfz ext.tar.gz
     rm /tmp/ext.tar.gz
     cd /tmp/imagick-*

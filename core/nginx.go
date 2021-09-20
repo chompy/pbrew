@@ -39,6 +39,16 @@ func NginxService() *Service {
 	}
 }
 
+// NginxRouteConfigPath returns path for project route config.
+func NginxRouteConfigPath(p *Project) string {
+	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("nginx_routes_%s.conf", p.Name))
+}
+
+// NginxAppConfigPath returns path for application config.
+func NginxAppConfigPath(p *Project, def *def.App) string {
+	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("nginx_app_%s_%s.conf", p.Name, def.Name))
+}
+
 // NginxAdd generates nginx config for given project.
 func NginxAdd(proj *Project) error {
 	if proj == nil {
@@ -50,7 +60,7 @@ func NginxAdd(proj *Project) error {
 		return err
 	}
 	if err := ioutil.WriteFile(
-		filepath.Join(GetDir(ConfDir), fmt.Sprintf("nginx_routes_%s.conf", proj.Name)),
+		NginxRouteConfigPath(proj),
 		[]byte(nginxRoutes),
 		0655,
 	); err != nil {
@@ -62,7 +72,7 @@ func NginxAdd(proj *Project) error {
 			return err
 		}
 		if err := ioutil.WriteFile(
-			filepath.Join(GetDir(ConfDir), fmt.Sprintf("nginx_app_%s_%s.conf", proj.Name, app.Name)),
+			NginxAppConfigPath(proj, app),
 			[]byte(nginxApp),
 			0655,
 		); err != nil {

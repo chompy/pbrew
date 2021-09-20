@@ -150,7 +150,11 @@ func (s *Service) phpPreSetup(d *def.App, p *Project) error {
 }
 
 func (s *Service) phpCleanup(d *def.App, p *Project) error {
+	// delete fpm pool conf
 	os.Remove(filepath.Join(s.phpFpmPoolPath(d, p)))
+	// delete nginx
+	os.Remove(NginxAppConfigPath(p, d))
+	os.Remove(NginxRouteConfigPath(p))
 	return nil
 }
 

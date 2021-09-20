@@ -11,7 +11,10 @@
     {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
-    "php.ini.tmpl" : "{DATA_PATH}/php_{BREW_APP}.ini"
+    "php.ini.tmpl" : "{DATA_PATH}/php.ini"
+  dependencies:
+    - "node"
+    - "ruby@2.4"
 
 "php-7.3":
   <<: *php
@@ -32,8 +35,8 @@
 "php-5.6":
   <<: *php
   brew_name: "php@5.6"
-  
-"mysql-*":
+
+"mariadb-*": &mariadb
   brew_name: "mariadb@10.6"
   start: |
     {BREW_PATH}/opt/mariadb@10.6/bin/mysql_install_db --defaults-file={CONF_FILE}
@@ -43,15 +46,8 @@
   config_templates: 
     "mariadb.conf.tmpl" : "{CONF_FILE}"
 
-"mariadb-*":
-  brew_name: "mariadb@10.6"
-  start: |
-    {BREW_PATH}/opt/mariadb@10.6/bin/mysql_install_db --defaults-file={CONF_FILE}
-    {BREW_PATH}/opt/mariadb@10.6/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
-  stop: |
-    pkill -F {PID_FILE}
-  config_templates: 
-    "mariadb.conf.tmpl" : "{CONF_FILE}"
+"mysql-*":
+  <<: *mariadb
 
 "redis-*":
   brew_name: "redis@6.2"
