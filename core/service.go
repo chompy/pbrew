@@ -63,6 +63,13 @@ func (s *Service) Install() error {
 
 // PostInstall runs the post install command for the service.
 func (s *Service) PostInstall() error {
+	// create data dir
+	if err := os.Mkdir(s.DataPath(), mkdirPerm); err != nil {
+		if !errors.Is(err, os.ErrExist) {
+			return errors.WithStack(err)
+		}
+	}
+	// run cmd
 	if s.PostInstallCmd != "" {
 		cmdStr := s.injectCommandParams(s.PostInstallCmd)
 		cmd := NewShellCommand()

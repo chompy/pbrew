@@ -1,4 +1,4 @@
-"php-7.4":
+"php-7.4": &php
   brew_name: "php@7.4"
   start: |
     {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
@@ -11,85 +11,28 @@
     {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
-    "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"
+    "php.ini.tmpl" : "{DATA_PATH}/php_{BREW_APP}.ini"
 
 "php-7.3":
+  <<: *php
   brew_name: "php@7.3"
-  start: |
-    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
-  stop: |
-    pkill -F {PID_FILE}
-  post_install: |
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
-  config_templates: 
-    "php_fpm.conf.tmpl" : "{CONF_FILE}"
-    "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"
 
 "php-7.2":
+  <<: *php
   brew_name: "php@7.2"
-  start: |
-    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
-  stop: |
-    pkill -F {PID_FILE}
-  post_install: |
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
-  config_templates: 
-    "php_fpm.conf.tmpl" : "{CONF_FILE}"
-    "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"
 
 "php-7.1":
+  <<: *php
   brew_name: "php@7.1"
-  start: |
-    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
-  stop: |
-    pkill -F {PID_FILE}
-  post_install: |
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
-  config_templates: 
-    "php_fpm.conf.tmpl" : "{CONF_FILE}"
-    "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"
 
 "php-7.0":
+  <<: *php
   brew_name: "php@7.0"
-  start: |
-    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
-  stop: |
-    pkill -F {PID_FILE}
-  post_install: |
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
-  config_templates: 
-    "php_fpm.conf.tmpl" : "{CONF_FILE}"
-    "php.ini.tmpl" : "{DATA_PATH}/php.ini"
-  dependencies:
-    - "ruby@2.4"
 
 "php-5.6":
+  <<: *php
   brew_name: "php@5.6"
-  start: |
-    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
-  stop: |
-    pkill -F {PID_FILE}
-  post_install: |
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
-    {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
-  config_templates: 
-    "php_fpm.conf.tmpl" : "{CONF_FILE}"
-    "php.ini.tmpl" : "{CONF_PATH}/php_{BREW_APP}.ini"
-
+  
 "mysql-*":
   brew_name: "mariadb@10.6"
   start: |
