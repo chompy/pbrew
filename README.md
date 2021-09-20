@@ -2,8 +2,8 @@
 - project database for tracking
     - assign and map ports
     - list running projects to be able to determine what services can be stopped on project:stop
-- build hooks
-- router ssl
+
+- fix nginx ssl generation on first install
 - project purge
 - all stop, all purge
 
@@ -19,4 +19,4 @@
 - app.web.commands.start ignored
 
 # Things that won't be implemented
-- varnish
+- varnish, all routes that point to varnish are passed through to the app
