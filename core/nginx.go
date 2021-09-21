@@ -93,6 +93,12 @@ func NginxDel(proj *Project) error {
 	return nil
 }
 
+// NginxHas returns true if project is currently loaded in to nginx router.
+func NginxHas(proj *Project) bool {
+	_, err := os.Stat(NginxRouteConfigPath(proj))
+	return !os.IsNotExist(err)
+}
+
 // GetHostNames returns all host names for given routes.
 func GetHostNames(routes []def.Route) []string {
 	out := make([]string, 0)

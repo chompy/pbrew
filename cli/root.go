@@ -11,11 +11,11 @@ import (
 // RootCmd is the top level command.
 var RootCmd = &cobra.Command{
 	Use:     "pbrew [-v verbose]",
-	Version: "",
+	Version: "DEV",
 	Run: func(cmd *cobra.Command, args []string) {
-		//commandIntro(cmd.Version)
+		commandIntro(cmd.Version)
 		output.WriteStdout("\nAvailable Commands:\n")
-		//displayCommandList(cmd)
+		displayCommandList(cmd)
 	},
 }
 

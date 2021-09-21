@@ -1,9 +1,9 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 	"time"
 
@@ -75,62 +75,30 @@ var allServicesCmd = &cobra.Command{
 	Use:   "services [--json]",
 	Short: "List all services and their status.",
 	Run: func(cmd *cobra.Command, args []string) {
-		brewServices, err := core.LoadServiceList()
+		statuses, err := core.GetServiceStatuses()
 		handleError(err)
-		runningServices, err := core.ProjectTrackServices()
-		handleError(err)
-		portMaps, err := core.LoadPortMap()
-		handleError(err)
-		projectTracks, err := core.ProjectTrackGet()
-		handleError(err)
-		tableRows := make([][]string, 0)
-		for _, service := range brewServices {
-			// check if already listed
-			alreadyCreated := false
-			for _, tableRow := range tableRows {
-				if tableRow[0] == service.BrewName {
-					alreadyCreated = true
-					break
-				}
-			}
-			if alreadyCreated {
-				continue
-			}
-			// get status
-			status := "not installed"
-			if service.IsInstalled() {
-				status = "stopped"
-			}
-			for _, runningService := range runningServices {
-				if runningService == service.BrewName {
-					status = "running"
-					break
-				}
-			}
-			// get port
-			port, err := portMaps.ServicePort(service)
+		// json out
+		if cmd.PersistentFlags().Lookup("json").Value.String() == "true" {
+			jsonOut, err := json.Marshal(statuses)
 			handleError(err)
-			// get projects
-			projects := make([]string, 0)
-			for _, pt := range projectTracks {
-				for _, ptService := range pt.Services {
-					if ptService == service.BrewName {
-						projects = append(projects, pt.Name)
-						break
-					}
-				}
-			}
+			output.WriteStdout(string(jsonOut))
+			return
+		}
+		// table out
+		tableRows := make([][]string, 0)
+		for _, status := range statuses {
 			// create row
+			ports := make([]string, 0)
+			for _, port := range status.Ports {
+				ports = append(ports, fmt.Sprintf("%d", port))
+			}
 			tableRows = append(tableRows, []string{
-				service.BrewName,
-				fmt.Sprintf("%d", port),
-				status,
-				strings.Join(projects, ","),
+				status.Name,
+				strings.Join(ports, ","),
+				status.Status,
+				strings.Join(status.Projects, ","),
 			})
 		}
-		sort.Slice(tableRows, func(i int, j int) bool {
-			return strings.Compare(tableRows[i][0], tableRows[j][0]) < 0
-		})
 		drawTable(
 			[]string{"NAME", "PORT", "STATUS", "PROJECTS"},
 			tableRows,

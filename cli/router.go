@@ -8,7 +8,7 @@ import (
 
 var routerCmd = &cobra.Command{
 	Use:     "router",
-	Aliases: []string{"r"},
+	Aliases: []string{"r", "nginx"},
 	Short:   "Manage router.",
 }
 
