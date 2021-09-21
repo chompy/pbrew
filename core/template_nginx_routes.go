@@ -71,7 +71,7 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 				}
 			}
 			locationTemplates = append(locationTemplates, nginxRouteLocationTemplate{
-				Host:         strings.ReplaceAll(hostName, "__PID__", p.Name),
+				Host:         ProjectDefaultHostName(p, hostName),
 				Original:     parsedOriginalURL.Host,
 				Path:         strings.TrimRight(parsedRouteURL.Path, "/"),
 				Type:         route.Type,
@@ -81,7 +81,7 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 		}
 
 		hostTemplates = append(hostTemplates, nginxRouteHostTemplate{
-			Host:      strings.ReplaceAll(hostName, "__PID__", p.Name),
+			Host:      ProjectDefaultHostName(p, hostName),
 			PortHTTP:  config.RouterHTTP,
 			PortHTTPS: config.RouterHTTPS,
 			Locations: locationTemplates,

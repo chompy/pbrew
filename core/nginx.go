@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -112,7 +113,6 @@ func GetHostNames(routes []def.Route) []string {
 		if thisHost == "" {
 			thisHost = defaultHostName
 		}
-
 		hasHost := false
 		for _, host := range out {
 			if host == thisHost {
@@ -124,6 +124,9 @@ func GetHostNames(routes []def.Route) []string {
 			out = append(out, thisHost)
 		}
 	}
+	sort.Slice(out, func(i, j int) bool {
+		return strings.Compare(out[i], out[j]) < 0
+	})
 	return out
 }
 
@@ -145,5 +148,15 @@ func GetRoutesForHostName(host string, routes []def.Route) []def.Route {
 		}
 		out = append(out, route)
 	}
+	sort.Slice(out, func(i, j int) bool {
+		return strings.Compare(out[i].Path, out[j].Path) < 0
+	})
 	return out
+}
+
+// ProjectDefaultHostName returns first for hostname with {default} tag.
+func ProjectDefaultHostName(p *Project, host string) string {
+	host = strings.ReplaceAll(host, "__PID__", p.Name)
+	host = strings.ReplaceAll(host, "{default}", p.Name)
+	return host
 }
