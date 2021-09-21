@@ -207,9 +207,6 @@ func (s *Service) Reload() error {
 // PreStart performs setup that should occur prior to starting service.
 func (s *Service) PreStart(d interface{}, p *Project) error {
 	done := output.Duration(fmt.Sprintf("Pre setup %s.", s.BrewName))
-	if s.IsRunning() {
-		return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
-	}
 	// create data dir
 	if err := os.Mkdir(s.DataPath(), mkdirPerm); err != nil {
 		if !errors.Is(err, os.ErrExist) {

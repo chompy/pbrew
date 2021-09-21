@@ -4,6 +4,10 @@
     {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
   stop: |
     pkill -F {PID_FILE}
+  reload: |
+    pkill -F {PID_FILE}
+    sleep 1
+    {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
   post_install: |
     {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set php_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear
     {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
@@ -43,6 +47,10 @@
     {BREW_PATH}/opt/mariadb@10.6/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
   stop: |
     pkill -F {PID_FILE}
+  reload: |
+    pkill -F {PID_FILE}
+    sleep 1
+    {BREW_PATH}/opt/mariadb@10.6/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
   config_templates: 
     "mariadb.conf.tmpl" : "{CONF_FILE}"
 
@@ -55,6 +63,10 @@
     {BREW_PATH}/opt/redis/bin/redis-server {CONF_FILE}
   stop: |
     pkill -F {PID_FILE}
+  reload: |
+    pkill -F {PID_FILE}
+    sleep 1
+    {BREW_PATH}/opt/redis/bin/redis-server {CONF_FILE}
   config_templates: 
     "redis.conf.tmpl" : "{CONF_FILE}"
 

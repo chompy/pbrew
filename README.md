@@ -1,7 +1,6 @@
 # TODO
 - list running projects to be able to determine what services can be stopped on project:stop
-- project purge
-- all purge
+- expansion/completion of nginx config generator
 
 # Things that might be implemented
 - app dependencies

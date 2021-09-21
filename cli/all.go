@@ -53,6 +53,8 @@ var allPurgeCmd = &cobra.Command{
 	Use:   "purge",
 	Short: "Purge all pbrew files.",
 	Run: func(cmd *cobra.Command, args []string) {
+		output.Info("STARTING ALL PURGE IN 5 SECONDS")
+		time.Sleep(time.Second * 5)
 		// all stop
 		allStopCmd.Run(cmd, args)
 		// delete dirs
@@ -60,6 +62,8 @@ var allPurgeCmd = &cobra.Command{
 		os.RemoveAll(core.GetDir(core.DataDir))
 		os.RemoveAll(core.GetDir(core.ConfDir))
 		os.RemoveAll(core.GetDir(core.VarsDir))
+		os.RemoveAll(core.GetDir(core.LogDir))
+		os.RemoveAll(core.GetDir(core.MntDir))
 		// TODO option to delete homebrew dir?
 		done()
 	},

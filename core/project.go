@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -129,39 +130,26 @@ func (p *Project) PreSetup() error {
 	if err != nil {
 		return err
 	}
-	for _, service := range p.Services {
+	servicePreSetup := func(service interface{}) error {
 		brewService, err := serviceList.MatchDef(service)
 		if err != nil {
 			if errors.Is(err, ErrServiceNotFound) {
-				continue
+				return nil
 			}
 			return err
-		}
-		if brewService.IsRunning() {
-			if err := brewService.Stop(); err != nil {
-				return err
-			}
-			time.Sleep(time.Second)
 		}
 		if err := brewService.PreStart(&service, p); err != nil {
 			return err
 		}
+		return nil
 	}
-	for _, service := range p.Apps {
-		brewService, err := serviceList.MatchDef(service)
-		if err != nil {
-			if errors.Is(err, ErrServiceNotFound) {
-				continue
-			}
+	for _, service := range p.Services {
+		if err := servicePreSetup(service); err != nil {
 			return err
 		}
-		if brewService.IsRunning() {
-			if err := brewService.Stop(); err != nil {
-				return err
-			}
-			time.Sleep(time.Second)
-		}
-		if err := brewService.PreStart(service, p); err != nil {
+	}
+	for _, service := range p.Apps {
+		if err := servicePreSetup(service); err != nil {
 			return err
 		}
 	}
@@ -231,14 +219,21 @@ func (p *Project) Start() error {
 		return err
 	}
 	for _, service := range services {
-		if err := service.Start(); err != nil {
-			if !errors.Is(err, ErrServiceAlreadyRunning) {
-				return err
-			}
-			output.IndentLevel--
+		// reload if already running
+		if service.IsRunning() {
 			if err := service.Reload(); err != nil {
+				if errors.Is(err, ErrServiceReloadNotDefined) {
+					output.Warn(err.Error())
+					output.IndentLevel--
+					continue
+				}
 				return err
 			}
+			continue
+		}
+		// start
+		if err := service.Start(); err != nil {
+			return err
 		}
 	}
 	// setup services
@@ -247,12 +242,25 @@ func (p *Project) Start() error {
 		return err
 	}
 	done()
+	// track project
+	if err := ProjectTrackAdd(p); err != nil {
+		return err
+	}
 	return nil
 }
 
 // Stop stops the project.
 func (p *Project) Stop() error {
 	done := output.Duration("Stopping services.")
+	// remove from project tracking
+	if err := ProjectTrackRemove(p); err != nil {
+		return err
+	}
+	remainingServices, err := ProjectTrackServices()
+	if err != nil {
+		return err
+	}
+	// stop services that are no longer needed
 	brewServiceList, err := LoadServiceList()
 	if err != nil {
 		return err
@@ -268,10 +276,25 @@ func (p *Project) Stop() error {
 		if !brewService.IsRunning() {
 			return nil
 		}
-		if err := brewService.Stop(); err != nil {
+		if err := brewService.Cleanup(service, p); err != nil {
 			return err
 		}
-		if err := brewService.Cleanup(service, p); err != nil {
+		// if service is used by other projects then don't stop it, reload instead
+		for _, runningService := range remainingServices {
+			if runningService == brewService.BrewName {
+				if err := brewService.Reload(); err != nil {
+					if errors.Is(err, ErrServiceReloadNotDefined) {
+						output.Warn(err.Error())
+						output.IndentLevel--
+						return nil
+					}
+					return err
+				}
+				return nil
+			}
+		}
+		// stop service when no longer needed
+		if err := brewService.Stop(); err != nil {
 			return err
 		}
 		return nil
@@ -286,6 +309,51 @@ func (p *Project) Stop() error {
 			return err
 		}
 	}
+	done()
+	return nil
+}
+
+// Purge deletes all files for this project created by pbrew.
+func (p *Project) Purge() error {
+	// stop project
+	if err := p.Stop(); err != nil {
+		return err
+	}
+	// purge services
+	done := output.Duration("Purging service data.")
+	brewServiceList, err := LoadServiceList()
+	if err != nil {
+		return err
+	}
+	purgeService := func(service interface{}) error {
+		brewService, err := brewServiceList.MatchDef(service)
+		if err != nil {
+			if errors.Is(err, ErrServiceNotFound) {
+				return nil
+			}
+			return err
+		}
+		if err := brewService.Purge(&service, p); err != nil {
+			return err
+		}
+		return nil
+	}
+	for _, service := range p.Services {
+		if err := purgeService(service); err != nil {
+			return err
+		}
+	}
+	for _, service := range p.Apps {
+		if err := purgeService(service); err != nil {
+			return err
+		}
+	}
+	done()
+	done = output.Duration("Delete data.")
+	// delete mnt
+	os.RemoveAll(filepath.Join(GetDir(MntDir), p.Name))
+	// delete var
+	os.Remove(variablePath(p.Name))
 	done()
 	return nil
 }
