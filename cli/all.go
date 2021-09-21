@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"fmt"
 	"os"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -68,8 +71,77 @@ var allPurgeCmd = &cobra.Command{
 	},
 }
 
+var allServicesCmd = &cobra.Command{
+	Use:   "services [--json]",
+	Short: "List all services and their status.",
+	Run: func(cmd *cobra.Command, args []string) {
+		brewServices, err := core.LoadServiceList()
+		handleError(err)
+		runningServices, err := core.ProjectTrackServices()
+		handleError(err)
+		portMaps, err := core.LoadPortMap()
+		handleError(err)
+		projectTracks, err := core.ProjectTrackGet()
+		handleError(err)
+		tableRows := make([][]string, 0)
+		for _, service := range brewServices {
+			// check if already listed
+			alreadyCreated := false
+			for _, tableRow := range tableRows {
+				if tableRow[0] == service.BrewName {
+					alreadyCreated = true
+					break
+				}
+			}
+			if alreadyCreated {
+				continue
+			}
+			// get status
+			status := "not installed"
+			if service.IsInstalled() {
+				status = "stopped"
+			}
+			for _, runningService := range runningServices {
+				if runningService == service.BrewName {
+					status = "running"
+					break
+				}
+			}
+			// get port
+			port, err := portMaps.ServicePort(service)
+			handleError(err)
+			// get projects
+			projects := make([]string, 0)
+			for _, pt := range projectTracks {
+				for _, ptService := range pt.Services {
+					if ptService == service.BrewName {
+						projects = append(projects, pt.Name)
+						break
+					}
+				}
+			}
+			// create row
+			tableRows = append(tableRows, []string{
+				service.BrewName,
+				fmt.Sprintf("%d", port),
+				status,
+				strings.Join(projects, ","),
+			})
+		}
+		sort.Slice(tableRows, func(i int, j int) bool {
+			return strings.Compare(tableRows[i][0], tableRows[j][0]) < 0
+		})
+		drawTable(
+			[]string{"NAME", "PORT", "STATUS", "PROJECTS"},
+			tableRows,
+		)
+	},
+}
+
 func init() {
+	allServicesCmd.PersistentFlags().Bool("json", false, "output in json")
 	allCmd.AddCommand(allStopCmd)
 	allCmd.AddCommand(allPurgeCmd)
+	allCmd.AddCommand(allServicesCmd)
 	RootCmd.AddCommand(allCmd)
 }

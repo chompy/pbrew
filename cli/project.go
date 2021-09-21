@@ -56,7 +56,9 @@ var projectStopCmd = &cobra.Command{
 			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
 		}
 		if nginx.IsRunning() {
-			if len(core.ProjectTrackGet()) == 0 {
+			projectTracks, err := core.ProjectTrackGet()
+			handleError(err)
+			if len(projectTracks) == 0 {
 				handleError(nginx.Stop())
 				return
 			}

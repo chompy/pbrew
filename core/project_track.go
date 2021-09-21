@@ -49,8 +49,11 @@ func saveProjectTracks() error {
 }
 
 // ProjectTrackGet returns list of tracked running projects.
-func ProjectTrackGet() []ProjectTrack {
-	return projectTracks
+func ProjectTrackGet() ([]ProjectTrack, error) {
+	if err := loadProjectTracks(); err != nil {
+		return nil, err
+	}
+	return projectTracks, nil
 }
 
 // ProjectTrackServices returns list of all running services.
@@ -93,6 +96,11 @@ func ProjectTrackAdd(p *Project) error {
 	}
 	if err := loadProjectTracks(); err != nil {
 		return err
+	}
+	for _, pt := range projectTracks {
+		if pt.Name == p.Name && pt.Path == p.Path {
+			return nil
+		}
 	}
 	projectTracks = append(projectTracks, pt)
 	if err := saveProjectTracks(); err != nil {
