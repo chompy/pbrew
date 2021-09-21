@@ -77,23 +77,22 @@ var varListCmd = &cobra.Command{
 	Short: "List project variable.",
 	Run: func(cmd *cobra.Command, args []string) {
 		vars, _ := loadVars()
-
+		// json
 		if cmd.PersistentFlags().Lookup("json").Value.String() == "true" {
 			varsJson, err := json.Marshal(vars)
 			handleError(err)
 			output.WriteStdout(string(varsJson))
+			return
 		}
-
+		// table
 		tableRows := make([][]string, 0)
 		for k := range vars {
 			tableRows = append(tableRows, []string{k, vars.GetString(k)})
 		}
-
 		drawTable(
 			[]string{"KEY", "VALUE"},
 			tableRows,
 		)
-
 	},
 }
 
