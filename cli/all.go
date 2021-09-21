@@ -18,7 +18,6 @@ var allStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop all services.",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		// itterate services and stop
 		serviceList, err := core.LoadServiceList()
 		handleError(err)
@@ -50,7 +49,24 @@ var allStopCmd = &cobra.Command{
 	},
 }
 
+var allPurgeCmd = &cobra.Command{
+	Use:   "purge",
+	Short: "Purge all pbrew files.",
+	Run: func(cmd *cobra.Command, args []string) {
+		// all stop
+		allStopCmd.Run(cmd, args)
+		// delete dirs
+		done := output.Duration("Delete data directories.")
+		os.RemoveAll(core.GetDir(core.DataDir))
+		os.RemoveAll(core.GetDir(core.ConfDir))
+		os.RemoveAll(core.GetDir(core.VarsDir))
+		// TODO option to delete homebrew dir?
+		done()
+	},
+}
+
 func init() {
 	allCmd.AddCommand(allStopCmd)
+	allCmd.AddCommand(allPurgeCmd)
 	RootCmd.AddCommand(allCmd)
 }
