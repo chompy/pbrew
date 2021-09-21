@@ -1,6 +1,7 @@
 # TODO
-- list running projects to be able to determine what services can be stopped on project:stop
 - expansion/completion of nginx config generator
+- auto install composer, base on dependencies in .platform.app.yaml, expose to PATH
+- brew install sometimes exits with status code 1 even though successful
 
 # Things that might be implemented
 - app dependencies

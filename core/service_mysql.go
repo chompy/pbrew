@@ -76,6 +76,10 @@ func (s *Service) MySQLExecute(query string) error {
 	return nil
 }
 
+func (s *Service) mySQLSchemeName(p *Project, name string) string {
+	return fmt.Sprintf("%s_%s", strings.ReplaceAll(p.Name, "-", "_"), name)
+}
+
 // mySQLPostSetup configures mysql for given service definition.
 func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 	if !s.IsMySQL() {
@@ -94,7 +98,7 @@ func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 	// schemas
 	schemas := s.MySQLGetSchemas(d)
 	for _, schema := range schemas {
-		schema = fmt.Sprintf("%s_%s", p.Name, schema)
+		schema = s.mySQLSchemeName(p, schema)
 		output.Info(fmt.Sprintf("Create %s database.", schema))
 		if err := s.MySQLExecute(fmt.Sprintf(
 			"CREATE SCHEMA IF NOT EXISTS %s; GRANT ALL PRIVILEGES ON %s.* TO '%s'@'localhost';",
@@ -123,7 +127,7 @@ func (s *Service) mySQLPurge(d *def.Service, p *Project) error {
 	// schemas
 	schemas := s.MySQLGetSchemas(d)
 	for _, schema := range schemas {
-		schema = fmt.Sprintf("%s_%s", p.Name, schema)
+		schema = s.mySQLSchemeName(p, schema)
 		output.Info(fmt.Sprintf("Drop %s database.", schema))
 		if err := s.MySQLExecute(fmt.Sprintf(
 			"DROP SCHEMA IF EXISTS %s;",

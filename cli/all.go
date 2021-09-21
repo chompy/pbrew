@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -48,6 +49,8 @@ var allStopCmd = &cobra.Command{
 		os.RemoveAll(core.GetDir(core.ConfDir))
 		// delete run directory
 		os.RemoveAll(core.GetDir(core.RunDir))
+		// delete project track file
+		os.Remove(filepath.Join(core.GetDir(core.UserDir), core.ProjectTrackFile))
 		done()
 	},
 }

@@ -9,7 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-const projectTrackFile = "projects.json"
+// ProjectTileFile is the name of the project tracking file.
+const ProjectTrackFile = "projects.json"
 
 // ProjectTrack tracks running project.
 type ProjectTrack struct {
@@ -22,7 +23,7 @@ var projectTracks []ProjectTrack
 
 func loadProjectTracks() error {
 	projectTracks = make([]ProjectTrack, 0)
-	trackFilePath := filepath.Join(GetDir(UserDir), projectTrackFile)
+	trackFilePath := filepath.Join(GetDir(UserDir), ProjectTrackFile)
 	rawData, err := ioutil.ReadFile(trackFilePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -41,7 +42,7 @@ func saveProjectTracks() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	trackFilePath := filepath.Join(GetDir(UserDir), projectTrackFile)
+	trackFilePath := filepath.Join(GetDir(UserDir), ProjectTrackFile)
 	if err := ioutil.WriteFile(trackFilePath, rawData, mkdirPerm); err != nil {
 		return errors.WithStack(err)
 	}
