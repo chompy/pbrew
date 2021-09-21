@@ -1,10 +1,13 @@
 package cli
 
 import (
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 
@@ -69,9 +72,36 @@ var varSetCmd = &cobra.Command{
 	},
 }
 
+var varListCmd = &cobra.Command{
+	Use:   "list [--json]",
+	Short: "List project variable.",
+	Run: func(cmd *cobra.Command, args []string) {
+		vars, _ := loadVars()
+
+		if cmd.PersistentFlags().Lookup("json").Value.String() == "true" {
+			varsJson, err := json.Marshal(vars)
+			handleError(err)
+			output.WriteStdout(string(varsJson))
+		}
+
+		tableRows := make([][]string, 0)
+		for k := range vars {
+			tableRows = append(tableRows, []string{k, vars.GetString(k)})
+		}
+
+		drawTable(
+			[]string{"KEY", "VALUE"},
+			tableRows,
+		)
+
+	},
+}
+
 func init() {
 	varCmd.PersistentFlags().StringP("name", "n", "", "variable name")
 	varCmd.PersistentFlags().BoolP("global", "g", false, "set global variable")
+	varListCmd.PersistentFlags().Bool("json", false, "output as json")
 	varCmd.AddCommand(varSetCmd)
+	varCmd.AddCommand(varListCmd)
 	RootCmd.AddCommand(varCmd)
 }
