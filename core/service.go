@@ -277,6 +277,19 @@ func (s *Service) Cleanup(d interface{}, p *Project) error {
 
 // Purge deletes all data related to given project and service definition.
 func (s *Service) Purge(d interface{}, p *Project) error {
+	switch d := d.(type) {
+	case *def.Service:
+		{
+			done := output.Duration(fmt.Sprintf("Purge %s.", d.Name))
+			if s.IsMySQL() {
+				if err := s.mySQLPurge(d, p); err != nil {
+					return err
+				}
+			}
+			done()
+			break
+		}
+	}
 	return nil
 }
 

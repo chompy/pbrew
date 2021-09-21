@@ -5,6 +5,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 
@@ -102,6 +103,39 @@ func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 			mysqlUser,
 		)); err != nil {
 			return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
+		}
+	}
+	return nil
+}
+
+func (s *Service) mySQLPurge(d *def.Service, p *Project) error {
+	if !s.IsMySQL() {
+		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
+	}
+	// needs to be running to drop schemas
+	wasRunning := s.IsRunning()
+	if !wasRunning {
+		if err := s.Start(); err != nil {
+			return err
+		}
+		time.Sleep(time.Second * 3)
+	}
+	// schemas
+	schemas := s.MySQLGetSchemas(d)
+	for _, schema := range schemas {
+		schema = fmt.Sprintf("%s_%s", p.Name, schema)
+		output.Info(fmt.Sprintf("Drop %s database.", schema))
+		if err := s.MySQLExecute(fmt.Sprintf(
+			"DROP SCHEMA IF EXISTS %s;",
+			schema,
+		)); err != nil {
+			return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
+		}
+	}
+	// stop if it wasn't running
+	if !wasRunning {
+		if err := s.Stop(); err != nil {
+			return err
 		}
 	}
 	return nil

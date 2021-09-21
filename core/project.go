@@ -16,12 +16,12 @@ var routesYamlFilenames = []string{".platform/routes.yaml", ".platform/routes.pc
 
 // Project defines a Platform.sh project.
 type Project struct {
-	Path     string
-	Name     string
-	Apps     []*def.App
-	Services []def.Service
-	Routes   []def.Route
-	NoMounts bool
+	Path     string        `json:"path"`
+	Name     string        `json:"name"`
+	Apps     []*def.App    `json:"-"`
+	Services []def.Service `json:"-"`
+	Routes   []def.Route   `json:"-"`
+	NoMounts bool          `json:"-"`
 }
 
 // LoadProject loads a project at given the path.

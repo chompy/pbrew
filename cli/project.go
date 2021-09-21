@@ -63,9 +63,40 @@ var projectStopCmd = &cobra.Command{
 	},
 }
 
+var projectPurgeCmd = &cobra.Command{
+	Use:   "purge",
+	Short: "Purge project.",
+	Run: func(cmd *cobra.Command, args []string) {
+		// stop project
+		projectStopCmd.Run(cmd, args)
+		// itterate defs and purge services
+		proj, err := getProject()
+		handleError(err)
+		brewServiceList, err := core.LoadServiceList()
+		handleError(err)
+		for _, service := range proj.Services {
+			brewService, err := brewServiceList.MatchDef(service)
+			if err != nil && errors.Is(err, core.ErrServiceNotFound) {
+				continue
+			}
+			handleError(err)
+			handleError(brewService.Purge(&service, proj))
+		}
+		for _, service := range proj.Apps {
+			brewService, err := brewServiceList.MatchDef(service)
+			if err != nil && errors.Is(err, core.ErrServiceNotFound) {
+				continue
+			}
+			handleError(err)
+			handleError(brewService.Purge(service, proj))
+		}
+	},
+}
+
 func init() {
 	projectStartCmd.PersistentFlags().Bool("no-mounts", false, "disable symlink mounts")
 	projectCmd.AddCommand(projectStartCmd)
 	projectCmd.AddCommand(projectStopCmd)
+	projectCmd.AddCommand(projectPurgeCmd)
 	RootCmd.AddCommand(projectCmd)
 }
