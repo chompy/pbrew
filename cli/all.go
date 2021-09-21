@@ -60,7 +60,6 @@ var allPurgeCmd = &cobra.Command{
 		// delete dirs
 		done := output.Duration("Delete data directories.")
 		os.RemoveAll(core.GetDir(core.DataDir))
-		os.RemoveAll(core.GetDir(core.ConfDir))
 		os.RemoveAll(core.GetDir(core.VarsDir))
 		os.RemoveAll(core.GetDir(core.LogDir))
 		os.RemoveAll(core.GetDir(core.MntDir))

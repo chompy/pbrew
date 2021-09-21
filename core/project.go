@@ -138,13 +138,13 @@ func (p *Project) PreSetup() error {
 			}
 			return err
 		}
-		if err := brewService.PreStart(&service, p); err != nil {
+		if err := brewService.PreStart(service, p); err != nil {
 			return err
 		}
 		return nil
 	}
 	for _, service := range p.Services {
-		if err := servicePreSetup(service); err != nil {
+		if err := servicePreSetup(&service); err != nil {
 			return err
 		}
 	}
@@ -300,7 +300,7 @@ func (p *Project) Stop() error {
 		return nil
 	}
 	for _, service := range p.Services {
-		if err := stopService(service); err != nil {
+		if err := stopService(&service); err != nil {
 			return err
 		}
 	}
@@ -339,7 +339,7 @@ func (p *Project) Purge() error {
 		return nil
 	}
 	for _, service := range p.Services {
-		if err := purgeService(service); err != nil {
+		if err := purgeService(&service); err != nil {
 			return err
 		}
 	}

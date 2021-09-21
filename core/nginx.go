@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -85,6 +86,10 @@ func NginxAdd(proj *Project) error {
 
 // NginxDel deletes nginx config for given project.
 func NginxDel(proj *Project) error {
+	os.Remove(NginxRouteConfigPath(proj))
+	for _, app := range proj.Apps {
+		os.Remove(NginxAppConfigPath(proj, app))
+	}
 	return nil
 }
 

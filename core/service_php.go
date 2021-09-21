@@ -119,9 +119,6 @@ func (s *Service) phpPreSetup(d *def.App, p *Project) error {
 	if !s.IsPHP() {
 		return errors.WithStack(errors.WithMessage(ErrInvalidService, s.BrewName))
 	}
-	if s.IsRunning() {
-		return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
-	}
 	// install extensions
 	for _, ext := range d.Runtime.Extensions {
 		if err := s.PHPInstallExtension(ext.Name); err != nil {
@@ -152,9 +149,6 @@ func (s *Service) phpPreSetup(d *def.App, p *Project) error {
 func (s *Service) phpCleanup(d *def.App, p *Project) error {
 	// delete fpm pool conf
 	os.Remove(filepath.Join(s.phpFpmPoolPath(d, p)))
-	// delete nginx
-	os.Remove(NginxAppConfigPath(p, d))
-	os.Remove(NginxRouteConfigPath(p))
 	return nil
 }
 
