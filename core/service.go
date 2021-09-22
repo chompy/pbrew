@@ -351,5 +351,6 @@ func (s *Service) injectCommandParams(cmd string) string {
 	cmd = strings.ReplaceAll(cmd, "{CONF_PATH}", GetDir(ConfDir))
 	cmd = strings.ReplaceAll(cmd, "{DATA_PATH}", s.DataPath())
 	cmd = strings.ReplaceAll(cmd, "{LOG_PATH}", GetDir(LogDir))
+	cmd = strings.ReplaceAll(cmd, "{HOME_PATH}", GetDir(HomeDir))
 	return cmd
 }
