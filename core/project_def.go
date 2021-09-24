@@ -56,6 +56,9 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 					rel["host"] = rel["ip"]
 					rel["port"] = port
 					rel["rel"] = name
+					if strings.HasPrefix(name, "redis") {
+						rel["rel"] = "redis"
+					}
 					if brewService != nil && brewService.IsMySQL() {
 						rel["path"] = fmt.Sprintf("%s_%s", p.Name, config.(map[string]interface{})["default_schema"].(string))
 						rel["username"] = mysqlUser
@@ -74,6 +77,10 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 				rel["host"] = rel["ip"]
 				rel["port"] = port
 				rel["rel"] = d.GetTypeName()
+				if strings.HasPrefix(rel["rel"].(string), "redis") {
+					rel["rel"] = "redis"
+				}
+
 				out = append(out, rel)
 			}
 			return out

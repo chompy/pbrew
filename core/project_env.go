@@ -86,7 +86,7 @@ func (p *Project) Env(d interface{}) map[string]string {
 			out["PLATFORM_APP_DIR"] = p.Path
 			out["PLATFORM_DIR"] = p.Path
 			out["PLATFORM_DOCUMENT_ROOT"] = ""
-			out["PLATFORM_BRANCH"] = "pbrew"
+			out["PLATFORM_BRANCH"] = "pcc"
 			out["PLATFORM_PROJECT"] = p.Name
 			out["PLATFORM_PROJECT_ENTROPY"] = "--random--"
 			out["PLATFORM_ENVIRONMENT"] = fmt.Sprintf("pbrew-%s", p.Name)
