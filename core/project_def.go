@@ -60,7 +60,7 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 						rel["rel"] = "redis"
 					}
 					if brewService != nil && brewService.IsMySQL() {
-						rel["path"] = fmt.Sprintf("%s_%s", p.Name, config.(map[string]interface{})["default_schema"].(string))
+						rel["path"] = p.ResolveDatabase(config.(map[string]interface{})["default_schema"].(string))
 						rel["username"] = mysqlUser
 						rel["password"] = mysqlPass
 						rel["scheme"] = "mysql"
