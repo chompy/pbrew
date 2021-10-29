@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 	"gitlab.com/contextualcode/pbrew/core"
 )
@@ -45,7 +43,7 @@ var databaseDump = &cobra.Command{
 		handleError(err)
 		database := databaseCmd.PersistentFlags().Lookup("database").Value.String()
 		database = proj.ResolveDatabase(database)
-		handleError(brewService.MySQLDump(database, os.Stdout))
+		handleError(brewService.MySQLDump(database))
 	},
 }
 

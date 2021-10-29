@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"io"
 	"path/filepath"
 	"strings"
 	"time"
@@ -59,8 +58,14 @@ func (s *Service) MySQLShell(database string) error {
 }
 
 // MySQLDump dumps the given mysql database.
-func (s *Service) MySQLDump(database string, out io.Writer) error {
-	// TODO
+func (s *Service) MySQLDump(database string) error {
+	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewName, "bin", "mysqldump")
+	cmd := NewShellCommand()
+	cmd.Command = pathToMySQL
+	cmd.Args = []string{"-S", s.SocketPath(), "-u", "root", database}
+	if err := cmd.Drop(); err != nil {
+		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+	}
 	return nil
 }
 

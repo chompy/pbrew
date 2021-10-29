@@ -68,6 +68,7 @@ func brewEnv() []string {
 		fmt.Sprintf("HOMEBREW_PREFIX=%s", GetDir(BrewDir)),
 		fmt.Sprintf("HOMEBREW_REPOSITORY=%s", GetDir(BrewDir)),
 		fmt.Sprintf("HOMEBREW_SHELLENV_PREFIX=%s", GetDir(BrewDir)),
+		fmt.Sprintf("LD_LIBRARY_PATH=%s", filepath.Join(GetDir(BrewDir), "lib/gcc/11")),
 		fmt.Sprintf("HOME=%s", GetDir(HomeDir)),
 		fmt.Sprintf("USER=%s", user.Username),
 		fmt.Sprintf("PATH=%s:/bin:/usr/bin", filepath.Join(GetDir(BrewDir), "bin")),
