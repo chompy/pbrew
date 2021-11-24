@@ -29,12 +29,19 @@ func BrewInstall() error {
 	if err := cmd.Interactive(); err != nil {
 		return err
 	}
-	// taps
-	if err := brewCommand("tap", "shivammathur/php"); err != nil {
+	// install core dependencies
+	serviceList, err := LoadServiceList()
+	if err != nil {
 		return err
 	}
-	// dependencies
-	if err := brewCommand("install", "openssl"); err != nil {
+	coreService, err := serviceList.Match("_core")
+	if err != nil {
+		return err
+	}
+	if err := coreService.InstallDependencies(); err != nil {
+		return err
+	}
+	if err := coreService.PostInstall(); err != nil {
 		return err
 	}
 	done()
@@ -71,7 +78,7 @@ func brewEnv() []string {
 		fmt.Sprintf("LD_LIBRARY_PATH=%s", filepath.Join(GetDir(BrewDir), "lib/gcc/11")),
 		fmt.Sprintf("HOME=%s", GetDir(HomeDir)),
 		fmt.Sprintf("USER=%s", user.Username),
-		fmt.Sprintf("PATH=%s:/bin:/usr/bin", filepath.Join(GetDir(BrewDir), "bin")),
+		fmt.Sprintf("PATH=%s:/bin:/usr/bin:/usr/sbin", filepath.Join(GetDir(BrewDir), "bin")),
 		fmt.Sprintf("CPATH=%s", filepath.Join(GetDir(BrewDir), "include")),
 	}
 }

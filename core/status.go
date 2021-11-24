@@ -36,14 +36,14 @@ func GetServiceStatuses() ([]ServiceStatus, error) {
 		return nil, err
 	}
 	nginxService := NginxService()
-	brewServices[nginxService.BrewName] = nginxService
+	brewServices[nginxService.BrewAppName()] = nginxService
 	// list project statuses
 	out := make([]ServiceStatus, 0)
 	for _, service := range brewServices {
 		// check if already listed
 		alreadyCreated := false
 		for _, addedService := range out {
-			if addedService.Name == service.BrewName {
+			if addedService.Name == service.BrewAppName() {
 				alreadyCreated = true
 				break
 			}
@@ -60,7 +60,7 @@ func GetServiceStatuses() ([]ServiceStatus, error) {
 		}
 		// get port
 		ports := []int{config.RouterHTTP, config.RouterHTTPS}
-		if service.BrewName != nginxService.BrewName {
+		if service.BrewAppName() != nginxService.BrewAppName() {
 			port, err := portMaps.ServicePort(service)
 			if err != nil {
 				return nil, err
@@ -71,13 +71,13 @@ func GetServiceStatuses() ([]ServiceStatus, error) {
 		projects := make([]string, 0)
 		for _, pt := range projectTracks {
 			for _, ptService := range pt.Services {
-				if ptService == service.BrewName {
+				if ptService == service.BrewAppName() {
 					projects = append(projects, pt.Name)
 					break
 				}
 			}
 		}
-		if service.BrewName == nginxService.BrewName {
+		if service.BrewAppName() == nginxService.BrewAppName() {
 			for _, pt := range projectTracks {
 				proj := &Project{Name: pt.Name}
 				if NginxHas(proj) {
@@ -86,7 +86,7 @@ func GetServiceStatuses() ([]ServiceStatus, error) {
 			}
 		}
 		out = append(out, ServiceStatus{
-			Name:     service.BrewName,
+			Name:     service.BrewAppName(),
 			Ports:    ports,
 			Status:   status,
 			Projects: projects,

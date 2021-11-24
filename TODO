@@ -1,0 +1,2 @@
+- Fix Python dependencies error BackendUnavailable
+- Fix PlatformCC so 'python' dependency maps to Python 2

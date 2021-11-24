@@ -88,7 +88,7 @@ func ProjectTrackAdd(p *Project) error {
 	}
 	serviceNames := make([]string, 0)
 	for _, service := range brewServices {
-		serviceNames = append(serviceNames, service.BrewName)
+		serviceNames = append(serviceNames, service.BrewAppName())
 	}
 	pt := ProjectTrack{
 		Name:     p.Name,

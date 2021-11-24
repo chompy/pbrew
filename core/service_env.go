@@ -9,7 +9,7 @@ import (
 func ServicesEnv(services []*Service) []string {
 	envPath := make([]string, 0)
 	for _, service := range services {
-		envPath = append(envPath, filepath.Join(GetDir(BrewDir), "opt", service.BrewName, "bin"))
+		envPath = append(envPath, filepath.Join(GetDir(BrewDir), "opt", service.BrewAppName(), "bin"))
 		for _, dependency := range service.Dependencies {
 			envPath = append(envPath, filepath.Join(GetDir(BrewDir), "opt", dependency, "bin"))
 		}
@@ -17,6 +17,7 @@ func ServicesEnv(services []*Service) []string {
 	envPath = append(envPath, filepath.Join(GetDir(BrewDir), "bin"))
 	envPath = append(envPath, "/bin")
 	envPath = append(envPath, "/usr/bin")
+	envPath = append(envPath, "/usr/sbin")
 	env := make([]string, 0)
 	env = append(env, brewEnv()...)
 	for k, v := range env {

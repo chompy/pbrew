@@ -43,7 +43,7 @@ func (s *Service) BuildConfigTemplateVars() (serviceTemplateVars, error) {
 		return serviceTemplateVars{}, errors.WithStack(err)
 	}
 	return serviceTemplateVars{
-		Name:      strings.ReplaceAll(s.BrewName, "@", "-"),
+		Name:      strings.ReplaceAll(s.BrewAppName(), "@", "-"),
 		Port:      port,
 		Socket:    s.SocketPath(),
 		Pid:       s.PidPath(),

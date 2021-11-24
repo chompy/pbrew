@@ -1,6 +1,17 @@
+"_core":
+  brew_name: "homebrew/core"
+  post_install: |
+    {BREW_PATH}/bin/pyenv install 2.7.18
+    {BREW_PATH}/bin/pyenv install 3.10.0
+  dependencies:
+    - "node"
+    - "nvm"
+    - "ruby@2.4"
+    - "composer"
+    - "pyenv"
+
 "php-7.4": &php
-  brew_name: "php@7.4"
-  install_name: "shivammathur/php/{BREW_APP}"
+  brew_name: "shivammathur/php/php@7.4"
   start: |
     {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
   stop: |
@@ -17,35 +28,31 @@
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
     "php.ini.tmpl" : "{DATA_PATH}/php.ini"
-  dependencies:
-    - "node"
-    - "nvm"
-    - "ruby@2.4"
   install_check: |
     [ -f {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm ] && [ -f {BREW_PATH}/opt/{BREW_APP}/bin/php ]
 
 "php-7.3":
   <<: *php
-  brew_name: "php@7.3"
+  brew_name: "shivammathur/php/php@7.3"
 
 "php-7.2":
   <<: *php
-  brew_name: "php@7.2"
+  brew_name: "shivammathur/php/php@7.2"
   pre_install: |
     {BREW_PATH}/bin/brew install tidy-html5
     ln -s {BREW_PATH}/Cellar/tidy-html5/5.8.0/lib/libtidy.so.5.8.0 {BREW_PATH}/lib/libtidy.so.5
 
 "php-7.1":
   <<: *php
-  brew_name: "php@7.1"
+  brew_name: "shivammathur/php/php@7.1"
 
 "php-7.0":
   <<: *php
-  brew_name: "php@7.0"
+  brew_name: "shivammathur/php/php@7.0"
 
 "php-5.6":
   <<: *php
-  brew_name: "php@5.6"
+  brew_name: "shivammathur/php/php@5.6"
 
 "mariadb-*": &mariadb
   brew_name: "mariadb@10.6"

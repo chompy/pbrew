@@ -37,7 +37,7 @@ var appBuildCmd = &cobra.Command{
 
 var appDeployCmd = &cobra.Command{
 	Use:   "deploy",
-	Short: "Run Deploy hook for application.",
+	Short: "Run deploy hook for application.",
 	Run: func(cmd *cobra.Command, args []string) {
 		proj, err := getProject()
 		handleError(err)
@@ -48,12 +48,26 @@ var appDeployCmd = &cobra.Command{
 
 var appPostDeployCmd = &cobra.Command{
 	Use:   "post-deploy",
-	Short: "Run Deploy hook for application.",
+	Short: "Run post deploy hook for application.",
 	Run: func(cmd *cobra.Command, args []string) {
 		proj, err := getProject()
 		handleError(err)
 		app := appCmdSelectApp(proj)
 		handleError(proj.PostDeploy(app))
+	},
+}
+
+var appInstallDepsCmd = &cobra.Command{
+	Use:     "install-deps",
+	Short:   "Install dependencies for application.",
+	Aliases: []string{"install-dependencies", "id", "deps"},
+	Run: func(cmd *cobra.Command, args []string) {
+		proj, err := getProject()
+		handleError(err)
+		app := appCmdSelectApp(proj)
+		handleError(proj.DepPHPComposerInstall(app))
+		handleError(proj.DepNodeNpmInstall(app))
+		handleError(proj.DepPythonPipInstall(app))
 	},
 }
 
@@ -77,5 +91,6 @@ func init() {
 	appCmd.AddCommand(appBuildCmd)
 	appCmd.AddCommand(appDeployCmd)
 	appCmd.AddCommand(appPostDeployCmd)
+	appCmd.AddCommand(appInstallDepsCmd)
 	RootCmd.AddCommand(appCmd)
 }

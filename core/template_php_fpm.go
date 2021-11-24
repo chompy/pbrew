@@ -33,6 +33,10 @@ func (p *Project) buildPhpFPMPoolTemplate(app *def.App) (phpFpmPoolTemplate, err
 	if err != nil {
 		return phpFpmPoolTemplate{}, err
 	}
+	// set php memory limit default
+	if vars.GetString("php:memory_limit") == "" {
+		vars.Set("php:memory_limit", "512M")
+	}
 	return phpFpmPoolTemplate{
 		ProjectName: p.Name,
 		AppName:     app.Name,

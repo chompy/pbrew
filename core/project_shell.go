@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -35,12 +36,14 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 		}
 		brewServiceList = append(brewServiceList, brewService)
 	}
-
 	// generate pathes
 	envPaths := []string{
 		filepath.Join(p.Path, ".global", "bin"),
 		filepath.Join(p.Path, ".global", "vendor", "bin"),
+		filepath.Join(p.Path, ".global", "node_modules", "bin"),
 		filepath.Join(p.Path, ".platformsh", "bin"),
+		filepath.Join(GetDir(HomeDir), ".pyenv", "versions", "3.10.0", "bin"),
+		filepath.Join(GetDir(HomeDir), ".pyenv", "versions", "2.7.18", "bin"),
 	}
 	// inject env vars
 	env := make([]string, 0)
@@ -53,6 +56,7 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 	//env = append(env, "HOME="+p.Path)
 	env = append(env, fmt.Sprintf("PS1=%s-%s> ", p.Name, d.Name))
 	env = append(env, fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)))
+	env = append(env, fmt.Sprintf("TERM=%s", os.Getenv("TERM")))
 	for k, v := range p.Env(d) {
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
 	}

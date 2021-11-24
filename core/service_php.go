@@ -51,12 +51,12 @@ func LoadPHPExtensionList() (PHPExtensions, error) {
 
 // IsPHP returns true if service is php.
 func (s *Service) IsPHP() bool {
-	return strings.HasPrefix(s.BrewName, "php")
+	return strings.HasPrefix(s.BrewAppName(), "php")
 }
 
 // PHPVersion returns the PHP version.
 func (s *Service) PHPVersion() string {
-	nameSplit := strings.Split(s.BrewName, "@")
+	nameSplit := strings.Split(s.BrewAppName(), "@")
 	if len(nameSplit) < 2 {
 		return ""
 	}
@@ -110,7 +110,7 @@ func (s *Service) PHPGetInstalledExtensions() []string {
 }
 
 func (s *Service) phpFpmPoolPath(d *def.App, p *Project) string {
-	brewName := strings.ReplaceAll(s.BrewName, "@", "-")
+	brewName := strings.ReplaceAll(s.BrewAppName(), "@", "-")
 	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s_%s_%s.conf", brewName, p.Name, d.Name))
 }
 

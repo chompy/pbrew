@@ -17,7 +17,7 @@ const mysqlPass = "pbrew"
 
 // IsMySQL returns true if service is mysql compatible.
 func (s *Service) IsMySQL() bool {
-	return strings.HasPrefix(s.BrewName, "mysql") || strings.HasPrefix(s.BrewName, "mariadb")
+	return strings.HasPrefix(s.BrewAppName(), "mysql") || strings.HasPrefix(s.BrewAppName(), "mariadb")
 }
 
 // MySQLGetSchemas returns list of database schemas.
@@ -42,7 +42,7 @@ func (s *Service) MySQLShell(database string) error {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
 	}
 	output.Info(fmt.Sprintf("Access shell for %s.", s.BrewName))
-	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewName, "bin", "mysql")
+	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewAppName(), "bin", "mysql")
 	args := make([]string, 0)
 	args = append(args, "-S", s.SocketPath(), "-u", "root")
 	if database != "" {
@@ -59,7 +59,7 @@ func (s *Service) MySQLShell(database string) error {
 
 // MySQLDump dumps the given mysql database.
 func (s *Service) MySQLDump(database string) error {
-	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewName, "bin", "mysqldump")
+	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewAppName(), "bin", "mysqldump")
 	cmd := NewShellCommand()
 	cmd.Command = pathToMySQL
 	cmd.Args = []string{"-S", s.SocketPath(), "-u", "root", database}
@@ -71,7 +71,7 @@ func (s *Service) MySQLDump(database string) error {
 
 // MySQLExecute executes given query.
 func (s *Service) MySQLExecute(query string) error {
-	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewName, "bin", "mysql")
+	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewAppName(), "bin", "mysql")
 	cmd := NewShellCommand()
 	cmd.Command = pathToMySQL
 	cmd.Args = []string{"-S", s.SocketPath(), "-u", "root", "-e", query}

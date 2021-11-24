@@ -22,7 +22,6 @@ import (
 // Service is a Homebrew service.
 type Service struct {
 	BrewName        string            `yaml:"brew_name"`
-	InstallName     string            `yaml:"install_name"`
 	PostInstallCmd  string            `yaml:"post_install"`
 	PreInstallCmd   string            `yaml:"pre_install"`
 	ConfigTemplates map[string]string `yaml:"config_templates"`
@@ -55,11 +54,7 @@ func (s *Service) Install() error {
 	if err := s.PreInstall(); err != nil {
 		return err
 	}
-	installName := s.injectCommandParams(s.InstallName)
-	if installName == "" {
-		installName = s.BrewName
-	}
-	if err := brewCommand("install", installName, "--force-bottle"); err != nil {
+	if err := brewCommand("install", s.BrewName); err != nil {
 		if !s.InstallCheck() {
 			return err
 		}
@@ -344,7 +339,7 @@ func (s *Service) Port() (int, error) {
 
 // SocketPath returns path to service socket.
 func (s *Service) SocketPath() string {
-	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewName, "@", "-")))
+	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
 }
 
 // UpstreamSocketPath returns path to app upstream socket.
@@ -355,19 +350,25 @@ func (s *Service) UpstreamSocketPath(p *Project, app *def.App) string {
 	return s.SocketPath()
 }
 
+// BrewAppName returns the brew app name without namespace.
+func (s *Service) BrewAppName() string {
+	brewAppNamePath := strings.Split(strings.Trim(s.BrewName, "/"), "/")
+	return brewAppNamePath[len(brewAppNamePath)-1]
+}
+
 // PidPath returns path to service pid file.
 func (s *Service) PidPath() string {
-	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewName, "@", "-")))
+	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
 }
 
 // ConfigPath returns path to service config file.
 func (s *Service) ConfigPath() string {
-	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s.conf", strings.ReplaceAll(s.BrewName, "@", "-")))
+	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s.conf", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
 }
 
 // DataPath returns path to service data directory.
 func (s *Service) DataPath() string {
-	return filepath.Join(GetDir(DataDir), strings.ReplaceAll(s.BrewName, "@", "-"))
+	return filepath.Join(GetDir(DataDir), strings.ReplaceAll(s.BrewAppName(), "@", "-"))
 }
 
 // ConfigParams returns confir template parameters for service.
@@ -383,8 +384,9 @@ func (s *Service) injectCommandParams(cmd string) string {
 	if err != nil {
 		output.Warn(err.Error())
 	}
+
 	cmd = strings.ReplaceAll(cmd, "{BREW_PATH}", GetDir(BrewDir))
-	cmd = strings.ReplaceAll(cmd, "{BREW_APP}", s.BrewName)
+	cmd = strings.ReplaceAll(cmd, "{BREW_APP}", s.BrewAppName())
 	cmd = strings.ReplaceAll(cmd, "{PORT}", fmt.Sprintf("%d", port))
 	cmd = strings.ReplaceAll(cmd, "{SOCKET}", s.SocketPath())
 	cmd = strings.ReplaceAll(cmd, "{PID_FILE}", s.PidPath())

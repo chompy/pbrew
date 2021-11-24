@@ -84,7 +84,7 @@ func (p PortMap) assignPort(name string) (int, error) {
 
 // ServicePort retrieves or creates an assigned port for the given service.
 func (p PortMap) ServicePort(s *Service) (int, error) {
-	return p.assignPort("s-" + s.BrewName)
+	return p.assignPort("s-" + s.BrewAppName())
 }
 
 // UpstreamPort retrieves of creates an assigned port for the given app def.

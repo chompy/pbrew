@@ -281,7 +281,7 @@ func (p *Project) Stop() error {
 		}
 		// if service is used by other projects then don't stop it, reload instead
 		for _, runningService := range remainingServices {
-			if runningService == brewService.BrewName {
+			if runningService == brewService.BrewAppName() {
 				if err := brewService.Reload(); err != nil {
 					if errors.Is(err, ErrServiceReloadNotDefined) {
 						output.Warn(err.Error())

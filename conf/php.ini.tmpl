@@ -1,5 +1,5 @@
 session.save_path=/tmp
-memory_limit=256M
+memory_limit=2048M
 {{ range $key, $ext := .Params.Extensions }}
 extension={{ $.DataDir }}/{{ $ext }}.so
 {{ end }}

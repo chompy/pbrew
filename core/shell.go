@@ -37,9 +37,11 @@ func (s ShellCommand) Interactive() error {
 	cmd.Stdout = s.Stdout
 	cmd.Stdin = s.Stdin
 	cmd.Env = s.Env
+	//io.WriteString(os.Stdout, "=== INTERACTIVE SHELL =====================\n")
 	if err := cmd.Run(); err != nil {
 		return errors.WithStack(err)
 	}
+	//io.WriteString(os.Stdout, "===========================================\n")
 	return nil
 }
 
