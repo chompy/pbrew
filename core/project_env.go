@@ -18,7 +18,7 @@ func (p *Project) EnvPlatformRelationships(d interface{}) string {
 		output.Warn(err.Error())
 		return ""
 	}
-	return base64.RawStdEncoding.EncodeToString(jsonRaw)
+	return base64.StdEncoding.EncodeToString(jsonRaw)
 }
 
 // EnvPlatformVariables returns PLATFORM_VARIABLES environment variable.
