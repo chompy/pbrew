@@ -1,5 +1,6 @@
 "php-7.4": &php
   brew_name: "php@7.4"
+  install_name: "shivammathur/php/{BREW_APP}"
   start: |
     {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm -D --fpm-config {CONF_FILE} -g {PID_FILE}
   stop: |
@@ -20,6 +21,8 @@
     - "node"
     - "nvm"
     - "ruby@2.4"
+  install_check: |
+    [ -f {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm ] && [ -f {BREW_PATH}/opt/{BREW_APP}/bin/php ]
 
 "php-7.3":
   <<: *php
@@ -28,6 +31,9 @@
 "php-7.2":
   <<: *php
   brew_name: "php@7.2"
+  pre_install: |
+    {BREW_PATH}/bin/brew install tidy-html5
+    ln -s {BREW_PATH}/Cellar/tidy-html5/5.8.0/lib/libtidy.so.5.8.0 {BREW_PATH}/lib/libtidy.so.5
 
 "php-7.1":
   <<: *php
@@ -44,16 +50,18 @@
 "mariadb-*": &mariadb
   brew_name: "mariadb@10.6"
   start: |
-    {BREW_PATH}/opt/mariadb@10.6/bin/mysql_install_db --defaults-file={CONF_FILE}
-    {BREW_PATH}/opt/mariadb@10.6/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
+    {BREW_PATH}/opt/{BREW_APP}/bin/mysql_install_db --defaults-file={CONF_FILE}
+    {BREW_PATH}/opt/{BREW_APP}/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
   stop: |
     pkill -F {PID_FILE}
   reload: |
     pkill -F {PID_FILE}
     sleep 1
-    {BREW_PATH}/opt/mariadb@10.6/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
+    {BREW_PATH}/opt/{BREW_APP}/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
   config_templates: 
     "mariadb.conf.tmpl" : "{CONF_FILE}"
+  install_check: |
+    [ -f {BREW_PATH}/opt/{BREW_APP}/bin/mysqld_safe ] && [ -f {BREW_PATH}/opt/{BREW_APP}/bin/mysql_install_db ]
 
 "mysql-*":
   <<: *mariadb
@@ -70,6 +78,8 @@
     {BREW_PATH}/opt/redis/bin/redis-server {CONF_FILE}
   config_templates: 
     "redis.conf.tmpl" : "{CONF_FILE}"
+  install_check: |
+    [ -f {BREW_PATH}/opt/redis/bin/redis-server ]
 
 "redis-persistent-*":
   <<: *redis

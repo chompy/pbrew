@@ -22,11 +22,14 @@ import (
 // Service is a Homebrew service.
 type Service struct {
 	BrewName        string            `yaml:"brew_name"`
+	InstallName     string            `yaml:"install_name"`
 	PostInstallCmd  string            `yaml:"post_install"`
+	PreInstallCmd   string            `yaml:"pre_install"`
 	ConfigTemplates map[string]string `yaml:"config_templates"`
 	StartCmd        string            `yaml:"start"`
 	StopCmd         string            `yaml:"stop"`
 	ReloadCmd       string            `yaml:"reload"`
+	InstallCheckCmd string            `yaml:"install_check"`
 	Dependencies    []string          `yaml:"dependencies"`
 }
 
@@ -49,14 +52,54 @@ func (s *Service) Info() (map[string]interface{}, error) {
 
 // Install installs the service and runs the post install command.
 func (s *Service) Install() error {
-	if err := brewCommand("install", s.BrewName, "--force-bottle"); err != nil {
+	if err := s.PreInstall(); err != nil {
 		return err
+	}
+	installName := s.injectCommandParams(s.InstallName)
+	if installName == "" {
+		installName = s.BrewName
+	}
+	if err := brewCommand("install", installName, "--force-bottle"); err != nil {
+		if !s.InstallCheck() {
+			return err
+		}
+		output.Warn("Install command errored but install check was successful... " + err.Error())
 	}
 	if err := brewCommand("services", "stop", s.BrewName); err != nil {
 		return err
 	}
 	if err := s.PostInstall(); err != nil {
 		return err
+	}
+	return nil
+}
+
+// InstallCheck checks to see if the installation was successful.
+func (s *Service) InstallCheck() bool {
+	// run cmd
+	if s.InstallCheckCmd != "" {
+		cmdStr := s.injectCommandParams(s.InstallCheckCmd)
+		cmd := NewShellCommand()
+		cmd.Args = []string{"--norc", "-c", cmdStr}
+		cmd.Env = ServicesEnv([]*Service{s})
+		if err := cmd.Interactive(); err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+// PreInstall runs the pre install command for the service.
+func (s *Service) PreInstall() error {
+	// run cmd
+	if s.PreInstallCmd != "" {
+		cmdStr := s.injectCommandParams(s.PreInstallCmd)
+		cmd := NewShellCommand()
+		cmd.Args = []string{"--norc", "-c", cmdStr}
+		cmd.Env = ServicesEnv([]*Service{s})
+		if err := cmd.Interactive(); err != nil {
+			return errors.WithMessage(err, s.BrewName)
+		}
 	}
 	return nil
 }
