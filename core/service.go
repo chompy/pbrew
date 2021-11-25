@@ -35,7 +35,7 @@ type Service struct {
 // Info returns information about Homebrew application.
 func (s *Service) Info() (map[string]interface{}, error) {
 	binPath := filepath.Join(GetDir(BrewDir), "bin/brew")
-	out, err := exec.Command(binPath, "info", s.BrewName, "--json").Output()
+	out, err := exec.Command(binPath, "info", s.BrewAppName(), "--json").Output()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
