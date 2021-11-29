@@ -25,9 +25,7 @@ func (p *Project) executeHookCmd(cmdStr string, d *def.App) error {
 	if err != nil {
 		return err
 	}
-	cmd.Args = []string{
-		"--init-file", filepath.Join(GetDir(HomeDir), ".bash_profile"), "-c", cmdStr,
-	}
+	cmd.Args = []string{"--norc", "-c", cmdStr}
 	if err := cmd.Interactive(); err != nil {
 		return err
 	}

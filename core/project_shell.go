@@ -62,7 +62,7 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 	}
 	// run interactive shell
 	cmd := NewShellCommand()
-	cmd.Args = []string{"--init-file", filepath.Join(GetDir(HomeDir), ".bash_profile")}
+	cmd.Args = []string{"--norc"}
 	cmd.Env = env
 	return cmd, nil
 }
@@ -87,10 +87,8 @@ func (p *Project) Command(d *def.App, cmdStr string) error {
 	if err != nil {
 		return err
 	}
-	cmd.Args = []string{
-		"--init-file", filepath.Join(GetDir(HomeDir), ".bash_profile"),
-		"-c", cmdStr,
-	}
+	cmdStr = "source $(brew --prefix nvm)/nvm.sh && " + cmdStr
+	cmd.Args = []string{"--norc", "-c", cmdStr}
 	if err := cmd.Interactive(); err != nil {
 		return err
 	}

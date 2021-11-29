@@ -26,7 +26,7 @@ func IsBrewInstalled() bool {
 func BrewInstall() error {
 	done := output.Duration("Install Homebrew.")
 	cmd := NewShellCommand()
-	cmd.Args = []string{"-c", fmt.Sprintf(brewInstall, GetDir(BrewDir))}
+	cmd.Args = []string{"--norc", "-c", fmt.Sprintf(brewInstall, GetDir(BrewDir))}
 	cmd.Env = brewEnv()
 	if err := cmd.Interactive(); err != nil {
 		return err
@@ -40,7 +40,6 @@ func BrewInstall() error {
 	if err != nil {
 		return err
 	}
-	coreService.noBuildBottle = true
 	if err := coreService.InstallDependencies(); err != nil {
 		return err
 	}

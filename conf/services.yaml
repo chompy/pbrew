@@ -5,7 +5,6 @@
     {BREW_PATH}/bin/pyenv install 3.10.0
     source $({BREW_PATH}/bin/brew --prefix nvm)/nvm.sh
     nvm install node
-    echo "source $(brew --prefix nvm)/nvm.sh" >> ~/.bash_profile
   dependencies:
     - "nvm"
     - "ruby@2.4"

@@ -20,19 +20,21 @@ const (
 	LogDir
 	AppDir
 	UserDir
+	BottleDir
 )
 
 var appDirectories = map[int]string{
-	BrewDir: filepath.Join(getUserPath(), "homebrew"),
-	RunDir:  filepath.Join(getUserPath(), "run"),
-	ConfDir: filepath.Join(getUserPath(), "conf"),
-	DataDir: filepath.Join(getUserPath(), "data"),
-	VarsDir: filepath.Join(getUserPath(), "vars"),
-	MntDir:  filepath.Join(getUserPath(), "mnt"),
-	HomeDir: filepath.Join(getUserPath(), "home"),
-	LogDir:  filepath.Join(getUserPath(), "logs"),
-	AppDir:  getAppPath(),
-	UserDir: getUserPath(),
+	BrewDir:   filepath.Join(getUserPath(), "homebrew"),
+	RunDir:    filepath.Join(getUserPath(), "run"),
+	ConfDir:   filepath.Join(getUserPath(), "conf"),
+	DataDir:   filepath.Join(getUserPath(), "data"),
+	VarsDir:   filepath.Join(getUserPath(), "vars"),
+	MntDir:    filepath.Join(getUserPath(), "mnt"),
+	HomeDir:   filepath.Join(getUserPath(), "home"),
+	LogDir:    filepath.Join(getUserPath(), "logs"),
+	AppDir:    getAppPath(),
+	UserDir:   getUserPath(),
+	BottleDir: filepath.Join(getUserPath(), "bottles"),
 }
 
 // GetDir returns given key's path.

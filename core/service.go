@@ -28,7 +28,6 @@ type Service struct {
 	ReloadCmd       string            `yaml:"reload"`
 	InstallCheckCmd string            `yaml:"install_check"`
 	Dependencies    []string          `yaml:"dependencies"`
-	noBuildBottle   bool
 }
 
 // Info returns information about Homebrew application.
@@ -41,11 +40,11 @@ func (s *Service) Install() error {
 	if err := s.PreInstall(); err != nil {
 		return err
 	}
-	bCmd := []string{"install", s.BrewName, "--build-bottle"}
-	if s.noBuildBottle {
-		bCmd = []string{"install", s.BrewName}
+	installName := s.BrewName
+	if err := brewBottleDownload(s.BrewName); err == nil {
+		installName = brewBottleDownloadPath(s.BrewName)
 	}
-	if err := brewCommand(bCmd...); err != nil {
+	if err := brewCommand("install", installName); err != nil {
 		if !s.InstallCheck() {
 			return err
 		}
@@ -81,10 +80,7 @@ func (s *Service) PreInstall() error {
 	if s.PreInstallCmd != "" {
 		cmdStr := s.injectCommandParams(s.PreInstallCmd)
 		cmd := NewShellCommand()
-		cmd.Args = []string{
-			"--init-file", filepath.Join(GetDir(HomeDir), ".bash_profile"),
-			"-c", cmdStr,
-		}
+		cmd.Args = []string{"--norc", "-c", cmdStr}
 		cmd.Env = ServicesEnv([]*Service{s})
 		if err := cmd.Interactive(); err != nil {
 			return errors.WithMessage(err, s.BrewName)
@@ -118,8 +114,7 @@ func (s *Service) PostInstall() error {
 func (s *Service) InstallDependencies() error {
 	for _, name := range s.Dependencies {
 		dependService := Service{
-			BrewName:      name,
-			noBuildBottle: true,
+			BrewName: name,
 		}
 		if dependService.IsInstalled() {
 			continue
