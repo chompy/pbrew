@@ -52,7 +52,8 @@ func brewBottle(name string) error {
 }
 
 func brewBottleFindLocal(name string) (string, error) {
-	m, err := filepath.Glob(fmt.Sprintf("%s--*.tar.gz", brewAppName(name)))
+	appName := strings.Split(brewAppName(name), "@")
+	m, err := filepath.Glob(fmt.Sprintf("%s*--*.tar.gz", appName[0]))
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
