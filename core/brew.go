@@ -38,6 +38,7 @@ func BrewInstall() error {
 	if err != nil {
 		return err
 	}
+	coreService.noBuildBottle = true
 	if err := coreService.InstallDependencies(); err != nil {
 		return err
 	}
