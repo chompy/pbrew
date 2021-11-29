@@ -3,11 +3,12 @@
   post_install: |
     {BREW_PATH}/bin/pyenv install 2.7.18
     {BREW_PATH}/bin/pyenv install 3.10.0
+    source $({BREW_PATH}/bin/brew --prefix nvm)/nvm.sh
+    nvm install node
+    echo "source $(brew --prefix nvm)/nvm.sh" >> ~/.bash_profile
   dependencies:
-    - "node"
     - "nvm"
     - "ruby@2.4"
-    - "composer"
     - "pyenv"
 
 "php-7.4": &php
@@ -25,6 +26,12 @@
     {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set doc_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/doc
     {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set ext_dir {BREW_PATH}/opt/{BREW_APP}/lib/php
     {BREW_PATH}/opt/{BREW_APP}/bin/pecl config-set test_dir {BREW_PATH}/opt/{BREW_APP}/share/{BREW_APP}/pear/test
+    if [ ! -f {BREW_PATH}/bin/composer ]; then
+      {BREW_PATH}/opt/{BREW_APP}/bin/php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"   
+      {BREW_PATH}/opt/{BREW_APP}/bin/php composer-setup.php
+      {BREW_PATH}/opt/{BREW_APP}/bin/php -r "unlink('composer-setup.php');"
+      mv composer.phar {BREW_PATH}/bin/composer
+    fi
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
     "php.ini.tmpl" : "{DATA_PATH}/php.ini"

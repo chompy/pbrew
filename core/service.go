@@ -95,7 +95,10 @@ func (s *Service) PreInstall() error {
 	if s.PreInstallCmd != "" {
 		cmdStr := s.injectCommandParams(s.PreInstallCmd)
 		cmd := NewShellCommand()
-		cmd.Args = []string{"--norc", "-c", cmdStr}
+		cmd.Args = []string{
+			"--init-file", filepath.Join(GetDir(HomeDir), ".bash_profile"),
+			"-c", cmdStr,
+		}
 		cmd.Env = ServicesEnv([]*Service{s})
 		if err := cmd.Interactive(); err != nil {
 			return errors.WithMessage(err, s.BrewName)

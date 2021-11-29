@@ -55,19 +55,19 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 	}
 	//env = append(env, "HOME="+p.Path)
 	env = append(env, fmt.Sprintf("PS1=%s-%s> ", p.Name, d.Name))
-	env = append(env, fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)))
+	//env = append(env, fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)))
 	env = append(env, fmt.Sprintf("TERM=%s", os.Getenv("TERM")))
 	for k, v := range p.Env(d) {
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
 	}
 	// run interactive shell
 	cmd := NewShellCommand()
-	cmd.Args = []string{"--norc"}
+	cmd.Args = []string{"--init-file", filepath.Join(GetDir(HomeDir), ".bash_profile")}
 	cmd.Env = env
 	return cmd, nil
 }
 
-// Shell opens a shell for given app.
+// Shell opens a shell in given app context.
 func (p *Project) Shell(d *def.App) error {
 	output.Info(fmt.Sprintf("Access shell for %s.", d.Name))
 	cmd, err := p.getAppShellCommand(d)
@@ -75,6 +75,23 @@ func (p *Project) Shell(d *def.App) error {
 		return err
 	}
 	if err := cmd.Drop(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Command executes a shell command in given app context.
+func (p *Project) Command(d *def.App, cmdStr string) error {
+	output.LogInfo(fmt.Sprintf("Run command '%s' in '%s'.", cmdStr, d.Name))
+	cmd, err := p.getAppShellCommand(d)
+	if err != nil {
+		return err
+	}
+	cmd.Args = []string{
+		"--init-file", filepath.Join(GetDir(HomeDir), ".bash_profile"),
+		"-c", cmdStr,
+	}
+	if err := cmd.Interactive(); err != nil {
 		return err
 	}
 	return nil

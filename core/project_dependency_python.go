@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
@@ -61,14 +60,11 @@ func (p *Project) DepPythonPipInstall(d interface{}) error {
 				pipBinPath := filepath.Join(GetDir(HomeDir), ".pyenv", "versions", pyFullVer, "bin", "pip")
 				depPath := filepath.Join(p.DepInstallPath(d), fmt.Sprintf("python%d", pyMajorVer))
 				reqTxtPath := filepath.Join(depPath, "requirements.txt")
-				cmd := NewShellCommand()
-				cmd.Args = []string{
-					"--norc", "-c",
-					fmt.Sprintf("%s install -r %s --prefix %s", pipBinPath, reqTxtPath, depPath),
-				}
-				cmd.Env = brewEnv()
-				if err := cmd.Interactive(); err != nil {
-					return errors.WithStack(err)
+				if err := p.Command(d, fmt.Sprintf(
+					"%s install -r %s --prefix %s",
+					pipBinPath, reqTxtPath, depPath,
+				)); err != nil {
+					return err
 				}
 			}
 			done2()

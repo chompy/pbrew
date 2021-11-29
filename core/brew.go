@@ -81,5 +81,6 @@ func brewEnv() []string {
 		fmt.Sprintf("USER=%s", user.Username),
 		fmt.Sprintf("PATH=%s:/bin:/usr/bin:/usr/sbin", filepath.Join(GetDir(BrewDir), "bin")),
 		fmt.Sprintf("CPATH=%s", filepath.Join(GetDir(BrewDir), "include")),
+		fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)),
 	}
 }
