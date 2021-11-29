@@ -28,6 +28,7 @@ type Service struct {
 	ReloadCmd       string            `yaml:"reload"`
 	InstallCheckCmd string            `yaml:"install_check"`
 	Dependencies    []string          `yaml:"dependencies"`
+	noBottle        bool
 }
 
 // Info returns information about Homebrew application.
@@ -41,8 +42,10 @@ func (s *Service) Install() error {
 		return err
 	}
 	installName := s.BrewName
-	if err := brewBottleDownload(s.BrewName); err == nil {
-		installName = brewBottleDownloadPath(s.BrewName)
+	if !s.noBottle {
+		if err := brewBottleDownload(s.BrewName); err == nil {
+			installName = brewBottleDownloadPath(s.BrewName)
+		}
 	}
 	if err := brewCommand("install", installName); err != nil {
 		if !s.InstallCheck() {
