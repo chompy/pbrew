@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
@@ -57,8 +56,6 @@ func (p *Project) DepPHPComposerInstall(d interface{}) error {
 				return err
 			}
 			done2 := output.Duration("Composer install.")
-			cmd := NewShellCommand()
-
 			serviceList, err := LoadServiceList()
 			if err != nil {
 				return err
@@ -68,14 +65,12 @@ func (p *Project) DepPHPComposerInstall(d interface{}) error {
 				return err
 			}
 			phpBinPath := filepath.Join(GetDir(BrewDir), "opt", brewService.BrewAppName(), "bin", "php")
-			composerBinPath := filepath.Join(GetDir(BrewDir), "opt", "composer", "bin", "composer")
-			cmd.Args = []string{
-				"--norc", "-c",
-				fmt.Sprintf("%s %s install -d %s", phpBinPath, composerBinPath, p.DepInstallPath(d)),
-			}
-			cmd.Env = brewEnv()
-			if err := cmd.Interactive(); err != nil {
-				return errors.WithStack(err)
+			composerBinPath := filepath.Join(GetDir(BrewDir), "bin", "composer")
+			if err := p.Command(d, fmt.Sprintf(
+				"%s %s install -d %s",
+				phpBinPath, composerBinPath, p.DepInstallPath(d),
+			)); err != nil {
+				return err
 			}
 			done2()
 			done()

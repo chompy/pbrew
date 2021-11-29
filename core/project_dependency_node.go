@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 )
@@ -53,16 +52,20 @@ func (p *Project) DepNodeNpmInstall(d interface{}) error {
 				return err
 			}
 			done2 := output.Duration("Npm install.")
-			cmd := NewShellCommand()
-			npmBinPath := filepath.Join(GetDir(BrewDir), "bin", "npm")
-			nodeModulesPath := filepath.Join(p.DepInstallPath(d), "node_modules")
-			cmd.Args = []string{
-				"--norc", "-c",
-				fmt.Sprintf("%s install %s -g --prefix %s", npmBinPath, p.DepInstallPath(d), nodeModulesPath),
+			if err := p.Command(d, fmt.Sprintf(
+				"source $(brew --prefix nvm)/nvm.sh && npm install %s --prefix %s",
+				p.DepInstallPath(d), p.DepInstallPath(d),
+			)); err != nil {
+				return err
 			}
-			cmd.Env = brewEnv()
-			if err := cmd.Interactive(); err != nil {
-				return errors.WithStack(err)
+			nodeBinDir := filepath.Join(p.DepInstallPath(d), "node_modules", "bin")
+			os.RemoveAll(nodeBinDir)
+			os.MkdirAll(nodeBinDir, mkdirPerm)
+			if err := p.Command(d, fmt.Sprintf(
+				"cd %s && ln -s ../*/bin/* .",
+				nodeBinDir,
+			)); err != nil {
+				return err
 			}
 			done2()
 			done()
