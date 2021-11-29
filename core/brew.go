@@ -1,8 +1,10 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -83,4 +85,25 @@ func brewEnv() []string {
 		fmt.Sprintf("CPATH=%s", filepath.Join(GetDir(BrewDir), "include")),
 		fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)),
 	}
+}
+
+func brewInfo(name string) (map[string]interface{}, error) {
+	binPath := filepath.Join(GetDir(BrewDir), "bin/brew")
+	out, err := exec.Command(binPath, "info", name, "--json").Output()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	info := make([]map[string]interface{}, 0)
+	if err := json.Unmarshal(out, &info); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if len(info) == 0 {
+		return nil, errors.WithStack(errors.WithMessage(ErrServiceNotFound, name))
+	}
+	return info[0], nil
+}
+
+func brewAppName(name string) string {
+	brewAppNamePath := strings.Split(strings.Trim(name, "/"), "/")
+	return brewAppNamePath[len(brewAppNamePath)-1]
 }

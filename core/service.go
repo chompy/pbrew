@@ -2,11 +2,9 @@ package core
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -35,19 +33,7 @@ type Service struct {
 
 // Info returns information about Homebrew application.
 func (s *Service) Info() (map[string]interface{}, error) {
-	binPath := filepath.Join(GetDir(BrewDir), "bin/brew")
-	out, err := exec.Command(binPath, "info", s.BrewAppName(), "--json").Output()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	info := make([]map[string]interface{}, 0)
-	if err := json.Unmarshal(out, &info); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	if len(info) == 0 {
-		return nil, errors.WithStack(errors.WithMessage(ErrServiceNotFound, s.BrewName))
-	}
-	return info[0], nil
+	return brewInfo(s.BrewAppName())
 }
 
 // Install installs the service and runs the post install command.
@@ -361,8 +347,7 @@ func (s *Service) UpstreamSocketPath(p *Project, app *def.App) string {
 
 // BrewAppName returns the brew app name without namespace.
 func (s *Service) BrewAppName() string {
-	brewAppNamePath := strings.Split(strings.Trim(s.BrewName, "/"), "/")
-	return brewAppNamePath[len(brewAppNamePath)-1]
+	return brewAppName(s.BrewName)
 }
 
 // PidPath returns path to service pid file.
