@@ -31,6 +31,10 @@ func BrewInstall() error {
 	if err := cmd.Interactive(); err != nil {
 		return err
 	}
+	// tap shivammathur/php
+	if err := brewCommand("tap", "shivammathur/php"); err != nil {
+		return err
+	}
 	// install core dependencies
 	serviceList, err := LoadServiceList()
 	if err != nil {

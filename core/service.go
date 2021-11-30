@@ -40,7 +40,8 @@ func (s *Service) Install() error {
 	if err := s.PreInstall(); err != nil {
 		return err
 	}
-	if err := brewCommand("install", s.BrewName); err != nil {
+	cmd := []string{"install", s.BrewName, "--force-bottle"}
+	if err := brewCommand(cmd...); err != nil {
 		if !s.InstallCheck() {
 			return err
 		}
