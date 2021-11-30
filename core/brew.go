@@ -32,10 +32,11 @@ func BrewInstall() error {
 		return err
 	}
 	done()
-	return brewInit()
+	return BrewInit()
 }
 
-func brewInit() error {
+// BrewInit runs initialization commands on Homebrew environment.
+func BrewInit() error {
 	done := output.Duration("Initialize Homebrew environment.")
 	// tap shivammathur/php
 	if err := brewCommand("tap", "shivammathur/php"); err != nil {

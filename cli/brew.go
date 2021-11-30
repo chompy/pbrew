@@ -1,8 +1,11 @@
 package cli
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 	"gitlab.com/contextualcode/pbrew/core"
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 )
 
 var brewCmd = &cobra.Command{
@@ -19,13 +22,41 @@ var brewCompileCmd = &cobra.Command{
 		serviceList, err := core.LoadServiceList()
 		handleError(err)
 		serviceDef, err := serviceList.Match(serviceName)
-		handleError(err)
+		if err != nil || serviceDef == nil {
+			serviceDef = &core.Service{
+				BrewName: serviceName,
+			}
+		}
 		handleError(serviceDef.Compile())
+	},
+}
+
+var brewInitCmd = &cobra.Command{
+	Use:   "init",
+	Short: "(Re)init Homebrew enviroment.",
+	Run: func(cmd *cobra.Command, args []string) {
+		handleError(core.BrewInit())
+	},
+}
+
+var brewInstallAllCmd = &cobra.Command{
+	Use:   "install-all",
+	Short: "Install every Homebrew service needed by Pbrew.",
+	Run: func(cmd *cobra.Command, args []string) {
+		output.Info("!! THIS WILL TAKE A LONG TIME, MAKE SURE YOUR COMPUTER DOESN'T GO TO SLEEP. !!")
+		time.Sleep(time.Second * 3)
+		serviceList, err := core.LoadServiceList()
+		handleError(err)
+		for _, def := range serviceList {
+			handleError(def.Install())
+		}
 	},
 }
 
 func init() {
 	brewCmd.PersistentFlags().StringP("service", "s", "", "name of service")
 	brewCmd.AddCommand(brewCompileCmd)
+	brewCmd.AddCommand(brewInitCmd)
+	brewCmd.AddCommand(brewInstallAllCmd)
 	RootCmd.AddCommand(brewCmd)
 }
