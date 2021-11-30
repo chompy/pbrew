@@ -13,14 +13,14 @@ var projectCmd = &cobra.Command{
 }
 
 var projectStartCmd = &cobra.Command{
-	Use:   "start [--no-mounts] [--no-bottles]",
+	Use:   "start [--no-mounts] [-b use-pbrew-bottles]",
 	Short: "Start project.",
 	Run: func(cmd *cobra.Command, args []string) {
 		// start project
 		proj, err := getProject()
 		handleError(err)
 		proj.NoMounts = cmd.PersistentFlags().Lookup("no-mounts").Value.String() == "true"
-		proj.NoBottles = cmd.PersistentFlags().Lookup("no-bottles").Value.String() == "true"
+		proj.UsePbrewBottles = cmd.PersistentFlags().Lookup("use-pbrew-bottles").Value.String() == "true"
 		handleError(proj.Start())
 		// generate nginx
 		handleError(core.NginxAdd(proj))
@@ -101,7 +101,7 @@ var projectPurgeCmd = &cobra.Command{
 
 func init() {
 	projectStartCmd.PersistentFlags().Bool("no-mounts", false, "disable symlink mounts")
-	projectStartCmd.PersistentFlags().Bool("no-bottles", false, "disable pbrew provided bottles")
+	projectStartCmd.PersistentFlags().BoolP("use-pbrew-bottles", "b", false, "enables use of pbrew provided bottles")
 	projectCmd.AddCommand(projectStartCmd)
 	projectCmd.AddCommand(projectStopCmd)
 	projectCmd.AddCommand(projectPurgeCmd)
