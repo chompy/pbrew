@@ -20,7 +20,6 @@ var projectStartCmd = &cobra.Command{
 		proj, err := getProject()
 		handleError(err)
 		proj.NoMounts = cmd.PersistentFlags().Lookup("no-mounts").Value.String() == "true"
-		proj.NoBottles = cmd.PersistentFlags().Lookup("no-bottles").Value.String() == "true"
 		handleError(proj.Start())
 		// generate nginx
 		handleError(core.NginxAdd(proj))
@@ -101,7 +100,6 @@ var projectPurgeCmd = &cobra.Command{
 
 func init() {
 	projectStartCmd.PersistentFlags().Bool("no-mounts", false, "disable symlink mounts")
-	projectStartCmd.PersistentFlags().Bool("no-bottles", false, "disable pbrew provided bottles")
 	projectCmd.AddCommand(projectStartCmd)
 	projectCmd.AddCommand(projectStopCmd)
 	projectCmd.AddCommand(projectPurgeCmd)
