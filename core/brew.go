@@ -31,6 +31,12 @@ func BrewInstall() error {
 	if err := cmd.Interactive(); err != nil {
 		return err
 	}
+	done()
+	return brewInit()
+}
+
+func brewInit() error {
+	done := output.Duration("Initialize Homebrew environment.")
 	// tap shivammathur/php
 	if err := brewCommand("tap", "shivammathur/php"); err != nil {
 		return err

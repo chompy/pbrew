@@ -36,6 +36,8 @@
     "php.ini.tmpl" : "{DATA_PATH}/php.ini"
   install_check: |
     [ -f {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm ] && [ -f {BREW_PATH}/opt/{BREW_APP}/bin/php ]
+  dependencies:
+    - "libunistring"
 
 "php-7.3":
   <<: *php
