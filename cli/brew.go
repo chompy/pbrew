@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-	"sort"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -48,30 +46,7 @@ var brewInstallAllCmd = &cobra.Command{
 		output.Info("!! THIS WILL TAKE A LONG TIME, MAKE SURE YOUR COMPUTER DOESN'T GO TO SLEEP. !!")
 		time.Sleep(time.Second * 3)
 		doReinstall := cmd.PersistentFlags().Lookup("reinstall").Value.String() == "true"
-		serviceList, err := core.LoadServiceList()
-		handleError(err)
-		keys := make([]string, 0)
-		for key := range serviceList {
-			if key[0] == '_' {
-				continue
-			}
-			keys = append(keys, key)
-		}
-		sort.Strings(keys)
-		for _, name := range keys {
-			def := serviceList[name]
-			done := output.Duration(fmt.Sprintf("Install '%s.'", name))
-			if def.IsInstalled() {
-				if !doReinstall {
-					output.Info("Already installed.")
-					done()
-					continue
-				}
-				handleError(def.Uninstall())
-			}
-			handleError(def.Install())
-			done()
-		}
+		handleError(core.BrewInstallAll(doReinstall))
 	},
 }
 

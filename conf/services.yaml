@@ -1,15 +1,3 @@
-"_core":
-  brew_name: "homebrew/core"
-  post_install: |
-    {BREW_PATH}/bin/pyenv install 2.7.18
-    {BREW_PATH}/bin/pyenv install 3.10.0
-    source $({BREW_PATH}/bin/brew --prefix nvm)/nvm.sh
-    nvm install node
-  dependencies:
-    - "nvm"
-    - "ruby@2.4"
-    - "pyenv"
-
 "php-7.4": &php
   brew_name: "shivammathur/php/php@7.4"
   start: |
@@ -31,6 +19,16 @@
       {BREW_PATH}/opt/{BREW_APP}/bin/php -r "unlink('composer-setup.php');"
       mv composer.phar {BREW_PATH}/bin/composer
     fi
+    if [ ! -f {HOME_PATH}/.pyenv/versions/2.7.18/bin/python ]; then
+      {BREW_PATH}/bin/pyenv install 2.7.18
+    fi
+    if [ ! -f {HOME_PATH}/.pyenv/versions/3.10.0/bin/python ]; then
+      {BREW_PATH}/bin/pyenv install 3.10.0
+    fi
+    if [ ! -d {HOME_PATH}/.nvm/versions/node ]; then
+      source $({BREW_PATH}/bin/brew --prefix nvm)/nvm.sh
+      nvm install node
+    fi
   config_templates: 
     "php_fpm.conf.tmpl" : "{CONF_FILE}"
     "php.ini.tmpl" : "{DATA_PATH}/php.ini"
@@ -38,6 +36,9 @@
     [ -f {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm ] && [ -f {BREW_PATH}/opt/{BREW_APP}/bin/php ]
   dependencies:
     - "libunistring"
+    - "nvm"
+    - "ruby@2.4"
+    - "pyenv"
 
 "php-7.3":
   <<: *php

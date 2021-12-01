@@ -42,21 +42,6 @@ func BrewInit() error {
 	if err := brewCommand("tap", "shivammathur/php"); err != nil {
 		return err
 	}
-	// install core dependencies
-	serviceList, err := LoadServiceList()
-	if err != nil {
-		return err
-	}
-	coreService, err := serviceList.Match("_core")
-	if err != nil {
-		return err
-	}
-	if err := coreService.InstallDependencies(); err != nil {
-		return err
-	}
-	if err := coreService.PostInstall(); err != nil {
-		return err
-	}
 	done()
 	return nil
 }
@@ -94,6 +79,7 @@ func brewEnv() []string {
 		fmt.Sprintf("PATH=%s:/bin:/usr/bin:/usr/sbin", filepath.Join(GetDir(BrewDir), "bin")),
 		fmt.Sprintf("CPATH=%s", filepath.Join(GetDir(BrewDir), "include")),
 		fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)),
+		"RUBY_CFLAGS=-DUSE_FFI_CLOSURE_ALLOC",
 	}
 }
 
