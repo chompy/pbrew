@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+	"sort"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -40,21 +42,42 @@ var brewInitCmd = &cobra.Command{
 }
 
 var brewInstallAllCmd = &cobra.Command{
-	Use:   "install-all",
+	Use:   "install-all [--reinstall]",
 	Short: "Install every Homebrew service needed by Pbrew.",
 	Run: func(cmd *cobra.Command, args []string) {
 		output.Info("!! THIS WILL TAKE A LONG TIME, MAKE SURE YOUR COMPUTER DOESN'T GO TO SLEEP. !!")
 		time.Sleep(time.Second * 3)
+		doReinstall := cmd.PersistentFlags().Lookup("reinstall").Value.String() == "true"
 		serviceList, err := core.LoadServiceList()
 		handleError(err)
-		for _, def := range serviceList {
+		keys := make([]string, 0)
+		for key := range serviceList {
+			if key[0] == '_' {
+				continue
+			}
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		for _, name := range keys {
+			def := serviceList[name]
+			done := output.Duration(fmt.Sprintf("Install '%s.'", name))
+			if def.IsInstalled() {
+				if !doReinstall {
+					output.Info("Already installed.")
+					done()
+					continue
+				}
+				handleError(def.Uninstall())
+			}
 			handleError(def.Install())
+			done()
 		}
 	},
 }
 
 func init() {
 	brewCmd.PersistentFlags().StringP("service", "s", "", "name of service")
+	brewInstallAllCmd.PersistentFlags().Bool("reinstall", false, "forces reinstall of all services")
 	brewCmd.AddCommand(brewCompileCmd)
 	brewCmd.AddCommand(brewInitCmd)
 	brewCmd.AddCommand(brewInstallAllCmd)

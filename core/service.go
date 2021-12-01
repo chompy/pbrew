@@ -62,6 +62,17 @@ func (s *Service) Install() error {
 	return nil
 }
 
+// Uninstall uninstalls the service.
+func (s *Service) Uninstall() error {
+	if !s.IsInstalled() {
+		return nil
+	}
+	if err := brewCommand("uninstall", s.BrewName); err != nil {
+		return err
+	}
+	return nil
+}
+
 // InstallCheck checks to see if the installation was successful.
 func (s *Service) InstallCheck() bool {
 	// run cmd

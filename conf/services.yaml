@@ -48,6 +48,7 @@
   brew_name: "shivammathur/php/php@7.2"
   pre_install: |
     {BREW_PATH}/bin/brew install tidy-html5
+    rm {BREW_PATH}/lib/libtidy.so.5
     ln -s {BREW_PATH}/Cellar/tidy-html5/5.8.0/lib/libtidy.so.5.8.0 {BREW_PATH}/lib/libtidy.so.5
 
 "php-7.1":
