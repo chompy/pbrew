@@ -45,8 +45,8 @@ func BrewInstallAll(reinstall bool) error {
 			return err
 		}
 		if def.IsPHP() {
-			for _, ext := range phpExtList {
-				if err := def.PHPInstallExtension(ext); err != nil {
+			for name := range phpExtList {
+				if err := def.PHPInstallExtension(name); err != nil {
 					return err
 				}
 			}
