@@ -26,7 +26,8 @@ func IsBrewInstalled() bool {
 func BrewInstall() error {
 	done := output.Duration("Install Homebrew.")
 	cmd := NewShellCommand()
-	cmd.Args = []string{"--norc", "-c", fmt.Sprintf(brewInstall, GetDir(BrewDir))}
+	cmd.Command = "/bin/bash"
+	cmd.Args = []string{"-c", fmt.Sprintf(brewInstall, GetDir(BrewDir))}
 	cmd.Env = brewEnv()
 	if err := cmd.Interactive(); err != nil {
 		return err
@@ -42,6 +43,10 @@ func BrewInit() error {
 	if err := brewCommand("tap", "shivammathur/php"); err != nil {
 		return err
 	}
+	// install zsh, this ensures all systems use the same shell
+	if err := brewCommand("install", "zsh"); err != nil {
+		return err
+	}
 	done()
 	return nil
 }
@@ -54,6 +59,7 @@ func brewCommand(subCmds ...string) error {
 	done := output.Duration("Run brew " + strings.Join(subCmds, " ") + ".")
 	binPath := filepath.Join(GetDir(BrewDir), "bin/brew")
 	cmd := NewShellCommand()
+	cmd.Command = "/bin/bash"
 	cmd.Args = []string{"--norc", "-c", binPath + " " + strings.Join(subCmds, " ")}
 	cmd.Env = brewEnv()
 	if err := cmd.Interactive(); err != nil {
@@ -75,6 +81,7 @@ func brewEnv() []string {
 		fmt.Sprintf("HOMEBREW_SHELLENV_PREFIX=%s", GetDir(BrewDir)),
 		fmt.Sprintf("LD_LIBRARY_PATH=%s", filepath.Join(GetDir(BrewDir), "lib/gcc/11")),
 		fmt.Sprintf("HOME=%s", GetDir(HomeDir)),
+		fmt.Sprintf("ZDOTDIR=%s", GetDir(HomeDir)),
 		fmt.Sprintf("USER=%s", user.Username),
 		fmt.Sprintf("PATH=%s:/bin:/usr/bin:/usr/sbin", filepath.Join(GetDir(BrewDir), "bin")),
 		fmt.Sprintf("CPATH=%s", filepath.Join(GetDir(BrewDir), "include")),

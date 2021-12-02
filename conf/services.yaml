@@ -26,6 +26,7 @@
       {BREW_PATH}/bin/pyenv install 3.10.0
     fi
     if [ ! -d {HOME_PATH}/.nvm/versions/node ]; then
+      echo "source $(brew --prefix nvm)/nvm.sh" >> {HOME_PATH}/.zshrc
       source $({BREW_PATH}/bin/brew --prefix nvm)/nvm.sh
       nvm install node
     fi

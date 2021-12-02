@@ -25,7 +25,7 @@ func (p *Project) executeHookCmd(cmdStr string, d *def.App) error {
 	if err != nil {
 		return err
 	}
-	cmd.Args = []string{"--norc", "-c", cmdStr}
+	cmd.Args = []string{"-c", cmdStr}
 	if err := cmd.Interactive(); err != nil {
 		return err
 	}

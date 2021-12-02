@@ -54,7 +54,6 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 		}
 	}
 	//env = append(env, "HOME="+p.Path)
-	env = append(env, fmt.Sprintf("PS1=%s-%s> ", p.Name, d.Name))
 	//env = append(env, fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)))
 	env = append(env, fmt.Sprintf("TERM=%s", os.Getenv("TERM")))
 	for k, v := range p.Env(d) {
@@ -62,7 +61,7 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 	}
 	// run interactive shell
 	cmd := NewShellCommand()
-	cmd.Args = []string{"--norc"}
+	cmd.Args = []string{}
 	cmd.Env = env
 	return cmd, nil
 }
@@ -88,7 +87,7 @@ func (p *Project) Command(d *def.App, cmdStr string) error {
 		return err
 	}
 	cmdStr = "source $(brew --prefix nvm)/nvm.sh && " + cmdStr
-	cmd.Args = []string{"--norc", "-c", cmdStr}
+	cmd.Args = []string{"-c", cmdStr}
 	if err := cmd.Interactive(); err != nil {
 		return err
 	}

@@ -21,7 +21,7 @@ type ShellCommand struct {
 
 func NewShellCommand() ShellCommand {
 	return ShellCommand{
-		Command: "/bin/bash",
+		Command: filepath.Join(GetDir(BrewDir), "bin", "zsh"),
 		Args:    []string{},
 		Env:     []string{},
 		Stdin:   os.Stdin,
