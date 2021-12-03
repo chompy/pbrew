@@ -33,6 +33,7 @@ func (p *Project) depPHPBuildComposerJSON(d interface{}) error {
 					return err
 				}
 			}
+			os.Remove(filepath.Join(p.DepInstallPath(d), "composer.lock"))
 			if err := ioutil.WriteFile(
 				filepath.Join(p.DepInstallPath(d), "composer.json"),
 				composerJSON,

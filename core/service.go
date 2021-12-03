@@ -53,9 +53,7 @@ func (s *Service) Install() error {
 		}
 		output.Warn("Install command errored but install check was successful... " + err.Error())
 	}
-	if err := brewCommand("services", "stop", s.BrewName); err != nil {
-		return err
-	}
+	brewCommand("services", "stop", s.BrewName)
 	if err := s.PostInstall(); err != nil {
 		return err
 	}
@@ -387,7 +385,6 @@ func (s *Service) injectCommandParams(cmd string) string {
 	if err != nil {
 		output.Warn(err.Error())
 	}
-
 	cmd = strings.ReplaceAll(cmd, "{BREW_PATH}", GetDir(BrewDir))
 	cmd = strings.ReplaceAll(cmd, "{BREW_APP}", s.BrewAppName())
 	cmd = strings.ReplaceAll(cmd, "{PORT}", fmt.Sprintf("%d", port))
