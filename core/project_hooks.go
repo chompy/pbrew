@@ -21,15 +21,7 @@ func (p *Project) executeHookCmd(cmdStr string, d *def.App) error {
 	if cmdStr == "" {
 		return nil
 	}
-	cmd, err := p.getAppShellCommand(d)
-	if err != nil {
-		return err
-	}
-	cmd.Args = []string{"-c", cmdStr}
-	if err := cmd.Interactive(); err != nil {
-		return err
-	}
-	return nil
+	return p.Command(d, cmdStr)
 }
 
 // Build executes build hooks for given app.

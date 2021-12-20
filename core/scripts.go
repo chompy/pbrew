@@ -9,5 +9,5 @@ echo "bindkey '^[[F' end-of-line" >> ~/.zshrc
 echo "bindkey '^[[3~' delete-char" >> ~/.zshrc
 echo "bindkey '^[[A' history-beginning-search-backward" >> ~/.zshrc
 echo "bindkey '^[[B' history-beginning-search-forward" >> ~/.zshrc
-echo 'PROMPT="${PLATFORM_PROJECT}> "' >> ~/.zshrc
+echo 'PROMPT="pbrew> "' >> ~/.zshrc
 `
