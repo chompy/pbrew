@@ -13,13 +13,18 @@ var appCmd = &cobra.Command{
 }
 
 var appShellCmd = &cobra.Command{
-	Use:     "shell",
+	Use:     "shell [-e execute]",
 	Aliases: []string{"sh"},
 	Short:   "Create shell for application.",
 	Run: func(cmd *cobra.Command, args []string) {
 		proj, err := getProject()
 		handleError(err)
 		app := appCmdSelectApp(proj)
+		execute := cmd.PersistentFlags().Lookup("execute").Value.String()
+		if execute != "" {
+			handleError(proj.Command(app, execute))
+			return
+		}
 		handleError(proj.Shell(app))
 	},
 }
@@ -87,6 +92,7 @@ func appCmdSelectApp(proj *core.Project) *def.App {
 
 func init() {
 	appCmd.PersistentFlags().StringP("service", "s", "", "name of application")
+	appShellCmd.PersistentFlags().StringP("execute", "e", "", "command to execute")
 	appCmd.AddCommand(appShellCmd)
 	appCmd.AddCommand(appBuildCmd)
 	appCmd.AddCommand(appDeployCmd)
