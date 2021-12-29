@@ -70,10 +70,21 @@ func (p *Project) buildNginxRouteTemplate() nginxRouteTemplate {
 					continue
 				}
 			}
+			path := strings.TrimRight(parsedRouteURL.Path, "/")
+			hasPath := false
+			for _, l := range locationTemplates {
+				if l.Path == path {
+					hasPath = true
+					break
+				}
+			}
+			if hasPath {
+				continue
+			}
 			locationTemplates = append(locationTemplates, nginxRouteLocationTemplate{
 				Host:         ProjectDefaultHostName(p, hostName),
 				Original:     parsedOriginalURL.Host,
-				Path:         strings.TrimRight(parsedRouteURL.Path, "/"),
+				Path:         path,
 				Type:         route.Type,
 				UpstreamPort: upstreamPort,
 				To:           route.To,
