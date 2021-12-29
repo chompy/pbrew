@@ -28,6 +28,8 @@ type Service struct {
 	ReloadCmd       string            `yaml:"reload"`
 	InstallCheckCmd string            `yaml:"install_check"`
 	Dependencies    []string          `yaml:"dependencies"`
+	Multiple        bool              `yaml:"multiple"`
+	ProjectName     string
 	usePbrewBottles bool
 }
 
@@ -247,6 +249,9 @@ func (s *Service) Reload() error {
 // PreStart performs setup that should occur prior to starting service.
 func (s *Service) PreStart(d interface{}, p *Project) error {
 	done := output.Duration(fmt.Sprintf("Pre setup %s.", s.BrewName))
+	if p != nil {
+		s.ProjectName = p.Name
+	}
 	// create data dir
 	if err := os.Mkdir(s.DataPath(), mkdirPerm); err != nil {
 		if !errors.Is(err, os.ErrExist) {
@@ -341,6 +346,9 @@ func (s *Service) Port() (int, error) {
 
 // SocketPath returns path to service socket.
 func (s *Service) SocketPath() string {
+	if s.Multiple && s.ProjectName != "" {
+		return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s-%s.sock", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.ProjectName))
+	}
 	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
 }
 
@@ -359,11 +367,17 @@ func (s *Service) BrewAppName() string {
 
 // PidPath returns path to service pid file.
 func (s *Service) PidPath() string {
+	if s.Multiple && s.ProjectName != "" {
+		return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s-%s.pid", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.ProjectName))
+	}
 	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
 }
 
 // ConfigPath returns path to service config file.
 func (s *Service) ConfigPath() string {
+	if s.Multiple && s.ProjectName != "" {
+		return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s-%s.conf", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.ProjectName))
+	}
 	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s.conf", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
 }
 
