@@ -51,31 +51,46 @@ func GetServiceStatuses() ([]ServiceStatus, error) {
 		if alreadyCreated {
 			continue
 		}
-		// get status
+		// default status
 		status := serviceStatusNotInstalled
-		if service.IsRunning() {
-			status = serviceStatusRunning
-		} else if service.IsInstalled() {
-			status = serviceStatusStopped
-		}
-		// get port
-		ports := []int{config.RouterHTTP, config.RouterHTTPS}
-		if service.BrewAppName() != nginxService.BrewAppName() {
-			port, err := portMaps.ServicePort(service)
-			if err != nil {
-				return nil, err
-			}
-			ports = []int{port}
-		}
-		// get projects
+		// get projects + ports + status
 		projects := make([]string, 0)
+		ports := make([]int, 0)
 		for _, pt := range projectTracks {
 			for _, ptService := range pt.Services {
 				if ptService == service.BrewAppName() {
 					projects = append(projects, pt.Name)
+					service.ProjectName = pt.Name
+					if service.IsRunning() {
+						status = serviceStatusRunning
+					}
+					port, err := portMaps.ServicePort(service)
+					if err != nil {
+						return nil, err
+					}
+					hasPort := false
+					for _, existingPort := range ports {
+						if existingPort == port {
+							hasPort = true
+							break
+						}
+					}
+					if !hasPort {
+						ports = append(ports, port)
+					}
 					break
 				}
 			}
+		}
+
+		if service.IsRunning() {
+			status = serviceStatusRunning
+		} else if service.IsInstalled() && status == serviceStatusNotInstalled {
+			status = serviceStatusStopped
+		}
+
+		if service.BrewAppName() == nginxService.BrewAppName() {
+			ports = []int{config.RouterHTTP, config.RouterHTTPS}
 		}
 		if service.BrewAppName() == nginxService.BrewAppName() {
 			for _, pt := range projectTracks {

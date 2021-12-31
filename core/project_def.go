@@ -41,6 +41,7 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 				}
 			}
 			if brewService != nil {
+				brewService.ProjectName = p.Name
 				port, err = brewService.Port()
 				if err != nil {
 					output.Warn(err.Error())
