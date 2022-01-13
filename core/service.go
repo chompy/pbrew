@@ -154,6 +154,9 @@ func (s *Service) IsInstalled() bool {
 
 // IsRunning returns true if service is running.
 func (s *Service) IsRunning() bool {
+	if s.IsSolr() {
+		return s.IsSolrRunning()
+	}
 	pidFile, err := ioutil.ReadFile(s.PidPath())
 	if err != nil {
 		if os.IsNotExist(err) {
