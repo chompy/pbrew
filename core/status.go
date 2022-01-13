@@ -11,10 +11,11 @@ const serviceStatusRunning = "running"
 
 // ServiceStatus defines
 type ServiceStatus struct {
-	Name     string   `json:"name"`
-	Ports    []int    `json:"ports"`
-	Projects []string `json:"projects"`
-	Status   string   `json:"status"`
+	Name        string   `json:"name"`
+	DisplayName string   `json:"display_name"`
+	Ports       []int    `json:"ports"`
+	Projects    []string `json:"projects"`
+	Status      string   `json:"status"`
 }
 
 // GetServiceStatuses returns status of all services.
@@ -101,10 +102,11 @@ func GetServiceStatuses() ([]ServiceStatus, error) {
 			}
 		}
 		out = append(out, ServiceStatus{
-			Name:     service.BrewAppName(),
-			Ports:    ports,
-			Status:   status,
-			Projects: projects,
+			Name:        service.BrewAppName(),
+			DisplayName: service.DisplayName(),
+			Ports:       ports,
+			Status:      status,
+			Projects:    projects,
 		})
 	}
 	sort.Slice(out, func(i int, j int) bool {

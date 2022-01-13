@@ -118,7 +118,7 @@ var allServicesCmd = &cobra.Command{
 				ports = append(ports, fmt.Sprintf("%d", port))
 			}
 			tableRows = append(tableRows, []string{
-				status.Name,
+				status.DisplayName,
 				strings.Join(ports, ","),
 				status.Status,
 				strings.Join(status.Projects, ","),

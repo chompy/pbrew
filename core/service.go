@@ -180,7 +180,7 @@ func (s *Service) IsRunning() bool {
 
 // Start will start the service.
 func (s *Service) Start() error {
-	done := output.Duration(fmt.Sprintf("Start %s.", s.BrewName))
+	done := output.Duration(fmt.Sprintf("Start %s.", s.DisplayName()))
 	// check status
 	if !s.IsInstalled() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, s.BrewName))
@@ -204,13 +204,13 @@ func (s *Service) Start() error {
 
 // Stop will stop the service.
 func (s *Service) Stop() error {
-	done := output.Duration(fmt.Sprintf("Stop %s.", s.BrewName))
+	done := output.Duration(fmt.Sprintf("Stop %s.", s.DisplayName()))
 	// check status
 	if !s.IsInstalled() {
 		return errors.WithStack(ErrServiceNotInstalled)
 	}
 	if !s.IsRunning() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.DisplayName()))
 	}
 	// execute stop cmd
 	cmdStr := s.injectCommandParams(s.StopCmd)
@@ -226,7 +226,7 @@ func (s *Service) Stop() error {
 
 // Reload reloads the service configuration.
 func (s *Service) Reload() error {
-	done := output.Duration(fmt.Sprintf("Reload %s.", s.BrewName))
+	done := output.Duration(fmt.Sprintf("Reload %s.", s.DisplayName()))
 	// check status
 	if s.ReloadCmd == "" {
 		return errors.WithStack(errors.WithMessage(ErrServiceReloadNotDefined, s.BrewName))
@@ -251,7 +251,7 @@ func (s *Service) Reload() error {
 
 // PreStart performs setup that should occur prior to starting service.
 func (s *Service) PreStart(d interface{}, p *Project) error {
-	done := output.Duration(fmt.Sprintf("Pre setup %s.", s.BrewName))
+	done := output.Duration(fmt.Sprintf("Pre setup %s.", s.DisplayName()))
 	if p != nil {
 		s.ProjectName = p.Name
 	}
@@ -366,6 +366,14 @@ func (s *Service) UpstreamSocketPath(p *Project, app *def.App) string {
 // BrewAppName returns the brew app name without namespace.
 func (s *Service) BrewAppName() string {
 	return brewAppName(s.BrewName)
+}
+
+// DisplayName returns the name the service should be displayed to the user as.
+func (s *Service) DisplayName() string {
+	if s.IsSolr() {
+		return "solr"
+	}
+	return s.BrewAppName()
 }
 
 // PidPath returns path to service pid file.
