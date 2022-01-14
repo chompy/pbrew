@@ -68,6 +68,9 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 						rel["query"] = map[string]interface{}{
 							"is_master": true,
 						}
+					} else if brewService != nil && brewService.IsSolr() {
+						rel["path"] = fmt.Sprintf("solr/%s", brewService.SolrCoreName(p, name))
+						rel["scheme"] = "solr"
 					}
 					out = append(out, rel)
 				}

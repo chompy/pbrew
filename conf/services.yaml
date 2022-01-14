@@ -103,10 +103,10 @@
 "redis-persistent-*":
   <<: *redis
 
-"solr-*":
+"solr-7*":
   brew_name: "java11"
   post_install: |
-    curl -L -o /tmp/solr.tar.gz https://www.apache.org/dyn/closer.lua/lucene/solr/8.11.1/solr-8.11.1.tgz?action=download
+    curl -L -o /tmp/solr.tar.gz https://www.apache.org/dyn/closer.lua/lucene/solr/7.7.3/solr-7.7.3.tgz?action=download
     mkdir {BREW_PATH}/opt/solr
     cd {BREW_PATH}/opt/solr
     tar xvfz /tmp/solr.tar.gz
