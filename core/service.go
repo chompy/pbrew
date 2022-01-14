@@ -294,6 +294,10 @@ func (s *Service) PostStart(d interface{}, p *Project) error {
 				if err := s.mySQLPostSetup(d, p); err != nil {
 					return err
 				}
+			} else if s.IsSolr() {
+				if err := s.solrPostSetup(d, p); err != nil {
+					return err
+				}
 			}
 			done()
 			break

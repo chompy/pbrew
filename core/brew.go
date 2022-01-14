@@ -86,6 +86,7 @@ func brewEnv() []string {
 		fmt.Sprintf("PATH=%s:/bin:/usr/bin:/usr/sbin", filepath.Join(GetDir(BrewDir), "bin")),
 		fmt.Sprintf("CPATH=%s", filepath.Join(GetDir(BrewDir), "include")),
 		fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)),
+		fmt.Sprintf("JAVA_HOME=%s", filepath.Join(GetDir(BrewDir), "opt", "java11")),
 		"RUBY_CFLAGS=-DUSE_FFI_CLOSURE_ALLOC",
 	}
 }

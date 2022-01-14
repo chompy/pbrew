@@ -26,13 +26,14 @@ func ServicesEnv(services []*Service) []string {
 			break
 		}
 	}
-	env = append(env, "PATH="+strings.Join(envPath, ":"))
 	env = append(env, "HOME="+GetDir(HomeDir))
 	for _, service := range services {
 		if service.IsPHP() {
 			env = append(env, "PHPRC="+service.DataPath())
-			break
+		} else if service.IsSolr() {
+			envPath = append(envPath, filepath.Join(GetDir(BrewDir), "opt", "solr", "bin"))
 		}
 	}
+	env = append(env, "PATH="+strings.Join(envPath, ":"))
 	return env
 }

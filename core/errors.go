@@ -13,5 +13,6 @@ var (
 	ErrServiceNotRunning       = errors.New("service not running")
 	ErrServiceReloadNotDefined = errors.New("service reload command not defined")
 	ErrServiceNotMySQL         = errors.New("service must be based on mysql")
+	ErrServiceNotSolr          = errors.New("service must be based on solr")
 	ErrPHPExtNotFound          = errors.New("php extension not found")
 )
