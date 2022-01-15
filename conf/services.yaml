@@ -91,9 +91,15 @@
   start: |
     {BREW_PATH}/opt/redis/bin/redis-server {CONF_FILE}
   stop: |
-    pkill -F {PID_FILE}
+    PID=`pgrep -o -f "redis-server 127.0.0.1:{PORT}"`
+    if [ ! -z $PID ]; then
+      kill "$PID"
+    fi
   reload: |
-    pkill -F {PID_FILE}
+    PID=`pgrep -o -f "redis-server 127.0.0.1:{PORT}"`
+    if [ ! -z $PID ]; then
+      kill "$PID"
+    fi
     sleep 1
     {BREW_PATH}/opt/redis/bin/redis-server {CONF_FILE}
   config_templates: 

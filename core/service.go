@@ -167,6 +167,8 @@ func (s *Service) IsInstalled() bool {
 func (s *Service) IsRunning() bool {
 	if s.IsSolr() {
 		return s.IsSolrRunning()
+	} else if s.IsRedis() {
+		return s.IsRedisRunning()
 	}
 	pidFile, err := ioutil.ReadFile(s.PidPath())
 	if err != nil {

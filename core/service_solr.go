@@ -27,11 +27,7 @@ func (s *Service) IsSolr() bool {
 // IsSolrRunning returns true if solr is running.
 func (s *Service) IsSolrRunning() bool {
 	port, _ := s.Port()
-	out, err := s.solrCommand("status")
-	if err != nil {
-		output.Warn(err.Error())
-		return false
-	}
+	out, _ := s.solrCommand("status")
 	return strings.Contains(string(out), fmt.Sprintf("port %d", port))
 }
 
