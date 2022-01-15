@@ -66,6 +66,7 @@
   brew_name: "shivammathur/php/php@5.6"
 
 "mariadb-*": &mariadb
+  name: "mariadb"
   brew_name: "mariadb@10.6"
   start: |
     {BREW_PATH}/opt/{BREW_APP}/bin/mysql_install_db --defaults-file={CONF_FILE}
@@ -85,6 +86,7 @@
   <<: *mariadb
 
 "redis-*": &redis
+  name: "redis"
   brew_name: "redis@6.2"
   start: |
     {BREW_PATH}/opt/redis/bin/redis-server {CONF_FILE}
@@ -104,20 +106,21 @@
   <<: *redis
 
 "solr-7*":
-  brew_name: "java11"
+  name: "solr"
   post_install: |
-    curl -L -o /tmp/solr.tar.gz https://www.apache.org/dyn/closer.lua/lucene/solr/7.7.3/solr-7.7.3.tgz?action=download
-    mkdir {BREW_PATH}/opt/solr
-    cd {BREW_PATH}/opt/solr
+    curl -L -o /tmp/solr.tar.gz "https://www.apache.org/dyn/closer.lua/lucene/solr/7.7.3/solr-7.7.3.tgz?action=download"
+    cd {BREW_PATH}/opt
     tar xvfz /tmp/solr.tar.gz
-    mv solr-* .
-    rm -r solr-*
+    mv solr-* solr
     rm /tmp/solr.tar.gz
-    mkdir -p {DATA_DIR}/solr
-    cp -r server/solr/* {DATA_DIR}/solr/
+    cp -r solr/server/solr/* {DATA_PATH}/
   start: |
-    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr/bin/solr start -p {PORT} -s {DATA_PATH}/solr
+    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr/bin/solr start -p {PORT} -s {DATA_PATH}
   stop: |
     JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr/bin/solr stop -p {PORT} 
   reload: |
     JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr/bin/solr restart -p {PORT} 
+  install_check: |
+    [ -f {BREW_PATH}/opt/solr/bin/solr ]
+  dependencies:
+    - "java11"

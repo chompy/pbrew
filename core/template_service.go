@@ -59,7 +59,7 @@ func (s *Service) BuildConfigTemplateVars() (serviceTemplateVars, error) {
 
 // GenerateConfigFile generates base config file for service.
 func (s *Service) GenerateConfigFile() error {
-	done := output.Duration(fmt.Sprintf("Generate config for %s.", s.BrewName))
+	done := output.Duration(fmt.Sprintf("Generate config for %s.", s.DisplayName()))
 	// assume config not needed if template not defined
 	if s.ConfigTemplates == nil {
 		return nil

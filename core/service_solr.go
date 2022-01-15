@@ -1,11 +1,16 @@
 package core
 
 import (
+	"archive/tar"
 	"bytes"
+	"compress/gzip"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -16,7 +21,7 @@ import (
 
 // IsSolr returns true if service is solr.
 func (s *Service) IsSolr() bool {
-	return strings.HasPrefix(s.BrewAppName(), "java") && strings.Contains(s.StartCmd, "solr")
+	return s.Name == "solr"
 }
 
 // IsSolrRunning returns true if solr is running.
@@ -33,14 +38,14 @@ func (s *Service) IsSolrRunning() bool {
 // SolrAddConfigSets adds configsets defines in given project.
 func (s *Service) SolrAddConfigSets(d *def.Service, p *Project) error {
 	if !s.IsSolr() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.DisplayName()))
 	}
 	// TODO
 	/*for name, conf := range d.Configuration["configsets"].(map[string]interface{}) {
 		output.Info(fmt.Sprintf("Create configset %s.", name))
 
 		name = s.solrCoreName(p, name)
-		path := filepath.Join(s.DataPath(), "solr", name, "configsets")
+		path := filepath.Join(s.DataPath(), name, "configsets")
 		os.MkdirAll(path, 0755)
 		buf := bytes.NewBufferString(conf.(string))
 		cmd := NewShellCommand()
@@ -60,7 +65,7 @@ func (s *Service) SolrAddConfigSets(d *def.Service, p *Project) error {
 // SolrAddCores adds all solr cores for given project and service.
 func (s *Service) SolrAddCores(d *def.Service, p *Project) error {
 	if !s.IsSolr() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.DisplayName()))
 	}
 	for core, conf := range d.Configuration["cores"].(map[string]interface{}) {
 		if s.SolrHasCore(p, core) {
@@ -71,27 +76,22 @@ func (s *Service) SolrAddCores(d *def.Service, p *Project) error {
 		args := make([]string, 0)
 		args = append(args, "-c", s.SolrCoreName(p, core))
 		if conf.(map[string]interface{})["conf_dir"] != nil {
-			buf := bytes.NewBufferString(conf.(map[string]interface{})["conf_dir"].(string))
-			cmd := NewShellCommand()
-			cmd.Env = brewEnv()
-			cmd.Stdin = buf
-			cmd.Args = []string{
-				"-c", "rm -rf /tmp/solrconf && mkdir -p /tmp/solrconf && cd /tmp/solrconf && base64 -d | tar xfz -",
+			if err := s.solrExtactConfigDir(conf.(map[string]interface{})["conf_dir"].(string)); err != nil {
+				return err
 			}
-			cmd.Interactive()
-			args = append(args, "-d", "/tmp/solrconf")
+			args = append(args, "-d", s.solrGetTempDir())
 		}
 		if _, err := s.solrCommand("create_core", args...); err != nil {
 			return err
 		}
 		// NEEDS TESTING
 		if conf.(map[string]interface{})["core_properties"] != nil {
-			corePropPath := filepath.Join(s.DataPath(), "solr", s.SolrCoreName(p, core), "core.properties")
+			corePropPath := filepath.Join(s.DataPath(), s.SolrCoreName(p, core), "core.properties")
 			coreProps := fmt.Sprintf("name=%s\n", s.SolrCoreName(p, core)) + conf.(map[string]interface{})["core_properties"].(string)
 			if err := ioutil.WriteFile(
 				corePropPath, []byte(coreProps), 0755,
 			); err != nil {
-				return errors.WithStack(errors.WithMessage(err, s.BrewName))
+				return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
 			}
 		}
 	}
@@ -150,7 +150,7 @@ func (s *Service) solrCommand(cmdStr string, args ...string) ([]byte, error) {
 // solrPostSetup configures solr for given service definition.
 func (s *Service) solrPostSetup(d *def.Service, p *Project) error {
 	if !s.IsSolr() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.DisplayName()))
 	}
 	if err := s.SolrAddConfigSets(d, p); err != nil {
 		return err
@@ -159,4 +159,56 @@ func (s *Service) solrPostSetup(d *def.Service, p *Project) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Service) solrExtactConfigDir(value string) error {
+	confDirTar, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	confDirTarReader := bytes.NewReader(confDirTar)
+	gzReader, err := gzip.NewReader(confDirTarReader)
+	if err != nil {
+		return err
+	}
+	defer gzReader.Close()
+	tarReader := tar.NewReader(gzReader)
+	os.RemoveAll(s.solrGetTempDir())
+	os.MkdirAll(s.solrGetTempDir(), 0755)
+	for {
+		header, err := tarReader.Next()
+		if err != nil {
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
+				return nil
+			}
+			return errors.WithStack(err)
+		}
+		if header == nil {
+			continue
+		}
+		target := filepath.Join(s.solrGetTempDir(), header.Name)
+		switch header.Typeflag {
+		case tar.TypeDir:
+			{
+				break
+			}
+		case tar.TypeReg:
+			{
+				os.MkdirAll(filepath.Dir(target), 0755)
+				f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+				if err != nil {
+					return errors.WithStack(err)
+				}
+				if _, err := io.Copy(f, tarReader); err != nil {
+					return errors.WithStack(err)
+				}
+				f.Close()
+				break
+			}
+		}
+	}
+}
+
+func (s *Service) solrGetTempDir() string {
+	return filepath.Join("/tmp", "solrconf")
 }

@@ -19,6 +19,7 @@ import (
 
 // Service is a Homebrew service.
 type Service struct {
+	Name            string            `yaml:"name"`
 	BrewName        string            `yaml:"brew_name"`
 	PostInstallCmd  string            `yaml:"post_install"`
 	PreInstallCmd   string            `yaml:"pre_install"`
@@ -43,19 +44,21 @@ func (s *Service) Install() error {
 	if err := s.PreInstall(); err != nil {
 		return err
 	}
-	installName := s.BrewName
-	if s.usePbrewBottles {
-		if err := brewBottleDownload(s.BrewName); err == nil {
-			installName = brewBottleDownloadPath(s.BrewName)
+	if s.BrewName != "" {
+		installName := s.BrewName
+		if s.usePbrewBottles {
+			if err := brewBottleDownload(s.BrewName); err == nil {
+				installName = brewBottleDownloadPath(s.BrewName)
+			}
 		}
-	}
-	if err := brewCommand("install", installName, "--force-bottle"); err != nil {
-		if !s.InstallCheck() {
-			return err
+		if err := brewCommand("install", installName, "--force-bottle"); err != nil {
+			if !s.InstallCheck() {
+				return err
+			}
+			output.Warn("Install command errored but install check was successful... " + err.Error())
 		}
-		output.Warn("Install command errored but install check was successful... " + err.Error())
+		brewCommand("services", "stop", s.BrewName)
 	}
-	brewCommand("services", "stop", s.BrewName)
 	if err := s.PostInstall(); err != nil {
 		return err
 	}
@@ -67,8 +70,10 @@ func (s *Service) Uninstall() error {
 	if !s.IsInstalled() {
 		return nil
 	}
-	if err := brewCommand("uninstall", s.BrewName); err != nil {
-		return err
+	if s.BrewName != "" {
+		if err := brewCommand("uninstall", s.BrewName); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -97,7 +102,7 @@ func (s *Service) PreInstall() error {
 		cmd.Args = []string{"-c", cmdStr}
 		cmd.Env = ServicesEnv([]*Service{s})
 		if err := cmd.Interactive(); err != nil {
-			return errors.WithMessage(err, s.BrewName)
+			return errors.WithMessage(err, s.DisplayName())
 		}
 	}
 	return nil
@@ -118,7 +123,7 @@ func (s *Service) PostInstall() error {
 		cmd.Args = []string{"-c", cmdStr}
 		cmd.Env = ServicesEnv([]*Service{s})
 		if err := cmd.Interactive(); err != nil {
-			return errors.WithMessage(err, s.BrewName)
+			return errors.WithMessage(err, s.DisplayName())
 		}
 	}
 	return nil
@@ -144,12 +149,18 @@ func (s *Service) InstallDependencies() error {
 
 // IsInstalled returns true if service is installed.
 func (s *Service) IsInstalled() bool {
-	info, err := s.Info()
-	if err != nil {
-		output.Error(err)
+	if !s.InstallCheck() {
 		return false
 	}
-	return len(info["installed"].([]interface{})) > 0
+	if s.BrewName != "" {
+		info, err := s.Info()
+		if err != nil {
+			output.Error(err)
+			return false
+		}
+		return len(info["installed"].([]interface{})) > 0
+	}
+	return true
 }
 
 // IsRunning returns true if service is running.
@@ -183,10 +194,10 @@ func (s *Service) Start() error {
 	done := output.Duration(fmt.Sprintf("Start %s.", s.DisplayName()))
 	// check status
 	if !s.IsInstalled() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, s.DisplayName()))
 	}
 	if s.IsRunning() {
-		return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceAlreadyRunning, s.DisplayName()))
 	}
 	// execute start cmd
 	done2 := output.Duration("Start up.")
@@ -195,7 +206,7 @@ func (s *Service) Start() error {
 	cmd.Args = []string{"-c", cmdStr}
 	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
-		return errors.WithMessage(err, s.BrewName)
+		return errors.WithMessage(err, s.DisplayName())
 	}
 	done2()
 	done()
@@ -218,7 +229,7 @@ func (s *Service) Stop() error {
 	cmd.Args = []string{"-c", cmdStr}
 	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
-		return errors.WithMessage(err, s.BrewName)
+		return errors.WithMessage(err, s.DisplayName())
 	}
 	done()
 	return nil
@@ -229,13 +240,13 @@ func (s *Service) Reload() error {
 	done := output.Duration(fmt.Sprintf("Reload %s.", s.DisplayName()))
 	// check status
 	if s.ReloadCmd == "" {
-		return errors.WithStack(errors.WithMessage(ErrServiceReloadNotDefined, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceReloadNotDefined, s.DisplayName()))
 	}
 	if !s.IsInstalled() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, s.DisplayName()))
 	}
 	if !s.IsRunning() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.DisplayName()))
 	}
 	// execute reload cmd
 	cmdStr := s.injectCommandParams(s.ReloadCmd)
@@ -243,7 +254,7 @@ func (s *Service) Reload() error {
 	cmd.Args = []string{"-c", cmdStr}
 	cmd.Env = ServicesEnv([]*Service{s})
 	if err := cmd.Interactive(); err != nil {
-		return errors.WithMessage(err, s.BrewName)
+		return errors.WithMessage(err, s.DisplayName())
 	}
 	done()
 	return nil
@@ -288,7 +299,7 @@ func (s *Service) PostStart(d interface{}, p *Project) error {
 		{
 			done := output.Duration(fmt.Sprintf("Post setup %s.", d.Name))
 			if !s.IsRunning() {
-				return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+				return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.DisplayName()))
 			}
 			if s.IsMySQL() {
 				if err := s.mySQLPostSetup(d, p); err != nil {
@@ -374,8 +385,8 @@ func (s *Service) BrewAppName() string {
 
 // DisplayName returns the name the service should be displayed to the user as.
 func (s *Service) DisplayName() string {
-	if s.IsSolr() {
-		return "solr"
+	if s.Name != "" {
+		return s.Name
 	}
 	return s.BrewAppName()
 }
@@ -398,7 +409,11 @@ func (s *Service) ConfigPath() string {
 
 // DataPath returns path to service data directory.
 func (s *Service) DataPath() string {
-	return filepath.Join(GetDir(DataDir), strings.ReplaceAll(s.BrewAppName(), "@", "-"))
+	name := s.BrewAppName()
+	if s.BrewName == "" {
+		name = strings.ToLower(s.Name)
+	}
+	return filepath.Join(GetDir(DataDir), strings.ReplaceAll(name, "@", "-"))
 }
 
 // ConfigParams returns confir template parameters for service.

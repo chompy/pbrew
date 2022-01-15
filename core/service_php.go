@@ -66,7 +66,7 @@ func (s *Service) PHPVersion() string {
 // PHPInstallExtension installs the given PHP extension.
 func (s *Service) PHPInstallExtension(name string) error {
 	if !s.IsPHP() {
-		return errors.WithStack(errors.WithMessage(ErrInvalidService, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrInvalidService, s.DisplayName()))
 	}
 	phpExtList, err := LoadPHPExtensionList()
 	if err != nil {
@@ -117,7 +117,7 @@ func (s *Service) phpFpmPoolPath(d *def.App, p *Project) string {
 func (s *Service) phpPreSetup(d *def.App, p *Project) error {
 	// checks
 	if !s.IsPHP() {
-		return errors.WithStack(errors.WithMessage(ErrInvalidService, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrInvalidService, s.DisplayName()))
 	}
 	// install extensions
 	for _, ext := range d.Runtime.Extensions {
@@ -137,7 +137,7 @@ func (s *Service) phpPreSetup(d *def.App, p *Project) error {
 	done := output.Duration("Generate PHP FPM pool.")
 	fpmPoolConf, err := p.GeneratePhpFpmPool(d)
 	if err != nil {
-		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+		return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
 	}
 	if err := ioutil.WriteFile(s.phpFpmPoolPath(d, p), []byte(fpmPoolConf), 0755); err != nil {
 		return errors.WithStack(err)

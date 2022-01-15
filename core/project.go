@@ -112,10 +112,10 @@ func (p *Project) InstallServices() error {
 			return err
 		}
 		if service.IsInstalled() {
-			output.LogInfo(fmt.Sprintf("Service '%s' already installed.", service.BrewName))
+			output.LogInfo(fmt.Sprintf("Service '%s' already installed.", service.DisplayName()))
 			continue
 		}
-		d2 := output.Duration(fmt.Sprintf("Installing '%s' service.", service.BrewName))
+		d2 := output.Duration(fmt.Sprintf("Installing '%s' service.", service.DisplayName()))
 		if err := service.Install(); err != nil {
 			return err
 		}

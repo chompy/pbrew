@@ -22,7 +22,7 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 		return ShellCommand{}, err
 	}
 	if !brewAppService.IsRunning() {
-		return ShellCommand{}, errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewAppService.BrewName))
+		return ShellCommand{}, errors.WithStack(errors.WithMessage(ErrServiceNotRunning, brewAppService.DisplayName()))
 	}
 	brewServiceList := make([]*Service, 0)
 	brewServiceList = append(brewServiceList, brewAppService)

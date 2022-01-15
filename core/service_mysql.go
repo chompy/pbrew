@@ -36,12 +36,12 @@ func (s *Service) MySQLGetSchemas(d *def.Service) []string {
 // MySQLShell enters the mysql shell.
 func (s *Service) MySQLShell(database string) error {
 	if !s.IsMySQL() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.DisplayName()))
 	}
 	if !s.IsRunning() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.DisplayName()))
 	}
-	output.Info(fmt.Sprintf("Access shell for %s.", s.BrewName))
+	output.Info(fmt.Sprintf("Access shell for %s.", s.DisplayName()))
 	pathToMySQL := filepath.Join(GetDir(BrewDir), "opt", s.BrewAppName(), "bin", "mysql")
 	args := make([]string, 0)
 	args = append(args, "-S", s.SocketPath(), "-u", "root")
@@ -52,7 +52,7 @@ func (s *Service) MySQLShell(database string) error {
 	cmd.Command = pathToMySQL
 	cmd.Args = args
 	if err := cmd.Drop(); err != nil {
-		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+		return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
 	}
 	return nil
 }
@@ -64,7 +64,7 @@ func (s *Service) MySQLDump(database string) error {
 	cmd.Command = pathToMySQL
 	cmd.Args = []string{"-S", s.SocketPath(), "-u", "root", database}
 	if err := cmd.Drop(); err != nil {
-		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+		return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func (s *Service) MySQLExecute(query string) error {
 	cmd.Command = pathToMySQL
 	cmd.Args = []string{"-S", s.SocketPath(), "-u", "root", "-e", query}
 	if err := cmd.Interactive(); err != nil {
-		return errors.WithStack(errors.WithMessage(err, s.BrewName))
+		return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
 	}
 	return nil
 }
@@ -88,7 +88,7 @@ func (s *Service) mySQLSchemeName(p *Project, name string) string {
 // mySQLPostSetup configures mysql for given service definition.
 func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 	if !s.IsMySQL() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.DisplayName()))
 	}
 	// user
 	// TODO project specific user+password
@@ -98,7 +98,7 @@ func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 		mysqlUser,
 		mysqlPass,
 	)); err != nil {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.DisplayName()))
 	}
 	// schemas
 	schemas := s.MySQLGetSchemas(d)
@@ -111,7 +111,7 @@ func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 			schema,
 			mysqlUser,
 		)); err != nil {
-			return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
+			return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.DisplayName()))
 		}
 	}
 	return nil
@@ -119,7 +119,7 @@ func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 
 func (s *Service) mySQLPurge(d *def.Service, p *Project) error {
 	if !s.IsMySQL() {
-		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
+		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.DisplayName()))
 	}
 	// needs to be running to drop schemas
 	wasRunning := s.IsRunning()
@@ -138,7 +138,7 @@ func (s *Service) mySQLPurge(d *def.Service, p *Project) error {
 			"DROP SCHEMA IF EXISTS %s;",
 			schema,
 		)); err != nil {
-			return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.BrewName))
+			return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.DisplayName()))
 		}
 	}
 	// stop if it wasn't running
