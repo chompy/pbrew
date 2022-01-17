@@ -30,6 +30,7 @@ type Service struct {
 	InstallCheckCmd string            `yaml:"install_check"`
 	Dependencies    []string          `yaml:"dependencies"`
 	Multiple        bool              `yaml:"multiple"`
+	PortOverride    int               `yaml:"port"`
 	ProjectName     string
 	usePbrewBottles bool
 }
@@ -357,6 +358,9 @@ func (s *Service) Purge(d interface{}, p *Project) error {
 
 // Port returns the assigned port.
 func (s *Service) Port() (int, error) {
+	if s.PortOverride > 0 {
+		return s.PortOverride, nil
+	}
 	portMap, err := LoadPortMap()
 	if err != nil {
 		return 0, err
