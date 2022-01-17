@@ -1,13 +1,16 @@
 package core
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
 
@@ -43,8 +46,8 @@ func BrewInit() error {
 	if err := brewCommand("tap", "shivammathur/php"); err != nil {
 		return err
 	}
-	// install zsh, this ensures all systems use the same shell
-	if err := brewCommand("install", "zsh"); err != nil {
+	// init home
+	if err := BrewInitHome(); err != nil {
 		return err
 	}
 	done()
@@ -110,4 +113,33 @@ func brewInfo(name string) (map[string]interface{}, error) {
 func brewAppName(name string) string {
 	brewAppNamePath := strings.Split(strings.Trim(name, "/"), "/")
 	return brewAppNamePath[len(brewAppNamePath)-1]
+}
+
+// BrewInitHome inits files in home directory.
+func BrewInitHome() error {
+	templatePaths := map[string]string{
+		"conf/bashrc.tmpl": ".bashrc",
+	}
+	templateVars := map[string]string{
+		"BrewDir": GetDir(BrewDir),
+		"HomeDir": GetDir(HomeDir),
+	}
+	for tmplPath, outPath := range templatePaths {
+		tmpl, err := template.ParseFiles(filepath.Join(GetDir(AppDir), tmplPath))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		var buf bytes.Buffer
+		if err := tmpl.Execute(&buf, templateVars); err != nil {
+			return errors.WithStack(err)
+		}
+		if err := ioutil.WriteFile(
+			filepath.Join(GetDir(HomeDir), outPath),
+			buf.Bytes(),
+			0655,
+		); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }

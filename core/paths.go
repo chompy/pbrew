@@ -86,3 +86,22 @@ func getUserPath() string {
 	}
 	return resolveUserPath(conf.UserDir)
 }
+
+func getShellPath() string {
+	conf, err := LoadConfig()
+	if err != nil {
+		output.Warn(err.Error())
+	}
+	pathes := []string{
+		resolveUserPath(conf.Shell),
+		filepath.Join(GetDir(BrewDir), "bin", conf.Shell),
+		filepath.Join("/bin", conf.Shell),
+		filepath.Join("/usr", "bin", conf.Shell),
+	}
+	for _, p := range pathes {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	return conf.Shell
+}
