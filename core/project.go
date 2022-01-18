@@ -77,6 +77,9 @@ func (p *Project) GetBrewServices() ([]*Service, error) {
 	}
 	out := make([]*Service, 0)
 	for _, app := range p.Apps {
+		if ServiceHasOverride(app) {
+			continue
+		}
 		service, err := serviceList.Match(app.Type)
 		if err != nil {
 			if errors.Is(err, ErrServiceNotFound) {
@@ -87,6 +90,9 @@ func (p *Project) GetBrewServices() ([]*Service, error) {
 		out = append(out, service)
 	}
 	for _, pshs := range p.Services {
+		if ServiceHasOverride(pshs) {
+			continue
+		}
 		service, err := serviceList.Match(pshs.Type)
 		if err != nil {
 			if errors.Is(err, ErrServiceNotFound) {
@@ -133,6 +139,9 @@ func (p *Project) PreSetup() error {
 		return err
 	}
 	servicePreSetup := func(service interface{}) error {
+		if ServiceHasOverride(service) {
+			return nil
+		}
 		brewService, err := serviceList.MatchDef(service)
 		if err != nil {
 			if errors.Is(err, ErrServiceNotFound) {
@@ -167,6 +176,9 @@ func (p *Project) PostSetup() error {
 		return err
 	}
 	for _, service := range p.Services {
+		if ServiceHasOverride(service) {
+			return nil
+		}
 		brewService, err := serviceList.MatchDef(service)
 		if err != nil {
 			if errors.Is(err, ErrServiceNotFound) {
@@ -268,6 +280,9 @@ func (p *Project) Stop() error {
 		return err
 	}
 	stopService := func(service interface{}) error {
+		if ServiceHasOverride(service) {
+			return nil
+		}
 		brewService, err := brewServiceList.MatchDef(service)
 		if err != nil {
 			if errors.Is(err, ErrServiceNotFound) {

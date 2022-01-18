@@ -31,16 +31,16 @@ func LoadServiceList() (ServiceList, error) {
 
 // Match matches platform.sh service with homebrew service.
 func (s ServiceList) Match(name string) (*Service, error) {
-	for serviceName, serviceDef := range s {
+	for serviceName, service := range s {
 		serviceName = strings.ReplaceAll(serviceName, "-", ":")
 		if serviceName == name {
-			return serviceDef, nil
+			return service, nil
 		}
 	}
-	for serviceName, serviceDef := range s {
+	for serviceName, service := range s {
 		serviceName = strings.ReplaceAll(serviceName, "-", ":")
 		if wildcardCompare(name, serviceName) {
-			return serviceDef, nil
+			return service, nil
 		}
 	}
 	return nil, errors.WithStack(errors.WithMessage(ErrServiceNotFound, name))

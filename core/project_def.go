@@ -33,6 +33,8 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 				return nil
 			}
 			port := 0
+
+			// load service
 			brewService, err := brewServices.MatchDef(d)
 			if err != nil {
 				if !errors.Is(err, ErrServiceNotFound) {
@@ -48,6 +50,16 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 					return nil
 				}
 			}
+
+			// load service override
+			serviceOverride, err := MatchServiceOverrideDef(d)
+			if err != nil {
+				if !errors.Is(err, ErrServiceNotFound) {
+					output.Warn(err.Error())
+					return nil
+				}
+			}
+
 			out := make([]map[string]interface{}, 0)
 			if d.Configuration["endpoints"] != nil {
 				for name, config := range d.Configuration["endpoints"].(map[string]interface{}) {
@@ -60,7 +72,10 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 					if strings.HasPrefix(name, "redis") {
 						rel["rel"] = "redis"
 					}
-					if brewService != nil && brewService.IsMySQL() {
+					if serviceOverride != nil {
+						rel = serviceOverride.Relationship()
+						rel["rel"] = name
+					} else if brewService != nil && brewService.IsMySQL() {
 						rel["path"] = p.ResolveDatabase(config.(map[string]interface{})["default_schema"].(string))
 						rel["username"] = mysqlUser
 						rel["password"] = mysqlPass
@@ -84,7 +99,6 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 				if strings.HasPrefix(rel["rel"].(string), "redis") {
 					rel["rel"] = "redis"
 				}
-
 				out = append(out, rel)
 			}
 			return out
