@@ -2,7 +2,7 @@ PBREW
 =====
 **By Contextual Code**
 
-A tool for quickly setting up local Platform.sh development environments that uses Homebrew and don't require containers.
+A tool for quickly setting up local Platform.sh development environments that uses Homebrew and doesn't require containers.
 
 
 ## Installation
@@ -18,7 +18,7 @@ Running PBREW for the first time will create a Homebrew environment in `~/.pbrew
 
 
 ## Supported Services
-PBREW is designed to support the services we use at Contextual Code. The follow are the services it supports...
+PBREW is designed to support the services we use at Contextual Code. The following are the services it supports...
 
 - PHP 5.6, 7.0, 7.1, 7.2, 7.3, 7.4
 - MariaDB 10.6
@@ -109,8 +109,7 @@ This would override the SOLR service for PBREW.
 
 ### Things that might be implemented
 - app dependencies
-- solr
-- support for other languages
+- support for other languages (Go, Python, etc)
 - workers
 - cron jobs
 
