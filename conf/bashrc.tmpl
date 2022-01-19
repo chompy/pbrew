@@ -28,7 +28,7 @@ PS1DIRNAME="\w"
 
 export PROMPT_DIRTRIM=3
 #export PS1="\[${GREEN}\]pbrew>\[${CLROFF}\] ${PS1DIRNAME} ${PROMPT} "
-export PS1="\[${GREEN}\]pbrew>\[${CLROFF}\] "
+export PS1="${PS1DIRNAME} \[${GREEN}\]pbrew>\[${CLROFF}\] "
 export TIME_STYLE=long-iso
 export HISTCONTROL=ignoreboth
 export HISTFILESIZE=5000
@@ -39,3 +39,6 @@ export VISUAL=vim
 export EDITOR="$VISUAL"
 export GOPATH="$HOME/go"
 
+if [ -d ~/.nvm/versions/node ]; then
+    source "$(brew --prefix nvm)/nvm.sh"
+fi
