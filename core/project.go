@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -26,10 +27,31 @@ type Project struct {
 	UsePbrewBottles bool          `json:"-"`
 }
 
+func findProjectRoot(path string) (string, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	pathSplit := strings.Split(path, string(os.PathSeparator))
+	if pathSplit[0] == "" {
+		pathSplit[0] = string(os.PathSeparator)
+	}
+	scanFiles := []string{".platform.app.yaml", ".platform"}
+	for i := range pathSplit {
+		currentPath := filepath.Join(pathSplit[0 : i+1]...)
+		for _, scanFile := range scanFiles {
+			if _, err := os.Stat(filepath.Join(currentPath, scanFile)); err == nil {
+				return currentPath, nil
+			}
+		}
+	}
+	return "", ErrProjectNotFound
+}
+
 // LoadProject loads a project at given the path.
 func LoadProject(projPath string) (*Project, error) {
 	var err error
-	projPath, err = filepath.Abs(projPath)
+	projPath, err = findProjectRoot(projPath)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

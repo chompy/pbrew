@@ -15,4 +15,5 @@ var (
 	ErrServiceNotMySQL         = errors.New("service must be based on mysql")
 	ErrServiceNotSolr          = errors.New("service must be based on solr")
 	ErrPHPExtNotFound          = errors.New("php extension not found")
+	ErrProjectNotFound         = errors.New("project not found")
 )
