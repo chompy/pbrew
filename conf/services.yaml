@@ -35,6 +35,7 @@
   install_check: |
     [ -f {BREW_PATH}/opt/{BREW_APP}/sbin/php-fpm ] && [ -f {BREW_PATH}/opt/{BREW_APP}/bin/php ]
   dependencies:
+    - "curl"
     - "libunistring"
     - "nvm"
     - "ruby@2.4"
@@ -128,4 +129,5 @@
   install_check: |
     [ -f {BREW_PATH}/opt/solr/bin/solr ]
   dependencies:
+    - "curl"
     - "java11"
