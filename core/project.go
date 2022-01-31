@@ -65,11 +65,19 @@ func LoadProject(projPath string) (*Project, error) {
 		}
 		apps = append(apps, app)
 	}
-	services, err := def.ParseServiceYamlFiles(serviceYamlFilenames)
+	serviceYamlFullPaths := make([]string, 0)
+	for _, f := range serviceYamlFilenames {
+		serviceYamlFullPaths = append(serviceYamlFullPaths, filepath.Join(projPath, f))
+	}
+	services, err := def.ParseServiceYamlFiles(serviceYamlFullPaths)
 	if err != nil {
 		return nil, err
 	}
-	routes, err := def.ParseRoutesYamlFiles(routesYamlFilenames)
+	routesYamlFullPaths := make([]string, 0)
+	for _, f := range routesYamlFilenames {
+		routesYamlFullPaths = append(routesYamlFullPaths, filepath.Join(projPath, f))
+	}
+	routes, err := def.ParseRoutesYamlFiles(routesYamlFullPaths)
 	if err != nil {
 		return nil, err
 	}
