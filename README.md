@@ -23,12 +23,12 @@ PBREW is designed to support the services we use at Contextual Code. The followi
 - PHP 5.6, 7.0, 7.1, 7.2, 7.3, 7.4
 - MariaDB 10.6
 - Redis 6.2
-- SOLR 7.7
+- Solr 7.7
 
 
 ## Usage
 
-In the root of a project you can run `pbrew p:start` to start PBREW. When ran for the first time all the nessacary services will be installed, it can take quite a long time.
+In the root of a project you can run `pbrew p:start` to start PBREW. When ran for the first time all the necessary services will be installed, it can take quite a long time.
 
 ### Pre-Install All Services
 You can pre-install all of PBREW's services with the `pbrew brew:install-all` command. This is good if you want to leave your computer on over night to get everything setup.
@@ -80,7 +80,7 @@ pbrew router:list
 
 
 ## Config
-You can configure PBREW by adding a config.yaml file to PBREW's root application directory.
+You can configure PBREW by adding a `config.yaml` file to PBREW's root application directory.
 
 # Shell
 You can configure the shell PBREW uses when you enter an application shell.
@@ -101,7 +101,7 @@ service_overrides:
         port: 8983
         scheme: solr
 ```
-This would override the SOLR service for PBREW.
+This would override the Solr service for PBREW.
 
 
 ## TODO
