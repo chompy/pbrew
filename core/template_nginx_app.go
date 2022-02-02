@@ -24,6 +24,7 @@ type nginxAppLocationTemplate struct {
 	Root     string
 	Passthru string
 	Socket   string
+	Rules    []nginxAppLocationTemplate
 }
 
 func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) {
@@ -44,11 +45,25 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 		if err != nil {
 			return nginxAppTemplate{}, errors.WithStack(err)
 		}
+		rules := make([]nginxAppLocationTemplate, 0)
+		for rulePath, rule := range location.Rules {
+			ruleRoot, _ := filepath.Abs(filepath.Join(p.Path, rule.Root))
+			if ruleRoot == "" {
+				ruleRoot = root
+			}
+			rules = append(rules, nginxAppLocationTemplate{
+				Path:     rulePath,
+				Root:     ruleRoot,
+				Passthru: rule.Passthru.GetString(),
+				Socket:   service.UpstreamSocketPath(p, app),
+			})
+		}
 		locations = append(locations, nginxAppLocationTemplate{
 			Path:     path,
 			Root:     root,
 			Passthru: location.Passthru.GetString(),
 			Socket:   service.UpstreamSocketPath(p, app),
+			Rules:    rules,
 		})
 	}
 	return nginxAppTemplate{

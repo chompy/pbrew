@@ -23,6 +23,17 @@ server {
             set $_rewrite_path "{{ .Passthru }}";
             try_files       $uri @rewrite;
             expires         0;
+            {{ range .Rules }}
+            location ~ "{{ .Path }}" {
+                set $_rewrite_path "{{ .Passthru }}";
+                {{ if eq .Passthru "" }}
+                try_files       $fastcgi_script_name =404;
+                {{ else }}
+                try_files       $fastcgi_script_name @rewrite;
+                {{ end }}
+            }
+            {{ end }}
+
         }
         location ~ ".+?\.php(?=$|/)" {    
             set $_rewrite_path "{{ .Passthru }}";
@@ -37,6 +48,7 @@ server {
             fastcgi_split_path_info ^(.+?\.php(?=$|/))((?:/.*)?)$;
             set $path_info  $fastcgi_path_info;
         }
+
     }
     {{ end }}
 }
