@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -36,25 +37,24 @@ func (s *Service) SolrAddConfigSets(d *def.Service, p *Project) error {
 	if !s.IsSolr() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.DisplayName()))
 	}
-	// TODO
-	/*for name, conf := range d.Configuration["configsets"].(map[string]interface{}) {
+	configSetPath := filepath.Join(s.DataPath(), "configsets")
+	os.MkdirAll(configSetPath, 0755)
+	tmpPath := s.solrGetTempDir()
+	for name, conf := range d.Configuration["configsets"].(map[string]interface{}) {
 		output.Info(fmt.Sprintf("Create configset %s.", name))
-
-		name = s.solrCoreName(p, name)
-		path := filepath.Join(s.DataPath(), name, "configsets")
-		os.MkdirAll(path, 0755)
-		buf := bytes.NewBufferString(conf.(string))
-		cmd := NewShellCommand()
-		cmd.Env = brewEnv()
-		cmd.Stdin = buf
-		cmd.Args = []string{
-			"-c",
-			fmt.Sprintf(
-				"rm -rf /tmp/solrconf && mkdir -p /tmp/solrconf && cd /tmp/solrconf && base64 -d | tar xfz - && cp -r /tmp/solrconf/* %s/",
-			),
+		// prefix configset name with project, same as core names
+		name = s.SolrCoreName(p, name)
+		// extract config
+		if err := s.solrExtactConfigDir(conf.(string)); err != nil {
+			return err
 		}
-		cmd.Interactive()
-	}*/
+		// move config
+		destDir := filepath.Join(configSetPath, name)
+		os.RemoveAll(destDir)
+		if err := os.Rename(tmpPath, destDir); err != nil {
+			return errors.WithStack(err)
+		}
+	}
 	return nil
 }
 
@@ -80,10 +80,14 @@ func (s *Service) SolrAddCores(d *def.Service, p *Project) error {
 		if _, err := s.solrCommand("create_core", args...); err != nil {
 			return err
 		}
-		// NEEDS TESTING
 		if conf.(map[string]interface{})["core_properties"] != nil {
 			corePropPath := filepath.Join(s.DataPath(), s.SolrCoreName(p, core), "core.properties")
 			coreProps := fmt.Sprintf("name=%s\n", s.SolrCoreName(p, core)) + conf.(map[string]interface{})["core_properties"].(string)
+			re := regexp.MustCompile(`(?m)configSet\=[ ]*(.*)`)
+			coreProps = re.ReplaceAllStringFunc(coreProps, func(m string) string {
+				configSetName := strings.TrimSpace(strings.Split(m, "=")[1])
+				return fmt.Sprintf("configSet=%s", s.SolrCoreName(p, configSetName))
+			})
 			if err := ioutil.WriteFile(
 				corePropPath, []byte(coreProps), 0755,
 			); err != nil {
