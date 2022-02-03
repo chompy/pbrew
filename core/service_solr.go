@@ -21,7 +21,7 @@ import (
 
 // IsSolr returns true if service is solr.
 func (s *Service) IsSolr() bool {
-	return s.Name == "solr"
+	return strings.HasPrefix(s.Name, "solr")
 }
 
 // IsSolrRunning returns true if solr is running.
@@ -132,7 +132,7 @@ func (s *Service) solrCommand(cmdStr string, args ...string) ([]byte, error) {
 	var buf bytes.Buffer
 	cmd := NewShellCommand()
 	cmd.Env = brewEnv()
-	cmd.Command = filepath.Join(GetDir(BrewDir), "opt", "solr", "bin", "solr")
+	cmd.Command = filepath.Join(GetDir(BrewDir), "opt", s.Name, "bin", "solr")
 	port, _ := s.Port()
 	cmd.Args = make([]string, 0)
 	cmd.Args = append(cmd.Args, cmdStr)

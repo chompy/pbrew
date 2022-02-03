@@ -87,8 +87,10 @@ func (p PortMap) ServicePort(s *Service) (int, error) {
 	if s.Multiple && s.ProjectName != "" {
 		// multi-instance service
 		return p.assignPort("s-" + s.BrewAppName() + "-" + s.ProjectName)
+	} else if s.BrewAppName() != "" {
+		return p.assignPort("s-" + s.BrewAppName())
 	}
-	return p.assignPort("s-" + s.BrewAppName())
+	return p.assignPort("s-" + s.Name)
 }
 
 // UpstreamPort retrieves of creates an assigned port for the given app def.

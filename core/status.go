@@ -41,10 +41,19 @@ func GetServiceStatuses() ([]ServiceStatus, error) {
 	// list project statuses
 	out := make([]ServiceStatus, 0)
 	for _, service := range brewServices {
+
+		name := service.BrewAppName()
+		if name == "" {
+			name = service.Name
+		}
+		if name == "" {
+			continue
+		}
+
 		// check if already listed
 		alreadyCreated := false
 		for _, addedService := range out {
-			if addedService.Name == service.BrewAppName() {
+			if addedService.Name == name {
 				alreadyCreated = true
 				break
 			}
@@ -102,7 +111,7 @@ func GetServiceStatuses() ([]ServiceStatus, error) {
 			}
 		}
 		out = append(out, ServiceStatus{
-			Name:        service.BrewAppName(),
+			Name:        name,
 			DisplayName: service.DisplayName(),
 			Ports:       ports,
 			Status:      status,
