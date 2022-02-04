@@ -111,44 +111,49 @@
 "redis-persistent-*":
   <<: *redis
 
-"solr-7*":
+"solr-7*": &solr
   name: "solr7"
-  post_install: |
+  pre_install: |
     curl -L -o /tmp/solr.tar.gz "https://www.apache.org/dyn/closer.lua/lucene/solr/7.7.3/solr-7.7.3.tgz?action=download"
+  post_install: |
     cd {BREW_PATH}/opt
     tar xvfz /tmp/solr.tar.gz
-    mv solr-* solr7
+    mv solr-* {NAME}
     rm /tmp/solr.tar.gz
-    cp -r solr7/server/solr/* {DATA_PATH}/
+    cp -r {NAME}/server/solr/* {DATA_PATH}/
   start: |
-    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr7/bin/solr start -p {PORT} -s {DATA_PATH}
+    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/{NAME}/bin/solr start -p {PORT} -s {DATA_PATH}
   stop: |
-    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr7/bin/solr stop -p {PORT} 
+    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/{NAME}/bin/solr stop -p {PORT} 
   reload: |
-    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr7/bin/solr restart -p {PORT} 
+    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/{NAME}/bin/solr restart -p {PORT} 
   install_check: |
-    [ -f {BREW_PATH}/opt/solr7/bin/solr ]
+    [ -f {BREW_PATH}/opt/{NAME}/bin/solr ]
   dependencies:
     - "curl"
     - "java11"
 
 "solr-8*":
+  <<: *solr
   name: "solr8"
-  post_install: |
+  pre_install: |
     curl -L -o /tmp/solr.tar.gz "https://www.apache.org/dyn/closer.lua/lucene/solr/8.11.1/solr-8.11.1.tgz?action=download"
+
+"solr-6*":
+  <<: *solr
+  name: "solr6"
+  pre_install: |
+    curl -L -o /tmp/solr8.tar.gz "https://www.apache.org/dyn/closer.lua/lucene/solr/8.11.1/solr-8.11.1.tgz?action=download"
+    curl -L -o /tmp/solr.tar.gz "https://archive.apache.org/dist/lucene/solr/6.6.6/solr-6.6.6.tgz"
+  post_install: |
     cd {BREW_PATH}/opt
     tar xvfz /tmp/solr.tar.gz
-    mv solr-* solr8
+    mv solr-* {NAME}
     rm /tmp/solr.tar.gz
-    cp -r solr8/server/solr/* {DATA_PATH}/
-  start: |
-    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr8/bin/solr start -p {PORT} -s {DATA_PATH}
-  stop: |
-    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr8/bin/solr stop -p {PORT} 
-  reload: |
-    JAVA_HOME={BREW_PATH}/opt/java11 {BREW_PATH}/opt/solr8/bin/solr restart -p {PORT} 
-  install_check: |
-    [ -f {BREW_PATH}/opt/solr8/bin/solr ]
-  dependencies:
-    - "curl"
-    - "java11"
+    cp -r {NAME}/server/solr/* {DATA_PATH}/
+    cd /tmp
+    tar xvfz /tmp/solr8.tar.gz
+    mv solr-* solr8
+    cp solr8/bin/solr {BREW_PATH}/opt/{NAME}/bin/solr
+    rm -rf solr8
+    rm /tmp/solr8.tar.gz

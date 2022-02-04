@@ -437,6 +437,7 @@ func (s *Service) injectCommandParams(cmd string) string {
 	}
 	cmd = strings.ReplaceAll(cmd, "{BREW_PATH}", GetDir(BrewDir))
 	cmd = strings.ReplaceAll(cmd, "{BREW_APP}", s.BrewAppName())
+	cmd = strings.ReplaceAll(cmd, "{NAME}", s.Name)
 	cmd = strings.ReplaceAll(cmd, "{PORT}", fmt.Sprintf("%d", port))
 	cmd = strings.ReplaceAll(cmd, "{SOCKET}", s.SocketPath())
 	cmd = strings.ReplaceAll(cmd, "{PID_FILE}", s.PidPath())

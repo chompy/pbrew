@@ -40,19 +40,21 @@ func (s *Service) SolrAddConfigSets(d *def.Service, p *Project) error {
 	configSetPath := filepath.Join(s.DataPath(), "configsets")
 	os.MkdirAll(configSetPath, 0755)
 	tmpPath := s.solrGetTempDir()
-	for name, conf := range d.Configuration["configsets"].(map[string]interface{}) {
-		output.Info(fmt.Sprintf("Create configset %s.", name))
-		// prefix configset name with project, same as core names
-		name = s.SolrCoreName(p, name)
-		// extract config
-		if err := s.solrExtactConfigDir(conf.(string)); err != nil {
-			return err
-		}
-		// move config
-		destDir := filepath.Join(configSetPath, name)
-		os.RemoveAll(destDir)
-		if err := os.Rename(tmpPath, destDir); err != nil {
-			return errors.WithStack(err)
+	if d.Configuration["configsets"] != nil {
+		for name, conf := range d.Configuration["configsets"].(map[string]interface{}) {
+			output.Info(fmt.Sprintf("Create configset %s.", name))
+			// prefix configset name with project, same as core names
+			name = s.SolrCoreName(p, name)
+			// extract config
+			if err := s.solrExtactConfigDir(conf.(string)); err != nil {
+				return err
+			}
+			// move config
+			destDir := filepath.Join(configSetPath, name)
+			os.RemoveAll(destDir)
+			if err := os.Rename(tmpPath, destDir); err != nil {
+				return errors.WithStack(err)
+			}
 		}
 	}
 	return nil
