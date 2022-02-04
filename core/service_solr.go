@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
@@ -83,6 +84,7 @@ func (s *Service) SolrAddCores(d *def.Service, p *Project) error {
 			return err
 		}
 		if conf.(map[string]interface{})["core_properties"] != nil {
+			time.Sleep(time.Second)
 			corePropPath := filepath.Join(s.DataPath(), s.SolrCoreName(p, core), "core.properties")
 			coreProps := fmt.Sprintf("name=%s\n", s.SolrCoreName(p, core)) + conf.(map[string]interface{})["core_properties"].(string)
 			re := regexp.MustCompile(`(?m)configSet\=[ ]*(.*)`)
