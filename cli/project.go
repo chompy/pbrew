@@ -36,7 +36,7 @@ var projectStartCmd = &cobra.Command{
 		if !nginx.IsInstalled() {
 			handleError(nginx.Install())
 		}
-		handleError(nginx.PreStart(nil, nil))
+		handleError(nginx.PreStart())
 		handleError(nginx.Start())
 	},
 }
@@ -85,16 +85,18 @@ var projectPurgeCmd = &cobra.Command{
 			if err != nil && errors.Is(err, core.ErrServiceNotFound) {
 				continue
 			}
+			brewService.SetDefinition(proj, &service)
 			handleError(err)
-			handleError(brewService.Purge(&service, proj))
+			handleError(brewService.Purge())
 		}
 		for _, service := range proj.Apps {
 			brewService, err := brewServiceList.MatchDef(service)
 			if err != nil && errors.Is(err, core.ErrServiceNotFound) {
 				continue
 			}
+			brewService.SetDefinition(proj, service)
 			handleError(err)
-			handleError(brewService.Purge(service, proj))
+			handleError(brewService.Purge())
 		}
 	},
 }

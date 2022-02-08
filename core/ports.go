@@ -84,9 +84,9 @@ func (p PortMap) assignPort(name string) (int, error) {
 
 // ServicePort retrieves or creates an assigned port for the given service.
 func (p PortMap) ServicePort(s *Service) (int, error) {
-	if s.Multiple && s.ProjectName != "" {
+	if s.Multiple && s.project != nil {
 		// multi-instance service
-		return p.assignPort("s-" + s.BrewAppName() + "-" + s.ProjectName)
+		return p.assignPort("s-" + s.BrewAppName() + "-" + s.project.Name)
 	} else if s.BrewAppName() != "" {
 		return p.assignPort("s-" + s.BrewAppName())
 	}

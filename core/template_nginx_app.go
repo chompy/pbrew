@@ -37,6 +37,8 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 	if err != nil {
 		return nginxAppTemplate{}, err
 	}
+	service.project = p
+	service.definition = app
 	// build location list
 	locations := make([]nginxAppLocationTemplate, 0)
 	for path, location := range app.Web.Locations {
@@ -55,14 +57,14 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 				Path:     rulePath,
 				Root:     ruleRoot,
 				Passthru: rule.Passthru.GetString(),
-				Socket:   service.UpstreamSocketPath(p, app),
+				Socket:   service.UpstreamSocketPath(),
 			})
 		}
 		locations = append(locations, nginxAppLocationTemplate{
 			Path:     path,
 			Root:     root,
 			Passthru: location.Passthru.GetString(),
-			Socket:   service.UpstreamSocketPath(p, app),
+			Socket:   service.UpstreamSocketPath(),
 			Rules:    rules,
 		})
 	}

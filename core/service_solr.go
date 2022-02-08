@@ -34,89 +34,108 @@ func (s *Service) IsSolrRunning() bool {
 }
 
 // SolrAddConfigSets adds configsets defines in given project.
-func (s *Service) SolrAddConfigSets(d *def.Service, p *Project) error {
+func (s *Service) SolrAddConfigSets() error {
 	if !s.IsSolr() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.DisplayName()))
 	}
-	configSetPath := filepath.Join(s.DataPath(), "configsets")
-	os.MkdirAll(configSetPath, 0755)
-	tmpPath := s.solrGetTempDir()
-	if d.Configuration["configsets"] != nil {
-		for name, conf := range d.Configuration["configsets"].(map[string]interface{}) {
-			output.Info(fmt.Sprintf("Create configset %s.", name))
-			// prefix configset name with project, same as core names
-			name = s.SolrCoreName(p, name)
-			// extract config
-			if err := s.solrExtactConfigDir(conf.(string)); err != nil {
-				return err
+	switch d := s.definition.(type) {
+	case *def.Service:
+		{
+			configSetPath := filepath.Join(s.DataPath(), "configsets")
+			os.MkdirAll(configSetPath, 0755)
+			tmpPath := s.solrGetTempDir()
+			if d.Configuration["configsets"] != nil {
+				for name, conf := range d.Configuration["configsets"].(map[string]interface{}) {
+					output.Info(fmt.Sprintf("Create configset %s.", name))
+					// prefix configset name with project, same as core names
+					name = s.SolrCoreName(name)
+					// extract config
+					if err := s.solrExtactConfigDir(conf.(string)); err != nil {
+						return err
+					}
+					// move config
+					destDir := filepath.Join(configSetPath, name)
+					os.RemoveAll(destDir)
+					if err := os.Rename(tmpPath, destDir); err != nil {
+						return errors.WithStack(err)
+					}
+				}
 			}
-			// move config
-			destDir := filepath.Join(configSetPath, name)
-			os.RemoveAll(destDir)
-			if err := os.Rename(tmpPath, destDir); err != nil {
-				return errors.WithStack(err)
-			}
+			break
+		}
+	default:
+		{
+			return errors.WithStack(errors.WithMessage(ErrServiceDefNotDefined, s.DisplayName()))
 		}
 	}
 	return nil
 }
 
 // SolrAddCores adds all solr cores for given project and service.
-func (s *Service) SolrAddCores(d *def.Service, p *Project) error {
+func (s *Service) SolrAddCores() error {
 	if !s.IsSolr() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.DisplayName()))
 	}
-	for core, conf := range d.Configuration["cores"].(map[string]interface{}) {
-		if s.SolrHasCore(p, core) {
-			output.Info(fmt.Sprintf("Core %s already exists.", core))
-			return nil
-		}
-		output.Info(fmt.Sprintf("Create core %s.", core))
-		args := make([]string, 0)
-		args = append(args, "-c", s.SolrCoreName(p, core))
-		if conf.(map[string]interface{})["conf_dir"] != nil {
-			if err := s.solrExtactConfigDir(conf.(map[string]interface{})["conf_dir"].(string)); err != nil {
-				return err
+	switch d := s.definition.(type) {
+	case *def.Service:
+		{
+			for core, conf := range d.Configuration["cores"].(map[string]interface{}) {
+				if s.SolrHasCore(core) {
+					output.Info(fmt.Sprintf("Core %s already exists.", core))
+					return nil
+				}
+				output.Info(fmt.Sprintf("Create core %s.", core))
+				args := make([]string, 0)
+				args = append(args, "-c", s.SolrCoreName(core))
+				if conf.(map[string]interface{})["conf_dir"] != nil {
+					if err := s.solrExtactConfigDir(conf.(map[string]interface{})["conf_dir"].(string)); err != nil {
+						return err
+					}
+					args = append(args, "-d", s.solrGetTempDir())
+				}
+				if _, err := s.solrCommand("create_core", args...); err != nil {
+					return err
+				}
+				if conf.(map[string]interface{})["core_properties"] != nil {
+					time.Sleep(time.Second)
+					corePropPath := filepath.Join(s.DataPath(), s.SolrCoreName(core), "core.properties")
+					coreProps := fmt.Sprintf("name=%s\n", s.SolrCoreName(core)) + conf.(map[string]interface{})["core_properties"].(string)
+					re := regexp.MustCompile(`(?m)configSet\=[ ]*(.*)`)
+					coreProps = re.ReplaceAllStringFunc(coreProps, func(m string) string {
+						configSetName := strings.TrimSpace(strings.Split(m, "=")[1])
+						return fmt.Sprintf("configSet=%s", s.SolrCoreName(configSetName))
+					})
+					if err := ioutil.WriteFile(
+						corePropPath, []byte(coreProps), 0755,
+					); err != nil {
+						return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
+					}
+				}
 			}
-			args = append(args, "-d", s.solrGetTempDir())
 		}
-		if _, err := s.solrCommand("create_core", args...); err != nil {
-			return err
-		}
-		if conf.(map[string]interface{})["core_properties"] != nil {
-			time.Sleep(time.Second)
-			corePropPath := filepath.Join(s.DataPath(), s.SolrCoreName(p, core), "core.properties")
-			coreProps := fmt.Sprintf("name=%s\n", s.SolrCoreName(p, core)) + conf.(map[string]interface{})["core_properties"].(string)
-			re := regexp.MustCompile(`(?m)configSet\=[ ]*(.*)`)
-			coreProps = re.ReplaceAllStringFunc(coreProps, func(m string) string {
-				configSetName := strings.TrimSpace(strings.Split(m, "=")[1])
-				return fmt.Sprintf("configSet=%s", s.SolrCoreName(p, configSetName))
-			})
-			if err := ioutil.WriteFile(
-				corePropPath, []byte(coreProps), 0755,
-			); err != nil {
-				return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
-			}
+	default:
+		{
+			return errors.WithStack(errors.WithMessage(ErrServiceDefNotDefined, s.DisplayName()))
 		}
 	}
 	return nil
 }
 
 // SolrCoreName returns the name of a given solr core in reference to given project.
-func (s *Service) SolrCoreName(p *Project, core string) string {
-	if p == nil {
+func (s *Service) SolrCoreName(core string) string {
+	if s.project == nil {
 		return core
 	}
-	return fmt.Sprintf("%s_%s", p.Name, core)
+	return fmt.Sprintf("%s_%s", s.project.Name, core)
 }
 
 // SolrHasCore check if solr already has given core.
-func (s *Service) SolrHasCore(p *Project, core string) bool {
+func (s *Service) SolrHasCore(core string) bool {
 	port, _ := s.Port()
 	if port == 0 {
 		return false
 	}
-	core = s.SolrCoreName(p, core)
+	core = s.SolrCoreName(core)
 	resp, err := http.Get(fmt.Sprintf(
 		"http://localhost:%d/solr/admin/cores?action=STATUS&core=%s",
 		port, core,
@@ -152,14 +171,14 @@ func (s *Service) solrCommand(cmdStr string, args ...string) ([]byte, error) {
 }
 
 // solrPostSetup configures solr for given service definition.
-func (s *Service) solrPostSetup(d *def.Service, p *Project) error {
+func (s *Service) solrPostSetup() error {
 	if !s.IsSolr() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotSolr, s.DisplayName()))
 	}
-	if err := s.SolrAddConfigSets(d, p); err != nil {
+	if err := s.SolrAddConfigSets(); err != nil {
 		return err
 	}
-	if err := s.SolrAddCores(d, p); err != nil {
+	if err := s.SolrAddCores(); err != nil {
 		return err
 	}
 	return nil

@@ -117,9 +117,11 @@ func (p *Project) GetBrewServices() ([]*Service, error) {
 			}
 			return nil, errors.WithStack(err)
 		}
+		service.project = p
+		service.definition = app
 		out = append(out, service)
 	}
-	for _, pshs := range p.Services {
+	for i, pshs := range p.Services {
 		if ServiceHasOverride(pshs) {
 			continue
 		}
@@ -130,6 +132,8 @@ func (p *Project) GetBrewServices() ([]*Service, error) {
 			}
 			return nil, errors.WithStack(err)
 		}
+		service.project = p
+		service.definition = &p.Services[i]
 		out = append(out, service)
 	}
 	return out, nil
@@ -179,7 +183,9 @@ func (p *Project) PreSetup() error {
 			}
 			return err
 		}
-		if err := brewService.PreStart(service, p); err != nil {
+		brewService.project = p
+		brewService.definition = service
+		if err := brewService.PreStart(); err != nil {
 			return err
 		}
 		return nil
@@ -216,7 +222,9 @@ func (p *Project) PostSetup() error {
 			}
 			return err
 		}
-		if err := brewService.PostStart(&service, p); err != nil {
+		brewService.project = p
+		brewService.definition = &service
+		if err := brewService.PostStart(); err != nil {
 			return err
 		}
 	}
@@ -228,7 +236,9 @@ func (p *Project) PostSetup() error {
 			}
 			return err
 		}
-		if err := brewService.PostStart(service, p); err != nil {
+		brewService.project = p
+		brewService.definition = service
+		if err := brewService.PostStart(); err != nil {
 			return err
 		}
 	}
@@ -320,11 +330,12 @@ func (p *Project) Stop() error {
 			}
 			return err
 		}
-		brewService.ProjectName = p.Name
+		brewService.project = p
+		brewService.definition = service
 		if !brewService.IsRunning() {
 			return nil
 		}
-		if err := brewService.Cleanup(service, p); err != nil {
+		if err := brewService.Cleanup(); err != nil {
 			return err
 		}
 		// if service is used by other projects then don't stop it, reload instead
@@ -383,7 +394,9 @@ func (p *Project) Purge() error {
 			}
 			return err
 		}
-		if err := brewService.Purge(&service, p); err != nil {
+		brewService.project = p
+		brewService.definition = service
+		if err := brewService.Purge(); err != nil {
 			return err
 		}
 		return nil

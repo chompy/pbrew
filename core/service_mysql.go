@@ -21,16 +21,22 @@ func (s *Service) IsMySQL() bool {
 }
 
 // MySQLGetSchemas returns list of database schemas.
-func (s *Service) MySQLGetSchemas(d *def.Service) []string {
-	if !s.IsMySQL() || d == nil || d.Configuration["schemas"] == nil {
-		return []string{}
+func (s *Service) MySQLGetSchemas() []string {
+	switch d := s.definition.(type) {
+	case *def.Service:
+		{
+			if !s.IsMySQL() || d == nil || d.Configuration["schemas"] == nil {
+				return []string{}
+			}
+			schemas := d.Configuration["schemas"].([]interface{})
+			out := make([]string, 0)
+			for _, schema := range schemas {
+				out = append(out, schema.(string))
+			}
+			return out
+		}
 	}
-	schemas := d.Configuration["schemas"].([]interface{})
-	out := make([]string, 0)
-	for _, schema := range schemas {
-		out = append(out, schema.(string))
-	}
-	return out
+	return []string{}
 }
 
 // MySQLShell enters the mysql shell.
@@ -81,12 +87,15 @@ func (s *Service) MySQLExecute(query string) error {
 	return nil
 }
 
-func (s *Service) mySQLSchemeName(p *Project, name string) string {
-	return fmt.Sprintf("%s_%s", strings.ReplaceAll(p.Name, "-", "_"), name)
+func (s *Service) mySQLSchemeName(name string) string {
+	if s.project == nil {
+		return name
+	}
+	return fmt.Sprintf("%s_%s", strings.ReplaceAll(s.project.Name, "-", "_"), name)
 }
 
 // mySQLPostSetup configures mysql for given service definition.
-func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
+func (s *Service) mySQLPostSetup() error {
 	if !s.IsMySQL() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.DisplayName()))
 	}
@@ -101,9 +110,9 @@ func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.DisplayName()))
 	}
 	// schemas
-	schemas := s.MySQLGetSchemas(d)
+	schemas := s.MySQLGetSchemas()
 	for _, schema := range schemas {
-		schema = s.mySQLSchemeName(p, schema)
+		schema = s.mySQLSchemeName(schema)
 		output.Info(fmt.Sprintf("Create %s database.", schema))
 		if err := s.MySQLExecute(fmt.Sprintf(
 			"CREATE SCHEMA IF NOT EXISTS %s; GRANT ALL PRIVILEGES ON %s.* TO '%s'@'localhost';",
@@ -117,7 +126,7 @@ func (s *Service) mySQLPostSetup(d *def.Service, p *Project) error {
 	return nil
 }
 
-func (s *Service) mySQLPurge(d *def.Service, p *Project) error {
+func (s *Service) mySQLPurge() error {
 	if !s.IsMySQL() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotMySQL, s.DisplayName()))
 	}
@@ -130,9 +139,9 @@ func (s *Service) mySQLPurge(d *def.Service, p *Project) error {
 		time.Sleep(time.Second * 3)
 	}
 	// schemas
-	schemas := s.MySQLGetSchemas(d)
+	schemas := s.MySQLGetSchemas()
 	for _, schema := range schemas {
-		schema = s.mySQLSchemeName(p, schema)
+		schema = s.mySQLSchemeName(schema)
 		output.Info(fmt.Sprintf("Drop %s database.", schema))
 		if err := s.MySQLExecute(fmt.Sprintf(
 			"DROP SCHEMA IF EXISTS %s;",

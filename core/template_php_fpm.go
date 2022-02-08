@@ -29,6 +29,8 @@ func (p *Project) buildPhpFPMPoolTemplate(app *def.App) (phpFpmPoolTemplate, err
 	if err != nil {
 		return phpFpmPoolTemplate{}, err
 	}
+	service.project = p
+	service.definition = app
 	vars, err := p.Variables(app)
 	if err != nil {
 		return phpFpmPoolTemplate{}, err
@@ -40,7 +42,7 @@ func (p *Project) buildPhpFPMPoolTemplate(app *def.App) (phpFpmPoolTemplate, err
 	return phpFpmPoolTemplate{
 		ProjectName: p.Name,
 		AppName:     app.Name,
-		Socket:      service.UpstreamSocketPath(p, app),
+		Socket:      service.UpstreamSocketPath(),
 		Env:         p.Env(app),
 		Ini:         vars.GetStringSubMap("php"),
 	}, nil

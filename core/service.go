@@ -33,6 +33,8 @@ type Service struct {
 	PortOverride    int               `yaml:"port"`
 	ProjectName     string
 	usePbrewBottles bool
+	project         *Project
+	definition      interface{}
 }
 
 // Info returns information about Homebrew application.
@@ -206,8 +208,21 @@ func (s *Service) Start() error {
 	done2 := output.Duration("Start up.")
 	cmdStr := s.injectCommandParams(s.StartCmd)
 	cmd := NewShellCommand()
-	cmd.Args = []string{"-c", cmdStr}
 	cmd.Env = ServicesEnv([]*Service{s})
+	if s.project != nil && s.definition != nil {
+		switch d := s.definition.(type) {
+		case *def.App:
+			{
+				var err error
+				cmd, err = s.project.getAppShellCommand(d)
+				if err != nil {
+					return err
+				}
+				break
+			}
+		}
+	}
+	cmd.Args = []string{"-c", cmdStr}
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.DisplayName())
 	}
@@ -264,11 +279,8 @@ func (s *Service) Reload() error {
 }
 
 // PreStart performs setup that should occur prior to starting service.
-func (s *Service) PreStart(d interface{}, p *Project) error {
+func (s *Service) PreStart() error {
 	done := output.Duration(fmt.Sprintf("Pre setup %s.", s.DisplayName()))
-	if p != nil {
-		s.ProjectName = p.Name
-	}
 	// create data dir
 	if err := os.Mkdir(s.DataPath(), mkdirPerm); err != nil {
 		if !errors.Is(err, os.ErrExist) {
@@ -280,15 +292,9 @@ func (s *Service) PreStart(d interface{}, p *Project) error {
 		return err
 	}
 	// service specific setup
-	switch d := d.(type) {
-	case *def.App:
-		{
-			if s.IsPHP() {
-				if err := s.phpPreSetup(d, p); err != nil {
-					return err
-				}
-			}
-			break
+	if s.IsPHP() {
+		if err := s.phpPreSetup(); err != nil {
+			return err
 		}
 	}
 	done()
@@ -296,8 +302,8 @@ func (s *Service) PreStart(d interface{}, p *Project) error {
 }
 
 // PostStart performs setup that should occur after starting service.
-func (s *Service) PostStart(d interface{}, p *Project) error {
-	switch d := d.(type) {
+func (s *Service) PostStart() error {
+	switch d := s.definition.(type) {
 	case *def.Service:
 		{
 			done := output.Duration(fmt.Sprintf("Post setup %s.", d.Name))
@@ -305,11 +311,11 @@ func (s *Service) PostStart(d interface{}, p *Project) error {
 				return errors.WithStack(errors.WithMessage(ErrServiceNotRunning, s.DisplayName()))
 			}
 			if s.IsMySQL() {
-				if err := s.mySQLPostSetup(d, p); err != nil {
+				if err := s.mySQLPostSetup(); err != nil {
 					return err
 				}
 			} else if s.IsSolr() {
-				if err := s.solrPostSetup(d, p); err != nil {
+				if err := s.solrPostSetup(); err != nil {
 					return err
 				}
 			}
@@ -321,13 +327,13 @@ func (s *Service) PostStart(d interface{}, p *Project) error {
 }
 
 // Cleanup performs cleanup for project.
-func (s *Service) Cleanup(d interface{}, p *Project) error {
-	switch d := d.(type) {
+func (s *Service) Cleanup() error {
+	switch d := s.definition.(type) {
 	case *def.App:
 		{
 			done := output.Duration(fmt.Sprintf("Clean up %s.", d.Name))
 			if s.IsPHP() {
-				if err := s.phpCleanup(d, p); err != nil {
+				if err := s.phpCleanup(); err != nil {
 					return err
 				}
 			}
@@ -339,13 +345,13 @@ func (s *Service) Cleanup(d interface{}, p *Project) error {
 }
 
 // Purge deletes all data related to given project and service definition.
-func (s *Service) Purge(d interface{}, p *Project) error {
-	switch d := d.(type) {
+func (s *Service) Purge() error {
+	switch d := s.definition.(type) {
 	case *def.Service:
 		{
 			done := output.Duration(fmt.Sprintf("Purge %s.", d.Name))
 			if s.IsMySQL() {
-				if err := s.mySQLPurge(d, p); err != nil {
+				if err := s.mySQLPurge(); err != nil {
 					return err
 				}
 			}
@@ -370,16 +376,25 @@ func (s *Service) Port() (int, error) {
 
 // SocketPath returns path to service socket.
 func (s *Service) SocketPath() string {
-	if s.Multiple && s.ProjectName != "" {
-		return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s-%s.sock", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.ProjectName))
+	if s.Multiple && s.project != nil {
+		return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s-%s.sock", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.project.Name))
 	}
 	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
 }
 
 // UpstreamSocketPath returns path to app upstream socket.
-func (s *Service) UpstreamSocketPath(p *Project, app *def.App) string {
+func (s *Service) UpstreamSocketPath() string {
 	if s.IsPHP() {
-		return filepath.Join(GetDir(RunDir), fmt.Sprintf("php-%s-%s.sock", p.Name, app.Name))
+		switch d := s.definition.(type) {
+		case *def.App:
+			{
+				return filepath.Join(GetDir(RunDir), fmt.Sprintf("php-%s-%s.sock", s.project.Name, d.Name))
+			}
+		case *def.Service:
+			{
+				return filepath.Join(GetDir(RunDir), fmt.Sprintf("php-%s-%s.sock", s.project.Name, d.Name))
+			}
+		}
 	}
 	return s.SocketPath()
 }
@@ -399,16 +414,16 @@ func (s *Service) DisplayName() string {
 
 // PidPath returns path to service pid file.
 func (s *Service) PidPath() string {
-	if s.Multiple && s.ProjectName != "" {
-		return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s-%s.pid", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.ProjectName))
+	if s.Multiple && s.project != nil {
+		return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s-%s.pid", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.project.Name))
 	}
 	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
 }
 
 // ConfigPath returns path to service config file.
 func (s *Service) ConfigPath() string {
-	if s.Multiple && s.ProjectName != "" {
-		return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s-%s.conf", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.ProjectName))
+	if s.Multiple && s.project != nil {
+		return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s-%s.conf", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.project.Name))
 	}
 	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s.conf", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
 }
@@ -428,6 +443,12 @@ func (s *Service) ConfigParams() map[string]interface{} {
 		return s.phpConfigParams()
 	}
 	return map[string]interface{}{}
+}
+
+// SetDefinition set the project and service definition for this service.
+func (s *Service) SetDefinition(p *Project, d interface{}) {
+	s.project = p
+	s.definition = d
 }
 
 func (s *Service) injectCommandParams(cmd string) string {

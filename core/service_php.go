@@ -109,46 +109,61 @@ func (s *Service) PHPGetInstalledExtensions() []string {
 	return out
 }
 
-func (s *Service) phpFpmPoolPath(d *def.App, p *Project) string {
+func (s *Service) phpFpmPoolPath() string {
 	brewName := strings.ReplaceAll(s.BrewAppName(), "@", "-")
-	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s_%s_%s.conf", brewName, p.Name, d.Name))
+	switch d := s.definition.(type) {
+	case *def.App:
+		{
+			return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s_%s_%s.conf", brewName, s.project.Name, d.Name))
+		}
+	}
+	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s.conf", brewName))
 }
 
-func (s *Service) phpPreSetup(d *def.App, p *Project) error {
+func (s *Service) phpPreSetup() error {
 	// checks
 	if !s.IsPHP() {
 		return errors.WithStack(errors.WithMessage(ErrInvalidService, s.DisplayName()))
 	}
-	// install extensions
-	for _, ext := range d.Runtime.Extensions {
-		if err := s.PHPInstallExtension(ext.Name); err != nil {
-			if errors.Is(err, ErrPHPExtNotFound) {
-				continue
+	switch d := s.definition.(type) {
+	case *def.App:
+		{
+			// install extensions
+			for _, ext := range d.Runtime.Extensions {
+				if err := s.PHPInstallExtension(ext.Name); err != nil {
+					if errors.Is(err, ErrPHPExtNotFound) {
+						continue
+					}
+					return errors.WithStack(err)
+				}
 			}
-			return errors.WithStack(err)
+			// (re)generate config file
+			// TODO better way??
+			if err := s.GenerateConfigFile(); err != nil {
+				return err
+			}
+			// php fpm pool
+			done := output.Duration("Generate PHP FPM pool.")
+			fpmPoolConf, err := s.project.GeneratePhpFpmPool(d)
+			if err != nil {
+				return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
+			}
+			if err := ioutil.WriteFile(s.phpFpmPoolPath(), []byte(fpmPoolConf), 0755); err != nil {
+				return errors.WithStack(err)
+			}
+			done()
+		}
+	default:
+		{
+			return errors.WithStack(errors.WithMessage(ErrServiceDefNotDefined, s.DisplayName()))
 		}
 	}
-	// (re)generate config file
-	// TODO better way??
-	if err := s.GenerateConfigFile(); err != nil {
-		return err
-	}
-	// php fpm pool
-	done := output.Duration("Generate PHP FPM pool.")
-	fpmPoolConf, err := p.GeneratePhpFpmPool(d)
-	if err != nil {
-		return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
-	}
-	if err := ioutil.WriteFile(s.phpFpmPoolPath(d, p), []byte(fpmPoolConf), 0755); err != nil {
-		return errors.WithStack(err)
-	}
-	done()
 	return nil
 }
 
-func (s *Service) phpCleanup(d *def.App, p *Project) error {
+func (s *Service) phpCleanup() error {
 	// delete fpm pool conf
-	os.Remove(filepath.Join(s.phpFpmPoolPath(d, p)))
+	os.Remove(filepath.Join(s.phpFpmPoolPath()))
 	return nil
 }
 
