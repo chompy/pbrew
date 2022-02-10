@@ -125,9 +125,7 @@ var projectStatusCmd = &cobra.Command{
 		handleError(err)
 		brewServices, err := proj.GetBrewServices()
 		handleError(err)
-
 		out := make([]core.ServiceStatus, 0)
-
 		for _, brewService := range brewServices {
 			for _, serviceStatus := range serviceStatues {
 				if serviceStatus.Name == brewService.BrewAppName() || serviceStatus.Name == brewService.Name {
@@ -136,7 +134,6 @@ var projectStatusCmd = &cobra.Command{
 				}
 			}
 		}
-
 		// json
 		if cmd.PersistentFlags().Lookup("json").Value.String() == "true" {
 			outJson, err := json.Marshal(out)
