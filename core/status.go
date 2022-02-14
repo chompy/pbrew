@@ -70,7 +70,7 @@ func GetServiceStatuses() ([]ServiceStatus, error) {
 			for _, ptService := range pt.Services {
 				if ptService == service.BrewAppName() {
 					projects = append(projects, pt.Name)
-					service.ProjectName = pt.Name
+					service.project = &Project{Name: pt.Name}
 					if service.IsRunning() {
 						status = serviceStatusRunning
 					}

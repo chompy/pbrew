@@ -137,7 +137,7 @@ func (s *Service) SolrHasCore(core string) bool {
 	}
 	core = s.SolrCoreName(core)
 	resp, err := http.Get(fmt.Sprintf(
-		"http://localhost:%d/solr/admin/cores?action=STATUS&core=%s",
+		"http://localhost:%d/solr/admin/cores?action=STATUS&wt=json&core=%s",
 		port, core,
 	))
 	if err != nil {
