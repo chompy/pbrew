@@ -87,6 +87,7 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 						brewService.project = p
 						brewService.definition = d
 						rel["path"] = fmt.Sprintf("solr/%s", brewService.SolrCoreName(name))
+						rel["rel"] = brewService.SolrCoreName(name)
 						rel["scheme"] = "solr"
 					}
 					out = append(out, rel)
@@ -139,7 +140,7 @@ func (p *Project) MapRelationships(d interface{}) map[string][]map[string]interf
 		for _, service := range p.Services {
 			serviceRels := p.GenerateRelationships(service)
 			for _, serviceRel := range serviceRels {
-				if service.Name == relSplit[0] && serviceRel["rel"] == relSplit[1] {
+				if service.Name == relSplit[0] && strings.HasSuffix(serviceRel["rel"].(string), relSplit[1]) {
 					out[relName] = append(out[relName], serviceRel)
 				}
 			}
@@ -156,7 +157,7 @@ func (p *Project) MatchRelationshipToService(rel string) interface{} {
 		if service.Name == relSplit[0] {
 			serviceRels := p.GenerateRelationships(service)
 			for _, serviceRel := range serviceRels {
-				if serviceRel["rel"] == relSplit[1] {
+				if strings.HasSuffix(serviceRel["rel"].(string), relSplit[1]) {
 					return service
 				}
 			}

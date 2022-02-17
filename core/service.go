@@ -384,18 +384,6 @@ func (s *Service) SocketPath() string {
 
 // UpstreamSocketPath returns path to app upstream socket.
 func (s *Service) UpstreamSocketPath() string {
-	if s.IsPHP() {
-		switch d := s.definition.(type) {
-		case *def.App:
-			{
-				return filepath.Join(GetDir(RunDir), fmt.Sprintf("php-%s-%s.sock", s.project.Name, d.Name))
-			}
-		case *def.Service:
-			{
-				return filepath.Join(GetDir(RunDir), fmt.Sprintf("php-%s-%s.sock", s.project.Name, d.Name))
-			}
-		}
-	}
 	return s.SocketPath()
 }
 

@@ -142,16 +142,6 @@ func (s *Service) phpPreSetup() error {
 			if err := s.GenerateConfigFile(); err != nil {
 				return err
 			}
-			// php fpm pool
-			done := output.Duration("Generate PHP FPM pool.")
-			fpmPoolConf, err := s.project.GeneratePhpFpmPool(d)
-			if err != nil {
-				return errors.WithStack(errors.WithMessage(err, s.DisplayName()))
-			}
-			if err := ioutil.WriteFile(s.phpFpmPoolPath(), []byte(fpmPoolConf), 0755); err != nil {
-				return errors.WithStack(err)
-			}
-			done()
 		}
 	default:
 		{
@@ -168,7 +158,15 @@ func (s *Service) phpCleanup() error {
 }
 
 func (s *Service) phpConfigParams() map[string]interface{} {
+	vars := def.Variables{}
+	projName := ""
+	if s.project != nil && s.definition != nil {
+		vars, _ = s.project.Variables(s.definition)
+		projName = s.project.Name
+	}
 	return map[string]interface{}{
 		"Extensions": s.PHPGetInstalledExtensions(),
+		"Ini":        vars.GetStringSubMap("php"),
+		"Project":    projName,
 	}
 }

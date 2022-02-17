@@ -1,3 +1,13 @@
-error_log = {{ .LogDir }}/{{ .Name }}.log
+error_log = {{ .LogDir }}/{{ .Name }}-{{ .Params.Project}}.log
 daemonize = no
-include={{ .ConfigDir }}/{{ .Name }}_*.conf
+
+[app]
+listen = {{ .Socket }}
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+clear_env = no
+{{ range $key, $val := .Params.Ini }}{{ if (ne $val "") }}php_admin_value[{{ $key }}] = "{{ $val }}"
+{{ end }}{{ end }}
