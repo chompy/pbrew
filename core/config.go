@@ -23,7 +23,7 @@ type Config struct {
 // DefaultConfig returns the default configuration settings.
 func DefaultConfig() Config {
 	return Config{
-		PortRangeStart:   51000,
+		PortRangeStart:   61000,
 		UserDir:          "~/.pbrew",
 		RouterHTTP:       80,
 		RouterHTTPS:      443,
