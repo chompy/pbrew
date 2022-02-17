@@ -86,7 +86,7 @@
 "mysql-*":
   <<: *mariadb
 
-"redis-*": &redis
+"redis-*":
   name: "redis"
   brew_name: "redis@6.2"
   start: |
@@ -108,9 +108,6 @@
   install_check: |
     [ -f {BREW_PATH}/opt/redis/bin/redis-server ]
   multiple: true
-
-"redis-persistent-*":
-  <<: *redis
 
 "solr-7*": &solr
   name: "solr7"

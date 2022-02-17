@@ -90,6 +90,9 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 						rel["rel"] = brewService.SolrCoreName(name)
 						rel["scheme"] = "solr"
 					}
+					if brewService != nil && brewService.IsRedis() {
+						rel["scheme"] = "redis"
+					}
 					out = append(out, rel)
 				}
 			} else {
@@ -101,6 +104,7 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 				rel["rel"] = d.GetTypeName()
 				if strings.HasPrefix(rel["rel"].(string), "redis") {
 					rel["rel"] = "redis"
+					rel["scheme"] = "redis"
 				}
 				out = append(out, rel)
 			}
