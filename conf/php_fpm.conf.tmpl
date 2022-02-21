@@ -11,3 +11,6 @@ pm.max_spare_servers = 3
 clear_env = no
 {{ range $key, $val := .Params.Ini }}{{ if (ne $val "") }}php_admin_value[{{ $key }}] = "{{ $val }}"
 {{ end }}{{ end }}
+{{ if eq .Name "php-5.6" }}
+php_admin_value[variables_order] = "EGPCS"
+{{ end }}

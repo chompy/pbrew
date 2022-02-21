@@ -1,5 +1,8 @@
 session.save_path=/tmp
 memory_limit=2048M
+{{ if eq .Name "php-5.6" }}
+variables_order=EGPCS
+{{ end }}
 {{ range $key, $ext := .Params.Extensions }}
 extension={{ $.DataDir }}/{{ $ext }}.so
 {{ end }}
