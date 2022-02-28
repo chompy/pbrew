@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"syscall"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -14,15 +16,17 @@ const ProjectTrackFile = "projects.json"
 
 // ProjectTrack tracks running project.
 type ProjectTrack struct {
-	Name     string   `json:"name"`
-	Path     string   `json:"path"`
-	Services []string `json:"services"`
+	Name     string    `json:"name"`
+	Path     string    `json:"path"`
+	Services []string  `json:"services"`
+	Time     time.Time `json:"time"`
 }
 
 var projectTracks []ProjectTrack
 
 func loadProjectTracks() error {
 	projectTracks = make([]ProjectTrack, 0)
+	workingTracks := make([]ProjectTrack, 0)
 	trackFilePath := filepath.Join(GetDir(UserDir), ProjectTrackFile)
 	rawData, err := ioutil.ReadFile(trackFilePath)
 	if err != nil {
@@ -31,8 +35,20 @@ func loadProjectTracks() error {
 		}
 		return errors.WithStack(err)
 	}
-	if err := json.Unmarshal(rawData, &projectTracks); err != nil {
+	if err := json.Unmarshal(rawData, &workingTracks); err != nil {
 		return errors.WithStack(err)
+	}
+
+	sysinfo := syscall.Sysinfo_t{}
+	if err := syscall.Sysinfo(&sysinfo); err != nil {
+		return errors.WithStack(err)
+	}
+	bootTime := time.Now().Add(time.Second * -time.Duration(sysinfo.Uptime))
+	for _, proj := range workingTracks {
+		if proj.Time.Before(bootTime) {
+			continue
+		}
+		projectTracks = append(projectTracks, proj)
 	}
 	return nil
 }
@@ -94,6 +110,7 @@ func ProjectTrackAdd(p *Project) error {
 		Name:     p.Name,
 		Path:     p.Path,
 		Services: serviceNames,
+		Time:     time.Now(),
 	}
 	if err := loadProjectTracks(); err != nil {
 		return err
