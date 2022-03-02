@@ -9,13 +9,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.1.3
 	gitlab.com/contextualcode/platform_cc/v2 v2.2.10
-	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
+	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
 	golang.org/x/term v0.0.0-20210503060354-a79de5458b56
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+require github.com/aws/aws-sdk-go v1.42.14
+
 require (
-	github.com/aws/aws-sdk-go v1.42.14 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect

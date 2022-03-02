@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"syscall"
 	"time"
 
 	"github.com/pkg/errors"
@@ -26,7 +25,6 @@ var projectTracks []ProjectTrack
 
 func loadProjectTracks() error {
 	projectTracks = make([]ProjectTrack, 0)
-	workingTracks := make([]ProjectTrack, 0)
 	trackFilePath := filepath.Join(GetDir(UserDir), ProjectTrackFile)
 	rawData, err := ioutil.ReadFile(trackFilePath)
 	if err != nil {
@@ -35,20 +33,8 @@ func loadProjectTracks() error {
 		}
 		return errors.WithStack(err)
 	}
-	if err := json.Unmarshal(rawData, &workingTracks); err != nil {
+	if err := json.Unmarshal(rawData, &projectTracks); err != nil {
 		return errors.WithStack(err)
-	}
-
-	sysinfo := syscall.Sysinfo_t{}
-	if err := syscall.Sysinfo(&sysinfo); err != nil {
-		return errors.WithStack(err)
-	}
-	bootTime := time.Now().Add(time.Second * -time.Duration(sysinfo.Uptime))
-	for _, proj := range workingTracks {
-		if proj.Time.Before(bootTime) {
-			continue
-		}
-		projectTracks = append(projectTracks, proj)
 	}
 	return nil
 }
