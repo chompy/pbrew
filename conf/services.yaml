@@ -68,7 +68,7 @@
 
 "mariadb-*": &mariadb
   name: "mariadb"
-  brew_name: "mariadb@10.6"
+  brew_name: "mariadb"
   start: |
     {BREW_PATH}/opt/{BREW_APP}/bin/mysql_install_db --defaults-file={CONF_FILE}
     {BREW_PATH}/opt/{BREW_APP}/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
