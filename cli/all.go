@@ -28,12 +28,12 @@ var allStopCmd = &cobra.Command{
 		projectTrack, err := core.ProjectTrackGet()
 		handleError(err)
 		for _, service := range serviceList {
-
 			if service.Multiple {
 				for _, proj := range projectTrack {
 					for _, ptServ := range proj.Services {
 						if ptServ == service.BrewAppName() {
-							service.ProjectName = proj.Name
+							p := core.Project{Name: proj.Name}
+							service.SetDefinition(&p, service)
 							if !service.IsRunning() {
 								continue
 							}
@@ -46,17 +46,17 @@ var allStopCmd = &cobra.Command{
 						}
 					}
 				}
-			} else {
-				if !service.IsRunning() {
-					continue
-				}
-				if err := service.Stop(); err != nil {
-					output.Warn(err.Error())
-					output.IndentLevel--
-					continue
-				}
-				time.Sleep(time.Second)
+				continue
 			}
+			if !service.IsRunning() {
+				continue
+			}
+			if err := service.Stop(); err != nil {
+				output.Warn(err.Error())
+				output.IndentLevel--
+				continue
+			}
+			time.Sleep(time.Second)
 		}
 		// stop nginx
 		nginx := core.NginxService()
