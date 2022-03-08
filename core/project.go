@@ -344,8 +344,8 @@ func (p *Project) Stop() error {
 				if runningService == brewService.BrewAppName() {
 					if err := brewService.Reload(); err != nil {
 						if errors.Is(err, ErrServiceReloadNotDefined) {
-							output.Warn(err.Error())
 							output.IndentLevel--
+							output.Warn(err.Error())
 							return nil
 						}
 						return err
@@ -356,7 +356,11 @@ func (p *Project) Stop() error {
 		}
 		// stop service when no longer needed
 		if err := brewService.Stop(); err != nil {
-			return err
+			if !errors.Is(err, ErrServiceNotRunning) {
+				return err
+			}
+			output.IndentLevel--
+			output.Warn(err.Error())
 		}
 		return nil
 	}
