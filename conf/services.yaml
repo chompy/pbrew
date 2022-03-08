@@ -68,7 +68,7 @@
 
 "mariadb-*": &mariadb
   name: "mariadb"
-  brew_name: "mariadb"
+  brew_name: "mariadb@10.4"
   start: |
     if [ -d "{DATA_PATH}/../mariadb-10.6" ]; then
       cp -rf {DATA_PATH}/../mariadb-10.6/* {DATA_PATH}/
