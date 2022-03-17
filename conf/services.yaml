@@ -75,9 +75,7 @@
   stop: |
     pkill -F {PID_FILE}
   reload: |
-    pkill -F {PID_FILE}
-    sleep 1
-    {BREW_PATH}/opt/{BREW_APP}/bin/mysqld_safe --defaults-file={CONF_FILE} --nowatch --pid-file={PID_FILE} --init-file={APP_PATH}/conf/mariadb_init.txt
+    true
   config_templates: 
     "mariadb.conf.tmpl" : "{CONF_FILE}"
   install_check: |
@@ -97,12 +95,7 @@
       kill "$PID"
     fi
   reload: |
-    PID=`pgrep -o -f "redis-server 127.0.0.1:{PORT}"`
-    if [ ! -z $PID ]; then
-      kill "$PID"
-    fi
-    sleep 1
-    {BREW_PATH}/opt/redis/bin/redis-server {CONF_FILE}
+    true
   config_templates: 
     "redis.conf.tmpl" : "{CONF_FILE}"
   install_check: |
