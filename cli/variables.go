@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 
 	"gitlab.com/contextualcode/platform_cc/v2/pkg/output"
@@ -89,6 +90,9 @@ var varListCmd = &cobra.Command{
 		for k := range vars {
 			tableRows = append(tableRows, []string{k, vars.GetString(k)})
 		}
+		sort.Slice(tableRows, func(i, j int) bool {
+			return tableRows[i][0] < tableRows[j][0]
+		})
 		drawTable(
 			[]string{"KEY", "VALUE"},
 			tableRows,
