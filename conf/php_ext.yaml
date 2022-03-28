@@ -28,25 +28,37 @@ igbinary: |
 
 imagick: |
   if [ ! -f {DATA_PATH}/imagick.so ]; then
-    if [ ! -d $HOME/imagick ]; then
-      cd /tmp
-      curl -L -o /tmp/im.tar.gz https://github.com/ImageMagick/ImageMagick/archive/refs/tags/7.1.0-8.tar.gz
-      tar xvfz im.tar.gz
-      rm im.tar.gz
-      cd /tmp/ImageMagick-7.1.0-8
-      mkdir $HOME/imagick
-      ./configure --prefix $HOME/imagick
+    if [ ! -f $HOME/bin/convert ]; then
+      brew install openjpeg libpng webp zlib freetype
+      # === LIBJPEG
+      cd $HOME
+      curl -L -o jpeg.tar.gz https://download.imagemagick.org/ImageMagick/download/delegates/jpegsrc.v9b.tar.gz
+      tar xvfz jpeg.tar.gz
+      rm jpeg.tar.gz
+      cd jpeg-*
+      ./configure --prefix $HOME
       make
       make install
-      rm -rf /tmp/ImageMagick-7.1.0-8
+      rm -rf $HOME/jpeg-*
+      # === IMAGICK
+      cd $HOME
+      curl -L -o im.tar.gz https://github.com/ImageMagick/ImageMagick/archive/refs/tags/7.1.0-29.tar.gz
+      tar xvfz im.tar.gz
+      rm im.tar.gz
+      cd ImageMagick-*
+      ./configure LDFLAGS="-L$HOME/lib" --prefix=$HOME
+      make
+      make install
+      rm -rf $HOME/ImageMagick-*
     fi
+    # === PHP EXT
     cd /tmp
     curl -o /tmp/ext.tar.gz https://pecl.php.net/get/imagick-3.5.1.tgz
     tar xvfz ext.tar.gz
     rm /tmp/ext.tar.gz
     cd /tmp/imagick-*
     phpize
-    ./configure --with-imagick=$HOME/imagick
+    ./configure LDFLAGS="-L$HOME/lib" --prefix=$HOME --with-imagick=$HOME
     make
     cp modules/imagick.so {DATA_PATH}/imagick.so
     rm -rf /tmp/imagick-*
