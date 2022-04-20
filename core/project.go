@@ -287,7 +287,11 @@ func (p *Project) Start() error {
 		}
 		// start
 		if err := service.Start(); err != nil {
-			return err
+			if !errors.Is(err, ErrServiceAlreadyRunning) {
+				output.Warn(err.Error())
+				output.IndentLevel--
+				return err
+			}
 		}
 	}
 	// setup services

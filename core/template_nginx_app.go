@@ -43,13 +43,13 @@ func (p *Project) buildNginxAppTemplate(app *def.App) (nginxAppTemplate, error) 
 	locations := make([]nginxAppLocationTemplate, 0)
 	for path, location := range app.Web.Locations {
 		path = strings.TrimRight(path, "/")
-		root, err := filepath.Abs(filepath.Join(p.Path, location.Root))
+		root, err := filepath.Abs(filepath.Join(app.Path, location.Root))
 		if err != nil {
 			return nginxAppTemplate{}, errors.WithStack(err)
 		}
 		rules := make([]nginxAppLocationTemplate, 0)
 		for rulePath, rule := range location.Rules {
-			ruleRoot, _ := filepath.Abs(filepath.Join(p.Path, rule.Root))
+			ruleRoot, _ := filepath.Abs(filepath.Join(app.Path, rule.Root))
 			if ruleRoot == "" {
 				ruleRoot = root
 			}
