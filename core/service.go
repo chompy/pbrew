@@ -54,7 +54,7 @@ func (s *Service) Install() error {
 				installName = brewBottleDownloadPath(s.BrewName)
 			}
 		}
-		if err := brewCommand("install", installName, "--force-bottle"); err != nil {
+		if err := brewCommand("install", installName); err != nil {
 			if !s.InstallCheck() {
 				return err
 			}
