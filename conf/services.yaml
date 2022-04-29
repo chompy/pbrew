@@ -86,7 +86,7 @@
 
 "redis-*":
   name: "redis"
-  brew_name: "redis@6.2"
+  brew_name: "redis"
   start: |
     {BREW_PATH}/opt/redis/bin/redis-server {CONF_FILE}
   stop: |
