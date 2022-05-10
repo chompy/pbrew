@@ -96,6 +96,11 @@ func (p *Project) Env(d interface{}) map[string]string {
 			out["PLATFORM_RELATIONSHIPS"] = p.EnvPlatformRelationships(d)
 			out["PLATFORM_ROUTES"] = p.EnvPlatformRoutes(d)
 			out["PLATFORM_VARIABLES"] = p.EnvPlatformVariables(d)
+			timezone := d.Variables.GetString("php:date.timezone")
+			if timezone == "" {
+				timezone = "UTC"
+			}
+			out["PHP_DATE_TIMEZONE"] = timezone
 			return out
 		}
 	}

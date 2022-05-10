@@ -74,3 +74,10 @@ imagick: |
 #    {BREW_PATH}/bin/brew install imagemagick --force-bottle
 #    {BREW_PATH}/opt/{BREW_APP}/bin/pecl install imagick
 #  fi
+
+yaml: |
+  if [ ! -f {DATA_PATH}/yaml.so ]; then
+    {BREW_PATH}/bin/brew install install libyaml
+    echo "{BREW_PATH}/opt/libyaml/" | pecl install yaml
+    cp {BREW_PATH}/Cellar/{BREW_APP}/*/pecl/*/yaml.so {DATA_PATH}/yaml.so
+  fi
