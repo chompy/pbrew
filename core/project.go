@@ -91,7 +91,7 @@ func LoadProject(projPath string) (*Project, error) {
 	done()
 	return &Project{
 		Path:     projPath,
-		Name:     filepath.Base(projPath),
+		Name:     strings.ToLower(filepath.Base(projPath)),
 		Apps:     apps,
 		Services: services,
 		Routes:   routes,
