@@ -5,5 +5,11 @@ memory_limit=2048M
 variables_order=EGPCS
 {{ end }}
 {{ range $key, $ext := .Params.Extensions }}
+{{ if eq $ext "xdebug" }}
+zend_extension={{ $.DataDir }}/{{ $ext }}.so
+xdebug.start_with_request=yes
+xdebug.mode=debug
+{{ else }}
 extension={{ $.DataDir }}/{{ $ext }}.so
+{{ end }}
 {{ end }}

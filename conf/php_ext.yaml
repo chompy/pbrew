@@ -81,3 +81,17 @@ yaml: |
     echo "{BREW_PATH}/opt/libyaml/" | pecl install yaml
     cp {BREW_PATH}/Cellar/{BREW_APP}/*/pecl/*/yaml.so {DATA_PATH}/yaml.so
   fi
+
+xdebug: |
+  if [ ! -f {DATA_PATH}/xdebug.so ]; then
+    cd /tmp
+    curl -o /tmp/ext.tar.gz https://pecl.php.net/get/xdebug-3.1.5.tgz
+    tar xvfz ext.tar.gz
+    rm /tmp/ext.tar.gz
+    cd /tmp/xdebug-*
+    phpize
+    ./configure
+    make
+    cp modules/xdebug.so {DATA_PATH}/xdebug.so
+    rm -rf /tmp/xdebug-*
+  fi
