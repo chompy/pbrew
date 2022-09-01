@@ -46,6 +46,9 @@ func BrewInit() error {
 	if err := brewCommand("tap", "shivammathur/php"); err != nil {
 		return err
 	}
+	if err := brewCommand("tap", "dbroadfoot/ruby"); err != nil {
+                return err
+        }
 	// php has a dependency on httpd which fails to build on some machines
 	// it's not really a needed dependency, so we can force it install via bottle
 	// even if it is broken
