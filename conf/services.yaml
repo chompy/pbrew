@@ -154,11 +154,10 @@
   multiple: true
   pre_install: |
     python3 -m pip install docutils sphinx
-    cd /tmp
-    git clone https://github.com/varnishcache/varnish-cache.git --branch 6.0
-    cd varnish-cache
-    ./autogen.sh
-    mkdir {HOME_PATH}/varnish
+    mkdir /tmp/vsrc
+    cd /tmp/vsrc
+    curl -f https://varnish-cache.org/downloads/varnish-6.0.10.tgz -o orig.tgz
+    tar xavf orig.tgz --strip 1
     ./configure --prefix {BREW_PATH}
     make
     make install
