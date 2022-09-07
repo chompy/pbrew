@@ -31,6 +31,7 @@ type Service struct {
 	Dependencies    []string          `yaml:"dependencies"`
 	Multiple        bool              `yaml:"multiple"`
 	PortOverride    int               `yaml:"port"`
+	ForceBottle     bool              `yaml:"force_bottle"`
 	ProjectName     string
 	usePbrewBottles bool
 	project         *Project
@@ -54,7 +55,11 @@ func (s *Service) Install() error {
 				installName = brewBottleDownloadPath(s.BrewName)
 			}
 		}
-		if err := brewCommand("install", installName); err != nil {
+		forceBottleStr := ""
+		if s.ForceBottle {
+			forceBottleStr = "--force-bottle"
+		}
+		if err := brewCommand("install", installName, forceBottleStr); err != nil {
 			if !s.InstallCheck() {
 				return err
 			}
@@ -172,6 +177,8 @@ func (s *Service) IsRunning() bool {
 		return s.IsSolrRunning()
 	} else if s.IsRedis() {
 		return s.IsRedisRunning()
+	} else if s.IsVarnish() {
+		return s.IsVarnishRunning()
 	}
 	pidFile, err := ioutil.ReadFile(s.PidPath())
 	if err != nil {
@@ -429,6 +436,9 @@ func (s *Service) DataPath() string {
 func (s *Service) ConfigParams() map[string]interface{} {
 	if s.IsPHP() {
 		return s.phpConfigParams()
+	}
+	if s.IsVarnish() {
+		return s.varnishConfigParams()
 	}
 	return map[string]interface{}{}
 }

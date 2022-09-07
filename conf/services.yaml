@@ -148,3 +148,37 @@
     cp solr8/bin/solr {BREW_PATH}/opt/{NAME}/bin/solr
     rm -rf solr8
     rm /tmp/solr8.tar.gz
+
+"varnish-*":
+  name: "varnish"
+  brew_name: ""
+  multiple: true
+  pre_install: |
+    python3 -m pip install docutils sphinx
+    cd /tmp
+    git clone https://github.com/varnishcache/varnish-cache.git --branch varnish-7.1.1
+    cd varnish-cache
+    ./autogen.sh
+    mkdir {HOME_PATH}/varnish
+    ./configure --prefix {HOME_PATH}/varnish
+    make
+    make install
+    git clone https://github.com/varnish/varnish-modules.git --branch 7.1
+    cd varnish-modules
+    ./bootstrap
+    ./configure --prefix {HOME_PATH}/varnish
+    make
+    make install
+  start: |
+    {HOME_PATH}/varnish/sbin/varnishd -f "{CONF_FILE}" -n "{DATA_PATH}"
+  stop: |
+    PID=`pgrep -o -f "varnishd"`
+    if [ ! -z $PID ]; then
+      kill "$PID"
+    fi
+  reload: |
+    true
+  install_check: |
+    [ -f {HOME_PATH}/varnish/sbin/varnishd ]
+  config_templates: 
+    "varnish_app.vcl.tmpl" : "{CONF_FILE}"

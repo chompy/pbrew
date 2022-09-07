@@ -1,0 +1,21 @@
+vcl 4.1;
+import std;
+import directors;
+
+{{ range .Params.Services }}
+backend {{ .Name }}-server {
+    .host = "127.0.0.1";
+    .port = "{{ .Port }}";
+    .first_byte_timeout = 60s;
+    .connect_timeout = 300s;
+}
+{{ end }}
+
+sub vcl_init {
+    {{ range .Params.Services }}
+    new {{ .Name }} = directors.round_robin();
+    {{ .Name }}.add_backend({{ .Name }}-server);
+    {{ end }}
+}
+
+{{ .Params.Vcl }}
