@@ -39,7 +39,7 @@
     - "curl"
     - "libunistring"
     - "nvm"
-    - "ruby@2.4"
+    - "dbroadfoot/ruby/ruby@2.4"
     - "pyenv"
 
 "php-7.3":
