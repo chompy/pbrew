@@ -151,34 +151,34 @@
 
 "varnish-*":
   name: "varnish"
-  brew_name: ""
   multiple: true
   pre_install: |
     python3 -m pip install docutils sphinx
     cd /tmp
-    git clone https://github.com/varnishcache/varnish-cache.git --branch varnish-7.1.1
+    git clone https://github.com/varnishcache/varnish-cache.git --branch 6.0
     cd varnish-cache
     ./autogen.sh
     mkdir {HOME_PATH}/varnish
-    ./configure --prefix {HOME_PATH}/varnish
+    ./configure --prefix {BREW_PATH}
     make
     make install
-    git clone https://github.com/varnish/varnish-modules.git --branch 7.1
+    git clone https://github.com/varnish/varnish-modules.git --branch 6.0
     cd varnish-modules
     ./bootstrap
-    ./configure --prefix {HOME_PATH}/varnish
+    ./configure --prefix {BREW_PATH}
     make
     make install
+    rm -r /tmp/varnish-cache
   start: |
-    {HOME_PATH}/varnish/sbin/varnishd -f "{CONF_FILE}" -n "{DATA_PATH}"
+    {BREW_PATH}/sbin/varnishd -a 127.0.0.1:{PORT} -f "{CONF_FILE}" -n "{DATA_PATH}"
   stop: |
-    PID=`pgrep -o -f "varnishd"`
+    PID=`pgrep -o -f "varnishd -a 127.0.0.1:{PORT}"`
     if [ ! -z $PID ]; then
       kill "$PID"
     fi
   reload: |
     true
   install_check: |
-    [ -f {HOME_PATH}/varnish/sbin/varnishd ]
+    [ -f {BREW_PATH}/sbin/varnishd ]
   config_templates: 
     "varnish_app.vcl.tmpl" : "{CONF_FILE}"

@@ -105,6 +105,9 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 				if strings.HasPrefix(rel["rel"].(string), "redis") {
 					rel["rel"] = "redis"
 					rel["scheme"] = "redis"
+				} else if brewService != nil && brewService.IsVarnish() {
+					rel["rel"] = "http"
+					rel["scheme"] = "http"
 				}
 				out = append(out, rel)
 			}
@@ -166,10 +169,6 @@ func (p *Project) MatchRelationshipToService(rel string) interface{} {
 				}
 			}
 		}
-	}
-	// map varnish to first app
-	if relSplit[0] == "varnish" {
-		return p.Apps[0]
 	}
 	// look for app match
 	for _, service := range p.Apps {

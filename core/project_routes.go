@@ -22,6 +22,26 @@ func (p *Project) GetUpstreamPort(d interface{}) int {
 			}
 			return port
 		}
+	case def.Service:
+		{
+			serviceList, err := LoadServiceList()
+			if err != nil {
+				output.Warn(err.Error())
+				return 0
+			}
+			brewService, err := serviceList.MatchDef(d)
+			if err != nil {
+				output.Warn(err.Error())
+				return 0
+			}
+
+			port, err := portMap.ServicePort(brewService)
+			if err != nil {
+				output.Warn(err.Error())
+				return 0
+			}
+			return port
+		}
 	}
 	return 0
 }
