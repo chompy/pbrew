@@ -48,6 +48,10 @@ func (s *Service) Install() error {
 	if err := s.PreInstall(); err != nil {
 		return err
 	}
+	if s.IsVarnish() && s.project != nil && !s.project.config.EnableVarnish {
+		output.Info("Skipping install. ('enable_varnish' is false).")
+		return nil
+	}
 	if s.BrewName != "" {
 		installName := s.BrewName
 		if s.usePbrewBottles {
@@ -204,6 +208,12 @@ func (s *Service) IsRunning() bool {
 // Start will start the service.
 func (s *Service) Start() error {
 	done := output.Duration(fmt.Sprintf("Start %s.", s.DisplayName()))
+	// varnish disabled
+	if s.IsVarnish() && s.project != nil && !s.project.config.EnableVarnish {
+		output.Info("Skipping ('enable_varnish' is false).")
+		done()
+		return nil
+	}
 	// check status
 	if !s.IsInstalled() {
 		return errors.WithStack(errors.WithMessage(ErrServiceNotInstalled, s.DisplayName()))
@@ -263,6 +273,12 @@ func (s *Service) Stop() error {
 // Reload reloads the service configuration.
 func (s *Service) Reload() error {
 	done := output.Duration(fmt.Sprintf("Reload %s.", s.DisplayName()))
+	// varnish disabled
+	if s.IsVarnish() && s.project != nil && !s.project.config.EnableVarnish {
+		output.Info("Skipping ('enable_varnish' is false).")
+		done()
+		return nil
+	}
 	// check status
 	if s.ReloadCmd == "" {
 		return errors.WithStack(errors.WithMessage(ErrServiceReloadNotDefined, s.DisplayName()))
@@ -310,6 +326,10 @@ func (s *Service) PreStart() error {
 
 // PostStart performs setup that should occur after starting service.
 func (s *Service) PostStart() error {
+	// varnish disabled
+	if s.IsVarnish() && s.project != nil && !s.project.config.EnableVarnish {
+		return nil
+	}
 	switch d := s.definition.(type) {
 	case *def.Service:
 		{

@@ -18,6 +18,7 @@ type Config struct {
 	RouterHTTPS      int               `yaml:"router_https_port"`
 	Shell            string            `yaml:"shell"`
 	ServiceOverrides []ServiceOverride `yaml:"service_overrides"`
+	EnableVarnish    bool              `yaml:"enable_varnish"`
 }
 
 // DefaultConfig returns the default configuration settings.
@@ -29,6 +30,7 @@ func DefaultConfig() Config {
 		RouterHTTPS:      443,
 		Shell:            "bash",
 		ServiceOverrides: make([]ServiceOverride, 0),
+		EnableVarnish:    false,
 	}
 }
 

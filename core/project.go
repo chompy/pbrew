@@ -25,6 +25,7 @@ type Project struct {
 	Routes          []def.Route   `json:"-"`
 	NoMounts        bool          `json:"-"`
 	UsePbrewBottles bool          `json:"-"`
+	config          Config
 }
 
 func findProjectRoot(path string) (string, error) {
@@ -51,6 +52,10 @@ func findProjectRoot(path string) (string, error) {
 // LoadProject loads a project at given the path.
 func LoadProject(projPath string) (*Project, error) {
 	var err error
+	config, err := LoadConfig()
+	if err != nil {
+		return nil, err
+	}
 	projPath, err = findProjectRoot(projPath)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -96,6 +101,7 @@ func LoadProject(projPath string) (*Project, error) {
 		Services: services,
 		Routes:   routes,
 		NoMounts: false,
+		config:   config,
 	}, nil
 }
 

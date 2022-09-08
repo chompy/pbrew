@@ -159,6 +159,10 @@ func (p *Project) MapRelationships(d interface{}) map[string][]map[string]interf
 // MatchRelationshipToService matches a given relationship to its service def.
 func (p *Project) MatchRelationshipToService(rel string) interface{} {
 	relSplit := strings.Split(rel, ":")
+	// map varnish to first app
+	if !p.config.EnableVarnish && relSplit[0] == "varnish" {
+		return p.Apps[0]
+	}
 	// look for service match
 	for _, service := range p.Services {
 		if service.Name == relSplit[0] {
