@@ -155,9 +155,9 @@
   post_install: |
     if [ ! -f {HOME_PATH}/.pyenv/versions/3.10.0/bin/python ]; then
       {BREW_PATH}/bin/pyenv install 3.10.0
-    fi  
-    {HOME_PATH}/.pyenv/versions/3.10.0/bin/python -m pip install --upgrade pip
-    {HOME_PATH}/.pyenv/versions/3.10.0/bin/python -m pip install docutils sphinx
+    fi
+    python -m pip install --upgrade pip
+    python -m pip install docutils sphinx
     mkdir /tmp/vsrc
     cd /tmp/vsrc
     curl -f https://varnish-cache.org/downloads/varnish-6.0.10.tgz -o orig.tgz
@@ -166,8 +166,9 @@
     mkdir {BREW_PATH}/opt/varnish
     ./configure --prefix {BREW_PATH}/opt/varnish
     make
-    make install
+    make install    
     cp -r share/varnish {BREW_PATH}/share/
+    export PKG_CONFIG_PATH={BREW_PATH}/opt/varnish/lib/pkgconfig
     git clone https://github.com/varnish/varnish-modules.git --branch 6.0
     cd varnish-modules
     ./bootstrap
@@ -188,3 +189,5 @@
     [ -f {BREW_PATH}/opt/varnish/sbin/varnishd ]
   config_templates: 
     "varnish_app.vcl.tmpl" : "{CONF_FILE}"
+  dependencies:
+    - "automake"

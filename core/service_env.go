@@ -18,6 +18,8 @@ func ServicesEnv(services []*Service) []string {
 	envPath = append(envPath, "/bin")
 	envPath = append(envPath, "/usr/bin")
 	envPath = append(envPath, "/usr/sbin")
+	envPath = append(envPath, filepath.Join(GetDir(HomeDir), ".pyenv", "versions", "3.10.0", "bin"))
+	envPath = append(envPath, filepath.Join(GetDir(HomeDir), ".pyenv", "versions", "2.7.18", "bin"))
 	env := make([]string, 0)
 	env = append(env, brewEnv()...)
 	for k, v := range env {
