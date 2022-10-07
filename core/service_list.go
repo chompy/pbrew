@@ -10,10 +10,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-var loadedServiceList map[string]*Service
+var loadedServiceList map[string]Service
 
 // ServiceList is a list of available Homebrew services.
-type ServiceList map[string]*Service
+type ServiceList map[string]Service
 
 // LoadServiceList loads all available Homebrew services.
 func LoadServiceList() (ServiceList, error) {
@@ -30,7 +30,7 @@ func LoadServiceList() (ServiceList, error) {
 }
 
 // Match matches platform.sh service with homebrew service.
-func (s ServiceList) Match(name string) (*Service, error) {
+func (s ServiceList) Match(name string) (Service, error) {
 	matchName := strings.ReplaceAll(name, ":", "-")
 	for serviceName, service := range s {
 		serviceName = strings.ReplaceAll(serviceName, ":", "-")
@@ -44,17 +44,17 @@ func (s ServiceList) Match(name string) (*Service, error) {
 			return service, nil
 		}
 	}
-	return nil, errors.WithStack(errors.WithMessage(ErrServiceNotFound, name))
+	return Service{}, errors.WithStack(errors.WithMessage(ErrServiceNotFound, name))
 }
 
 // MatchDef matches definition with its homebrew service.
-func (s ServiceList) MatchDef(d interface{}) (*Service, error) {
+func (s ServiceList) MatchDef(d interface{}) (Service, error) {
 	switch d := d.(type) {
 	case *def.App:
 		{
 			service, err := s.Match(d.Type)
 			if err != nil {
-				return nil, errors.WithStack(err)
+				return Service{}, errors.WithStack(err)
 			}
 			return service, nil
 		}
@@ -62,7 +62,7 @@ func (s ServiceList) MatchDef(d interface{}) (*Service, error) {
 		{
 			service, err := s.Match(d.Type)
 			if err != nil {
-				return nil, errors.WithStack(err)
+				return Service{}, errors.WithStack(err)
 			}
 			return service, nil
 		}
@@ -70,7 +70,7 @@ func (s ServiceList) MatchDef(d interface{}) (*Service, error) {
 		{
 			service, err := s.Match(d.Type)
 			if err != nil {
-				return nil, errors.WithStack(err)
+				return Service{}, errors.WithStack(err)
 			}
 			return service, nil
 		}
@@ -78,10 +78,10 @@ func (s ServiceList) MatchDef(d interface{}) (*Service, error) {
 		{
 			service, err := s.Match(d.Type)
 			if err != nil {
-				return nil, errors.WithStack(err)
+				return Service{}, errors.WithStack(err)
 			}
 			return service, nil
 		}
 	}
-	return nil, errors.WithStack(ErrInvalidDef)
+	return Service{}, errors.WithStack(ErrInvalidDef)
 }

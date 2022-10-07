@@ -31,7 +31,7 @@ var projectStartCmd = &cobra.Command{
 		handleError(core.NginxAdd(proj))
 		// start/reload nginx
 		nginx := core.NginxService()
-		if nginx == nil {
+		if nginx.Empty() {
 			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
 		}
 		if nginx.IsRunning() {
@@ -58,7 +58,7 @@ var projectStopCmd = &cobra.Command{
 		handleError(core.NginxDel(proj))
 		// reload nginx
 		nginx := core.NginxService()
-		if nginx == nil {
+		if nginx.Empty() {
 			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
 		}
 		if nginx.IsRunning() {

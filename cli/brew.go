@@ -22,8 +22,8 @@ var brewCompileCmd = &cobra.Command{
 		serviceList, err := core.LoadServiceList()
 		handleError(err)
 		serviceDef, err := serviceList.Match(serviceName)
-		if err != nil || serviceDef == nil {
-			serviceDef = &core.Service{
+		if err != nil || serviceDef.Empty() {
+			serviceDef = core.Service{
 				BrewName: serviceName,
 			}
 		}

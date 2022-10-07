@@ -38,6 +38,10 @@ type Service struct {
 	definition      interface{}
 }
 
+func (s Service) Empty() bool {
+	return s.StartCmd == ""
+}
+
 // Info returns information about Homebrew application.
 func (s *Service) Info() (map[string]interface{}, error) {
 	return brewInfo(s.BrewAppName())
@@ -91,13 +95,13 @@ func (s *Service) Uninstall() error {
 }
 
 // InstallCheck checks to see if the installation was successful.
-func (s *Service) InstallCheck() bool {
+func (s Service) InstallCheck() bool {
 	// run cmd
 	if s.InstallCheckCmd != "" {
 		cmdStr := s.injectCommandParams(s.InstallCheckCmd)
 		cmd := NewShellCommand()
 		cmd.Args = []string{"-c", cmdStr}
-		cmd.Env = ServicesEnv([]*Service{s})
+		cmd.Env = ServicesEnv([]Service{s})
 		if err := cmd.Interactive(); err != nil {
 			return false
 		}
@@ -106,13 +110,13 @@ func (s *Service) InstallCheck() bool {
 }
 
 // PreInstall runs the pre install command for the service.
-func (s *Service) PreInstall() error {
+func (s Service) PreInstall() error {
 	// run cmd
 	if s.PreInstallCmd != "" {
 		cmdStr := s.injectCommandParams(s.PreInstallCmd)
 		cmd := NewShellCommand()
 		cmd.Args = []string{"-c", cmdStr}
-		cmd.Env = ServicesEnv([]*Service{s})
+		cmd.Env = ServicesEnv([]Service{s})
 		if err := cmd.Interactive(); err != nil {
 			return errors.WithMessage(err, s.DisplayName())
 		}
@@ -121,7 +125,7 @@ func (s *Service) PreInstall() error {
 }
 
 // PostInstall runs the post install command for the service.
-func (s *Service) PostInstall() error {
+func (s Service) PostInstall() error {
 	// create data dir
 	if err := os.Mkdir(s.DataPath(), mkdirPerm); err != nil {
 		if !errors.Is(err, os.ErrExist) {
@@ -133,7 +137,7 @@ func (s *Service) PostInstall() error {
 		cmdStr := s.injectCommandParams(s.PostInstallCmd)
 		cmd := NewShellCommand()
 		cmd.Args = []string{"-c", cmdStr}
-		cmd.Env = ServicesEnv([]*Service{s})
+		cmd.Env = ServicesEnv([]Service{s})
 		if err := cmd.Interactive(); err != nil {
 			return errors.WithMessage(err, s.DisplayName())
 		}
@@ -206,7 +210,7 @@ func (s *Service) IsRunning() bool {
 }
 
 // Start will start the service.
-func (s *Service) Start() error {
+func (s Service) Start() error {
 	done := output.Duration(fmt.Sprintf("Start %s.", s.DisplayName()))
 	// varnish disabled
 	if s.IsVarnish() && s.project != nil && !s.project.config.EnableVarnish {
@@ -225,7 +229,7 @@ func (s *Service) Start() error {
 	done2 := output.Duration("Start up.")
 	cmdStr := s.injectCommandParams(s.StartCmd)
 	cmd := NewShellCommand()
-	cmd.Env = ServicesEnv([]*Service{s})
+	cmd.Env = ServicesEnv([]Service{s})
 	if s.project != nil && s.definition != nil {
 		switch d := s.definition.(type) {
 		case *def.App:
@@ -249,7 +253,7 @@ func (s *Service) Start() error {
 }
 
 // Stop will stop the service.
-func (s *Service) Stop() error {
+func (s Service) Stop() error {
 	done := output.Duration(fmt.Sprintf("Stop %s.", s.DisplayName()))
 	// check status
 	if !s.IsInstalled() {
@@ -262,7 +266,7 @@ func (s *Service) Stop() error {
 	cmdStr := s.injectCommandParams(s.StopCmd)
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
-	cmd.Env = ServicesEnv([]*Service{s})
+	cmd.Env = ServicesEnv([]Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.DisplayName())
 	}
@@ -271,7 +275,7 @@ func (s *Service) Stop() error {
 }
 
 // Reload reloads the service configuration.
-func (s *Service) Reload() error {
+func (s Service) Reload() error {
 	done := output.Duration(fmt.Sprintf("Reload %s.", s.DisplayName()))
 	// varnish disabled
 	if s.IsVarnish() && s.project != nil && !s.project.config.EnableVarnish {
@@ -293,7 +297,7 @@ func (s *Service) Reload() error {
 	cmdStr := s.injectCommandParams(s.ReloadCmd)
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", cmdStr}
-	cmd.Env = ServicesEnv([]*Service{s})
+	cmd.Env = ServicesEnv([]Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithMessage(err, s.DisplayName())
 	}
@@ -390,7 +394,7 @@ func (s *Service) Purge() error {
 }
 
 // Port returns the assigned port.
-func (s *Service) Port() (int, error) {
+func (s Service) Port() (int, error) {
 	if s.PortOverride > 0 {
 		return s.PortOverride, nil
 	}
@@ -403,10 +407,7 @@ func (s *Service) Port() (int, error) {
 
 // SocketPath returns path to service socket.
 func (s *Service) SocketPath() string {
-	if s.Multiple && s.project != nil {
-		return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s-%s.sock", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.project.Name))
-	}
-	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.sock", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
+	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.sock", s.UniqueName()))
 }
 
 // UpstreamSocketPath returns path to app upstream socket.
@@ -427,20 +428,32 @@ func (s *Service) DisplayName() string {
 	return s.BrewAppName()
 }
 
+func (s *Service) UniqueName() string {
+	brewName := strings.ReplaceAll(s.BrewAppName(), "@", "-")
+	if s.Multiple && s.project != nil && s.definition != nil {
+		switch d := s.definition.(type) {
+		case *def.App:
+			{
+				return fmt.Sprintf("%s-%s-%s", brewName, d.Name, s.project.Name)
+			}
+		default:
+			{
+				return fmt.Sprintf("%s-%s", brewName, s.project.Name)
+			}
+		}
+
+	}
+	return brewName
+}
+
 // PidPath returns path to service pid file.
 func (s *Service) PidPath() string {
-	if s.Multiple && s.project != nil {
-		return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s-%s.pid", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.project.Name))
-	}
-	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.pid", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
+	return filepath.Join(GetDir(RunDir), fmt.Sprintf("%s.pid", s.UniqueName()))
 }
 
 // ConfigPath returns path to service config file.
 func (s *Service) ConfigPath() string {
-	if s.Multiple && s.project != nil {
-		return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s-%s.conf", strings.ReplaceAll(s.BrewAppName(), "@", "-"), s.project.Name))
-	}
-	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s.conf", strings.ReplaceAll(s.BrewAppName(), "@", "-")))
+	return filepath.Join(GetDir(ConfDir), fmt.Sprintf("%s.conf", s.UniqueName()))
 }
 
 // DataPath returns path to service data directory.

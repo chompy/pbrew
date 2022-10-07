@@ -25,7 +25,7 @@ var routerStartCmd = &cobra.Command{
 	Short: "Start nginx router.",
 	Run: func(cmd *cobra.Command, args []string) {
 		nginx := core.NginxService()
-		if nginx == nil {
+		if nginx.Empty() {
 			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
 		}
 		if !nginx.IsInstalled() {
@@ -41,7 +41,7 @@ var routerStopCmd = &cobra.Command{
 	Short: "Stop nginx router.",
 	Run: func(cmd *cobra.Command, args []string) {
 		nginx := core.NginxService()
-		if nginx == nil {
+		if nginx.Empty() {
 			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
 		}
 		handleError(nginx.Stop())
@@ -56,7 +56,7 @@ var routerAddCmd = &cobra.Command{
 		handleError(err)
 		handleError(core.NginxAdd(proj))
 		nginx := core.NginxService()
-		if nginx == nil {
+		if nginx.Empty() {
 			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
 		}
 		handleError(nginx.Reload())
@@ -72,7 +72,7 @@ var routerDelCmd = &cobra.Command{
 		handleError(err)
 		handleError(core.NginxDel(proj))
 		nginx := core.NginxService()
-		if nginx == nil {
+		if nginx.Empty() {
 			handleError(errors.WithMessage(core.ErrServiceNotFound, "nginx"))
 		}
 		handleError(nginx.Reload())

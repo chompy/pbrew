@@ -30,8 +30,8 @@ const nginxPostInstallCmd = `
 `
 
 // NginxService returns the service for nginx.
-func NginxService() *Service {
-	return &Service{
+func NginxService() Service {
+	return Service{
 		BrewName:        "nginx",
 		PostInstallCmd:  nginxPostInstallCmd,
 		StartCmd:        nginxStartCmd,

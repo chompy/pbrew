@@ -6,7 +6,7 @@ import (
 )
 
 // ServicesEnv returns environment variables for given services.
-func ServicesEnv(services []*Service) []string {
+func ServicesEnv(services []Service) []string {
 	envPath := make([]string, 0)
 	for _, service := range services {
 		envPath = append(envPath, filepath.Join(GetDir(BrewDir), "opt", service.BrewAppName(), "bin"))

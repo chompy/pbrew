@@ -21,7 +21,7 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 	if err != nil {
 		return ShellCommand{}, err
 	}
-	brewServiceList := make([]*Service, 0)
+	brewServiceList := make([]Service, 0)
 	brewServiceList = append(brewServiceList, brewAppService)
 	for _, service := range p.Services {
 		brewService, err := serviceList.MatchDef(&service)

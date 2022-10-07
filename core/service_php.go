@@ -64,7 +64,7 @@ func (s *Service) PHPVersion() string {
 }
 
 // PHPInstallExtension installs the given PHP extension.
-func (s *Service) PHPInstallExtension(name string) error {
+func (s Service) PHPInstallExtension(name string) error {
 	if !s.IsPHP() {
 		return errors.WithStack(errors.WithMessage(ErrInvalidService, s.DisplayName()))
 	}
@@ -79,7 +79,7 @@ func (s *Service) PHPInstallExtension(name string) error {
 	done := output.Duration(fmt.Sprintf("Installing PHP extension %s.", extKey))
 	cmd := NewShellCommand()
 	cmd.Args = []string{"-c", s.injectCommandParams(extCmd)}
-	cmd.Env = ServicesEnv([]*Service{s})
+	cmd.Env = ServicesEnv([]Service{s})
 	if err := cmd.Interactive(); err != nil {
 		return errors.WithStack(errors.WithMessage(err, extKey))
 	}

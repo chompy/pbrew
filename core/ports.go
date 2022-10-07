@@ -83,7 +83,7 @@ func (p PortMap) assignPort(name string) (int, error) {
 }
 
 // ServicePort retrieves or creates an assigned port for the given service.
-func (p PortMap) ServicePort(s *Service) (int, error) {
+func (p PortMap) ServicePort(s Service) (int, error) {
 	appName := s.BrewAppName()
 	if appName == "" {
 		appName = s.Name

@@ -42,7 +42,7 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 					return nil
 				}
 			}
-			if brewService != nil {
+			if !brewService.Empty() {
 				brewService.SetDefinition(p, d)
 				port, err = brewService.Port()
 				if err != nil {
@@ -75,7 +75,7 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 					if serviceOverride != nil {
 						rel = serviceOverride.Relationship()
 						rel["rel"] = name
-					} else if brewService != nil && brewService.IsMySQL() {
+					} else if !brewService.Empty() && brewService.IsMySQL() {
 						rel["path"] = p.ResolveDatabase(config.(map[string]interface{})["default_schema"].(string))
 						rel["username"] = mysqlUser
 						rel["password"] = mysqlPass
@@ -83,14 +83,14 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 						rel["query"] = map[string]interface{}{
 							"is_master": true,
 						}
-					} else if brewService != nil && brewService.IsSolr() {
+					} else if !brewService.Empty() && brewService.IsSolr() {
 						brewService.project = p
 						brewService.definition = d
 						rel["path"] = fmt.Sprintf("solr/%s", brewService.SolrCoreName(name))
 						rel["rel"] = brewService.SolrCoreName(name)
 						rel["scheme"] = "solr"
 					}
-					if brewService != nil && brewService.IsRedis() {
+					if !brewService.Empty() && brewService.IsRedis() {
 						rel["scheme"] = "redis"
 					}
 					out = append(out, rel)
@@ -105,7 +105,7 @@ func (p *Project) GenerateRelationships(d interface{}) []map[string]interface{} 
 				if strings.HasPrefix(rel["rel"].(string), "redis") {
 					rel["rel"] = "redis"
 					rel["scheme"] = "redis"
-				} else if brewService != nil && brewService.IsVarnish() {
+				} else if !brewService.Empty() && brewService.IsVarnish() {
 					rel["rel"] = "http"
 					rel["scheme"] = "http"
 				}

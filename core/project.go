@@ -106,12 +106,12 @@ func LoadProject(projPath string) (*Project, error) {
 }
 
 // GetBrewServices returns list of Homebrew services used by project.
-func (p *Project) GetBrewServices() ([]*Service, error) {
+func (p *Project) GetBrewServices() ([]Service, error) {
 	serviceList, err := LoadServiceList()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	out := make([]*Service, 0)
+	out := make([]Service, 0)
 	for _, app := range p.Apps {
 		if ServiceHasOverride(app) {
 			continue
@@ -123,8 +123,7 @@ func (p *Project) GetBrewServices() ([]*Service, error) {
 			}
 			return nil, errors.WithStack(err)
 		}
-		service.project = p
-		service.definition = app
+		service.SetDefinition(p, app)
 		out = append(out, service)
 	}
 	for i, pshs := range p.Services {
@@ -138,8 +137,7 @@ func (p *Project) GetBrewServices() ([]*Service, error) {
 			}
 			return nil, errors.WithStack(err)
 		}
-		service.project = p
-		service.definition = &p.Services[i]
+		service.SetDefinition(p, &p.Services[i])
 		out = append(out, service)
 	}
 	return out, nil
