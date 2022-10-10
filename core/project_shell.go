@@ -56,17 +56,24 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 	// inject env vars
 	env := make([]string, 0)
 	env = append(env, ServicesEnv(brewServiceList)...)
-	for k, v := range env {
-		if strings.HasPrefix(v, "PATH") {
-			env[k] = "PATH=" + strings.Join(envPaths, ":") + ":" + strings.TrimPrefix(env[k], "PATH=")
-		}
-	}
+
 	//env = append(env, "HOME="+p.Path)
 	//env = append(env, fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)))
 	env = append(env, fmt.Sprintf("TERM=%s", os.Getenv("TERM")))
 
 	for k, v := range p.Env(d) {
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	envKeyMap := make(map[string]int)
+
+	for k, v := range env {
+
+		envKeyMap[strings.Split(v, "=")[0]] = 1
+
+		if strings.HasPrefix(v, "PATH") {
+			env[k] = "PATH=" + strings.Join(envPaths, ":") + ":" + strings.TrimPrefix(env[k], "PATH=")
+		}
 	}
 
 	// run interactive shell
@@ -80,10 +87,15 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 		if envMap, err := readFile(".env.prod");err == nil {
 
 			for key, value := range envMap {
-				output.WriteStdout(fmt.Sprintf("%s=%s", key,  value))
-				env = append(env, fmt.Sprintf("%s=%s", key,  value))
+				_, ok := envKeyMap[key]
+				if !ok {
+					env = append(env, fmt.Sprintf("%s=%s", key,  strings.ReplaceAll(value, "'", "\"")))
+				}
 			}
 			
+		} else {
+			output.WriteStdout(" Failed parsing .env.prod \n")
+			return cmd, err
 		}
 
 	} else {
