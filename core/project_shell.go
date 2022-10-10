@@ -88,7 +88,7 @@ func (p *Project) getAppShellCommand(d *def.App) (ShellCommand, error) {
 
 			for key, value := range envMap {
 				_, ok := envKeyMap[key]
-				if !ok {
+				if !ok || key == "PLATFORM_VARIABLES" {
 					env = append(env, fmt.Sprintf("%s=%s", key,  strings.ReplaceAll(value, "'", "\"")))
 				}
 			}
