@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -20,6 +21,7 @@ var routesYamlFilenames = []string{".platform/routes.yaml", ".platform/routes.pc
 type Project struct {
 	Path            string        `json:"path"`
 	Name            string        `json:"name"`
+	DefaultDomain   string        `json:"default_domain"`
 	Apps            []*def.App    `json:"-"`
 	Services        []def.Service `json:"-"`
 	Routes          []def.Route   `json:"-"`
@@ -51,6 +53,9 @@ func findProjectRoot(path string) (string, error) {
 // LoadProject loads a project at given the path.
 func LoadProject(projPath string) (*Project, error) {
 	var err error
+
+	defaultDomain, _ := exec.Command("bash", "-c", "platform project:info -- default_domain").Output()
+
 	projPath, err = findProjectRoot(projPath)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -92,6 +97,7 @@ func LoadProject(projPath string) (*Project, error) {
 	return &Project{
 		Path:     projPath,
 		Name:     strings.ToLower(filepath.Base(projPath)),
+		DefaultDomain: string(defaultDomain),
 		Apps:     apps,
 		Services: services,
 		Routes:   routes,

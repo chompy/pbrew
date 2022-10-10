@@ -110,6 +110,7 @@ func GetHostNames(routes []def.Route) []string {
 			continue
 		}
 		thisHost := strings.TrimSpace(urlParse.Host)
+
 		if thisHost == "" {
 			thisHost = defaultHostName
 		}
@@ -156,6 +157,7 @@ func GetRoutesForHostName(host string, routes []def.Route) []def.Route {
 
 // ProjectDefaultHostName returns first for hostname with {default} tag.
 func ProjectDefaultHostName(p *Project, host string) string {
+	host = strings.ReplaceAll(host, "__PID__.default", p.DefaultDomain)
 	host = strings.ReplaceAll(host, "__PID__", p.Name)
 	host = strings.ReplaceAll(host, "{default}", p.Name)
 	return host
