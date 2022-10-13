@@ -2,16 +2,22 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
+	"gitlab.com/contextualcode/platform_cc/v2/pkg/def"
 )
 
 // ProjectTileFile is the name of the project tracking file.
 const ProjectTrackFile = "projects.json"
+
+// ProjectTrackNameDelimiter is the delimiter of values in the service tracker names.
+const ProjectTrackNameDelimiter = "||"
 
 // ProjectTrack tracks running project.
 type ProjectTrack struct {
@@ -51,6 +57,54 @@ func saveProjectTracks() error {
 	return nil
 }
 
+func projectTrackGetServiceName(d interface{}, p *Project) string {
+	if d == nil || p == nil {
+		return ""
+	}
+	switch d := d.(type) {
+	case def.Service:
+		{
+			return fmt.Sprintf("s%s%s%s%s%s%s", ProjectTrackNameDelimiter, p.Name, ProjectTrackNameDelimiter, d.Name, ProjectTrackNameDelimiter, d.Type)
+		}
+	case *def.App:
+		{
+			return fmt.Sprintf("a%s%s%s%s%s%s", ProjectTrackNameDelimiter, p.Name, ProjectTrackNameDelimiter, d.Name, ProjectTrackNameDelimiter, d.Type)
+		}
+	}
+	return ""
+}
+
+// ProjectTrackGetService returns a service from a project track service name.
+func ProjectTrackGetService(name string) (Service, error) {
+	serviceList, err := LoadServiceList()
+	if err != nil {
+		return Service{}, err
+	}
+	values := strings.Split(name, ProjectTrackNameDelimiter)
+	if len(values) < 4 {
+		return Service{}, ErrInvalidService
+	}
+	service, err := serviceList.Match(values[3])
+	if err != nil {
+		return Service{}, err
+	}
+	mockProject := &Project{Name: values[1]}
+	var mockDef interface{}
+	switch values[0] {
+	case "s":
+		{
+			mockDef = &def.Service{Name: values[2], Type: values[3]}
+			break
+		}
+	case "a":
+		{
+			mockDef = &def.App{Name: values[2], Type: values[3]}
+		}
+	}
+	service.SetDefinition(mockProject, mockDef)
+	return service, nil
+}
+
 // ProjectTrackGet returns list of tracked running projects.
 func ProjectTrackGet() ([]ProjectTrack, error) {
 	if err := loadProjectTracks(); err != nil {
@@ -84,13 +138,12 @@ func ProjectTrackServices() ([]string, error) {
 
 // ProjectTrackAdd adds project to tracking.
 func ProjectTrackAdd(p *Project) error {
-	brewServices, err := p.GetBrewServices()
-	if err != nil {
-		return err
-	}
 	serviceNames := make([]string, 0)
-	for _, service := range brewServices {
-		serviceNames = append(serviceNames, service.BrewAppName())
+	for _, service := range p.Services {
+		serviceNames = append(serviceNames, projectTrackGetServiceName(service, p))
+	}
+	for _, service := range p.Apps {
+		serviceNames = append(serviceNames, projectTrackGetServiceName(service, p))
 	}
 	pt := ProjectTrack{
 		Name:     p.Name,

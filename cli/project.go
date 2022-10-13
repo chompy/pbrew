@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -108,55 +107,34 @@ var projectPurgeCmd = &cobra.Command{
 
 var projectStatusCmd = &cobra.Command{
 	Use:   "status [--json]",
-	Short: "Display current project status.",
+	Short: "List the status of all project's services.",
 	Run: func(cmd *cobra.Command, args []string) {
 		proj, err := getProject()
 		handleError(err)
-		/*projectTracks, err := core.ProjectTrackGet()
+		allServiceStatues, err := core.GetServiceStatuses()
 		handleError(err)
-		projectTrack := core.ProjectTrack{}
-		for _, v := range projectTracks {
-			if v.Name == proj.Name {
-				projectTrack = v
-				break
-			}
-		}*/
-		serviceStatues, err := core.GetServiceStatuses()
-		handleError(err)
-		brewServices, err := proj.GetBrewServices()
-		handleError(err)
-		out := make([]core.ServiceStatus, 0)
-		for _, brewService := range brewServices {
-			for _, serviceStatus := range serviceStatues {
-				if serviceStatus.Name == brewService.BrewAppName() || serviceStatus.Name == brewService.Name {
-					out = append(out, serviceStatus)
-					break
-				}
+		serviceStatues := make([]core.ServiceStatus, 0)
+		for _, serviceStatus := range allServiceStatues {
+			if serviceStatus.Project == proj.Name {
+				serviceStatues = append(serviceStatues, serviceStatus)
 			}
 		}
 		// json
 		if cmd.PersistentFlags().Lookup("json").Value.String() == "true" {
-			outJson, err := json.Marshal(out)
+			outJson, err := json.Marshal(serviceStatues)
 			handleError(err)
 			output.WriteStdout(string(outJson) + "\n")
 			return
 		}
 		rows := make([][]string, 0)
-		for _, v := range out {
-			ports := make([]string, 0)
-			for _, port := range v.Ports {
-				ports = append(ports, fmt.Sprintf("%d", port))
-			}
+		for _, v := range serviceStatues {
 			rows = append(rows, []string{
-				v.DisplayName,
-				v.Name,
-				v.Status,
-				strings.Join(ports, ","),
+				v.DefName, v.DefType, v.InstanceName, v.Status, fmt.Sprintf("%d", v.Port),
 			})
 		}
 		output.WriteStdout("\n >> " + proj.Name + "\n")
 		drawTable(
-			[]string{"NAME", "BREW NAME", "STATUS", "PORT"},
+			[]string{"NAME", "TYPE", "ID", "STATUS", "PORT"},
 			rows,
 		)
 	},

@@ -428,11 +428,16 @@ func (s *Service) DisplayName() string {
 	return s.BrewAppName()
 }
 
+// UniqueName returns a unique name for this instance.
 func (s *Service) UniqueName() string {
 	brewName := strings.ReplaceAll(s.BrewAppName(), "@", "-")
 	if s.Multiple && s.project != nil && s.definition != nil {
 		switch d := s.definition.(type) {
 		case *def.App:
+			{
+				return fmt.Sprintf("%s-%s-%s", brewName, d.Name, s.project.Name)
+			}
+		case *def.Service:
 			{
 				return fmt.Sprintf("%s-%s-%s", brewName, d.Name, s.project.Name)
 			}

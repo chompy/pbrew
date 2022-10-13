@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -22,41 +21,22 @@ var allStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop all services.",
 	Run: func(cmd *cobra.Command, args []string) {
-		// itterate services and stop
-		serviceList, err := core.LoadServiceList()
+		projectTracks, err := core.ProjectTrackGet()
 		handleError(err)
-		projectTrack, err := core.ProjectTrackGet()
-		handleError(err)
-		for _, service := range serviceList {
-			if service.Multiple {
-				for _, proj := range projectTrack {
-					for _, ptServ := range proj.Services {
-						if ptServ == service.BrewAppName() {
-							p := core.Project{Name: proj.Name}
-							service.SetDefinition(&p, service)
-							if !service.IsRunning() {
-								continue
-							}
-							if err := service.Stop(); err != nil {
-								output.Warn(err.Error())
-								output.IndentLevel--
-								continue
-							}
-							time.Sleep(time.Second)
-						}
-					}
+		for _, projTrack := range projectTracks {
+			for _, ptServiceName := range projTrack.Services {
+				service, err := core.ProjectTrackGetService(ptServiceName)
+				handleError(err)
+				if !service.IsRunning() {
+					continue
 				}
-				continue
+				if err := service.Stop(); err != nil {
+					output.Warn(err.Error())
+					output.IndentLevel--
+					continue
+				}
+				time.Sleep(time.Second)
 			}
-			if !service.IsRunning() {
-				continue
-			}
-			if err := service.Stop(); err != nil {
-				output.Warn(err.Error())
-				output.IndentLevel--
-				continue
-			}
-			time.Sleep(time.Second)
 		}
 		// stop nginx
 		nginx := core.NginxService()
@@ -97,8 +77,9 @@ var allPurgeCmd = &cobra.Command{
 }
 
 var allServicesCmd = &cobra.Command{
-	Use:   "services [--json]",
-	Short: "List all services and their status.",
+	Use:     "services [--json]",
+	Short:   "List all running services.",
+	Aliases: []string{"status"},
 	Run: func(cmd *cobra.Command, args []string) {
 		statuses, err := core.GetServiceStatuses()
 		handleError(err)
@@ -113,19 +94,12 @@ var allServicesCmd = &cobra.Command{
 		tableRows := make([][]string, 0)
 		for _, status := range statuses {
 			// create row
-			ports := make([]string, 0)
-			for _, port := range status.Ports {
-				ports = append(ports, fmt.Sprintf("%d", port))
-			}
 			tableRows = append(tableRows, []string{
-				status.DisplayName,
-				strings.Join(ports, ","),
-				status.Status,
-				strings.Join(status.Projects, ","),
+				status.Project, status.DefName, status.DefType, status.InstanceName, status.Status, fmt.Sprintf("%d", status.Port),
 			})
 		}
 		drawTable(
-			[]string{"NAME", "PORT", "STATUS", "PROJECTS"},
+			[]string{"PROJECT", "NAME", "TYPE", "ID", "STATUS", "PORT"},
 			tableRows,
 		)
 	},
