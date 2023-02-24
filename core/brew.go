@@ -46,9 +46,10 @@ func BrewInit() error {
 	if err := brewCommand("tap", "shivammathur/php"); err != nil {
 		return err
 	}
-	if err := brewCommand("tap", "dbroadfoot/ruby"); err != nil {
-                return err
-        }
+	// not sure why this ruby dependency is here...
+	//if err := brewCommand("tap", "dbroadfoot/ruby"); err != nil {
+    //           return err
+    //}
 	// php has a dependency on httpd which fails to build on some machines
 	// it's not really a needed dependency, so we can force it install via bottle
 	// even if it is broken
@@ -99,7 +100,7 @@ func brewEnv() []string {
 		fmt.Sprintf("CPATH=%s", filepath.Join(GetDir(BrewDir), "include")),
 		fmt.Sprintf("NVM_DIR=%s/.nvm", GetDir(HomeDir)),
 		fmt.Sprintf("JAVA_HOME=%s", filepath.Join(GetDir(BrewDir), "opt", "java11")),
-		"RUBY_CFLAGS=-DUSE_FFI_CLOSURE_ALLOC",
+		//"RUBY_CFLAGS=-DUSE_FFI_CLOSURE_ALLOC",
 	}
 }
 
