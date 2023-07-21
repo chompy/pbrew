@@ -42,6 +42,10 @@
   #  - "dbroadfoot/ruby/ruby@2.4" -- no sure this is needed.
     - "pyenv"
 
+"php-8.2":
+  <<: *php
+  brew_name: "php"
+
 "php-7.3":
   <<: *php
   brew_name: "shivammathur/php/php@7.3"
