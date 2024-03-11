@@ -44,7 +44,7 @@
 
 "php-8.3":
   <<: *php
-  brew_name: "php"
+  brew_name: "shivammathur/php/php@8.3"
 
 "php-8.2":
   <<: *php
