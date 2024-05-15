@@ -86,7 +86,7 @@ func LoadProject(projPath string) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	routes, err = def.ExpandRoutes(routes, "platform.cc")
+	routes, err = def.ExpandRoutes(routes, "localtest.me")
 	if err != nil {
 		return nil, err
 	}

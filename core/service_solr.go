@@ -233,5 +233,5 @@ func (s *Service) solrExtactConfigDir(value string) error {
 }
 
 func (s *Service) solrGetTempDir() string {
-	return filepath.Join("/tmp", "solrconf")
+	return filepath.Join(GetDir(TempDir), "solrconf")
 }

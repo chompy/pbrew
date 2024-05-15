@@ -21,6 +21,7 @@ const (
 	AppDir
 	UserDir
 	BottleDir
+	TempDir
 )
 
 var appDirectories = map[int]string{
@@ -35,6 +36,7 @@ var appDirectories = map[int]string{
 	AppDir:    getAppPath(),
 	UserDir:   getUserPath(),
 	BottleDir: filepath.Join(getUserPath(), "bottles"),
+	TempDir:   filepath.Join(getUserPath(), "tmp"),
 }
 
 // GetDir returns given key's path.
